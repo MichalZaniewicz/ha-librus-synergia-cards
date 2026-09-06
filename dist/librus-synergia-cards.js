@@ -739,7 +739,7 @@ const de=e=>(t,s)=>{void 0!==s?s.addInitializer(()=>{customElements.define(e,t)}
                           <span>${e.sender}</span>
                           ${e.date?q`<time>${De(e.date,s.language)}</time>`:W}
                         </div>
-                        <div class="item-text"><b>${e.topic}</b> — ${e.content}</div>
+                        <div class="item-text"><b>${e.topic}</b> - ${e.content}</div>
                       </div>
                     </div>
                   `)}
@@ -788,7 +788,7 @@ const de=e=>(t,s)=>{void 0!==s?s.addInitializer(()=>{customElements.define(e,t)}
                     <span>${e.topic}</span>
                     ${e.due_date?q`<time>${ke(s,"label.due")} ${De(e.due_date,s.language)}</time>`:W}
                   </div>
-                  <div class="item-text">${e.text}${e.teacher?q` — ${e.teacher}`:W}</div>
+                  <div class="item-text">${e.text}${e.teacher?q` - ${e.teacher}`:W}</div>
                 </div>
               </div>
             `)}

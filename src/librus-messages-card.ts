@@ -96,7 +96,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
                           <span>${m.sender}</span>
                           ${m.date ? html`<time>${formatShortDate(m.date, hass.language)}</time>` : nothing}
                         </div>
-                        <div class="item-text"><b>${m.topic}</b> — ${m.content}</div>
+                        <div class="item-text"><b>${m.topic}</b> - ${m.content}</div>
                       </div>
                     </div>
                   `

@@ -73,7 +73,7 @@ export class LibrusHomeworkAssignmentsCard extends LibrusBaseCard {
                       ? html`<time>${t(hass, "label.due")} ${formatShortDate(a.due_date, hass.language)}</time>`
                       : nothing}
                   </div>
-                  <div class="item-text">${a.text}${a.teacher ? html` — ${a.teacher}` : nothing}</div>
+                  <div class="item-text">${a.text}${a.teacher ? html` - ${a.teacher}` : nothing}</div>
                 </div>
               </div>
             `
