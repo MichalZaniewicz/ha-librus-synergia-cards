@@ -223,7 +223,7 @@
       ],
     }, 2);
     addEntity("sensor.unread_messages", "unread_messages", {
-      mailbox_breakdown: { inbox: 1, notes: 0, alerts: 1, substitutions: 1, absences: 0, justifications: 0, trash: 0 },
+      mailbox_breakdown: { inbox: 1, notes: 0, alerts: 1, substitutions: 1, absences: 0, justifications: 1, trash: 0 },
       recent: [
         { id: "186536", mailbox: "inbox", sender: "Marciszak Amelia", topic: "Zebranie z rodzicami", content: "Dzień dobry, serdecznie zapraszam na zebranie, które odbędzie się 9 września (środa)…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
       ],
@@ -232,6 +232,12 @@
       ],
       alerts_recent: [
         { id: "9002", mailbox: "alerts", sender: "Dyrekcja", topic: "Alert bezpieczeństwa", content: "Przypominamy o zasadach bezpieczeństwa podczas przerw międzylekcyjnych…", date: iso(new Date(today.getTime() - 4 * 86400000)), unread: true, has_attachment: false },
+      ],
+      // Mirrors a real submitted-but-not-yet-accepted excuse (2026-09-06,
+      // user request: "wysłałem teraz usprawiedliwienie - jest
+      // niezaakceptowane jeszcze").
+      justifications_recent: [
+        { id: "9003", mailbox: "justifications", sender: "Wychowawca", topic: "Usprawiedliwienie nieobecności", content: "Twoje usprawiedliwienie nieobecności z dnia 3 września oczekuje na akceptację wychowawcy.", date: iso(today), unread: true, has_attachment: false },
       ],
     }, 1);
     addEntity("sensor.school", "school", {
@@ -405,6 +411,11 @@
               sender: "Dyrekcja",
               topic: "Alert bezpieczeństwa",
               content: "Przypominamy o zasadach bezpieczeństwa podczas przerw międzylekcyjnych - zakaz biegania po korytarzach i klatkach schodowych.\n\nProsimy o przypomnienie dzieciom tych zasad w domu.",
+            },
+            "justifications:9003": {
+              sender: "Wychowawca",
+              topic: "Usprawiedliwienie nieobecności",
+              content: "Twoje usprawiedliwienie nieobecności z dnia 3 września zostało złożone i oczekuje na akceptację wychowawcy.\n\nStatus: OCZEKUJE",
             },
           };
           const key = `${msg.service_data.mailbox ?? "inbox"}:${msg.service_data.message_id}`;

@@ -54,9 +54,9 @@ export const pl: Record<keyof typeof en, string> = {
   "card.messages.read_notice": "Otwarcie oznaczy jako przeczytane w Librusie",
   "card.messages.fetch_failed": "Nie udało się pobrać pełnej treści",
 
-  "card.substitutions.title": "Zastępstwa i alerty",
+  "card.substitutions.title": "Zastępstwa, alerty i usprawiedliwienia",
   "card.substitutions.subtitle": "Wiadomości specjalne",
-  "card.substitutions.empty": "Brak zastępstw ani alertów",
+  "card.substitutions.empty": "Brak zastępstw, alertów ani usprawiedliwień",
   "mailbox.inbox": "Odebrane",
   "mailbox.notes": "Uwagi",
   "mailbox.alerts": "Alerty",

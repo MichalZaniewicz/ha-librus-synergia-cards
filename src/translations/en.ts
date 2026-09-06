@@ -53,9 +53,9 @@ export const en = {
   "card.messages.read_notice": "Opening marks it as read in Librus",
   "card.messages.fetch_failed": "Couldn't load the full message",
 
-  "card.substitutions.title": "Substitutions & alerts",
-  "card.substitutions.subtitle": "Zastępstwa i alerty",
-  "card.substitutions.empty": "No substitutions or alerts",
+  "card.substitutions.title": "Substitutions, alerts & justifications",
+  "card.substitutions.subtitle": "Zastępstwa, alerty i usprawiedliwienia",
+  "card.substitutions.empty": "No substitutions, alerts, or justifications",
   "mailbox.inbox": "Inbox",
   "mailbox.notes": "Notes",
   "mailbox.alerts": "Alerts",

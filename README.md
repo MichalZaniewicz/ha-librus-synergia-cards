@@ -35,7 +35,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Behaviour notices tile | `custom:librus-behaviour-notices-tile-card` | Compact single-row tile - count + latest category |
 | Messages | `custom:librus-messages-card` | Unread counts across every Wiadomości mailbox, with a preview of recent inbox messages - click one to load its full content (requires `ha-librus-synergia` 0.4.11+; this marks the message read in Librus, exactly like opening it in the Librus app) |
 | Messages tile | `custom:librus-messages-tile-card` | Compact single-row tile - unread count + latest sender/topic |
-| Substitutions & alerts | `custom:librus-substitutions-card` | Full content (not just a count) for "Zastępstwa" and "Alerty" - click one to load it in full (requires `ha-librus-synergia` 0.4.13+) |
+| Substitutions, alerts & justifications | `custom:librus-substitutions-card` | Full content (not just a count) for "Zastępstwa", "Alerty" and "Usprawiedliwienia" (a submitted absence excuse and its pending/accepted status) - click one to load it in full (requires `ha-librus-synergia` 0.4.13+, justifications 0.4.18+) |
 | Announcements | `custom:librus-announcements-card` | Unread items from the school notice board - click one to expand its full content (requires `ha-librus-synergia` 0.4.17+; no read-marking side effect, unlike Wiadomości) |
 | Announcements tile | `custom:librus-announcements-tile-card` | Compact single-row tile - unread count + latest subject |
 | Homework assignments | `custom:librus-homework-assignments-card` | Real "zadania domowe" with due dates - distinct from the general agenda feed |

@@ -26,10 +26,12 @@ function itemKey(m: RecentMessage): string {
 }
 
 /**
- * Full content (not just an unread count) for the two secondary
- * Wiadomości mailboxes worth actually reading - "Zastępstwa"
- * (substitutions, schedule changes) and "Alerty" (alerts). Same
- * click-to-expand pattern as `librus-messages-card`.
+ * Full content (not just an unread count) for the secondary Wiadomości
+ * mailboxes worth actually reading - "Zastępstwa" (substitutions,
+ * schedule changes), "Alerty" (alerts), and "Usprawiedliwienia"
+ * (justifications - a parent's submitted absence excuse and the school's
+ * response, added 2026-09-06 on user request). Same click-to-expand
+ * pattern as `librus-messages-card`.
  */
 @customElement("librus-substitutions-card")
 export class LibrusSubstitutionsCard extends LibrusBaseCard {
@@ -141,8 +143,9 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
     const entity = map.unread_messages ? hass.states[map.unread_messages] : undefined;
     const substitutions = (entity?.attributes.substitutions_recent as RecentMessage[] | undefined) ?? [];
     const alerts = (entity?.attributes.alerts_recent as RecentMessage[] | undefined) ?? [];
+    const justifications = (entity?.attributes.justifications_recent as RecentMessage[] | undefined) ?? [];
 
-    if (!entity || (substitutions.length === 0 && alerts.length === 0)) {
+    if (!entity || (substitutions.length === 0 && alerts.length === 0 && justifications.length === 0)) {
       return this._message("mdi:bell-alert-outline", t(hass, "card.substitutions.empty"));
     }
 
@@ -157,6 +160,7 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
         </div>
         ${this._renderSection(t(hass, "mailbox.substitutions"), substitutions)}
         ${this._renderSection(t(hass, "mailbox.alerts"), alerts)}
+        ${this._renderSection(t(hass, "mailbox.justifications"), justifications)}
       </ha-card>
     `;
   }
