@@ -8,6 +8,7 @@ import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 
 interface RecentAnnouncement {
+  id: string;
   subject: string;
   content: string;
   start_date: string | null;
@@ -18,6 +19,12 @@ interface RecentAnnouncement {
 @customElement("librus-announcements-card")
 export class LibrusAnnouncementsCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+
+  // Unlike librus-messages-card, the full content is already present in
+  // this attribute (Librus doesn't truncate this endpoint, and reading it
+  // has no server-side "mark as read" side effect) - this is just a local
+  // expand/collapse toggle, no fetch, no loading/error state needed.
+  @state() private _expandedId?: string;
 
   public static getConfigElement(): LovelaceCardEditor {
     return document.createElement("librus-device-editor") as LovelaceCardEditor;
@@ -34,6 +41,10 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
 
   public getCardSize(): number {
     return 2;
+  }
+
+  private _toggleExpanded(id: string): void {
+    this._expandedId = this._expandedId === id ? undefined : id;
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -64,7 +75,7 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
         <div class="scroll-list">
           ${recent.map(
             (a) => html`
-              <div class="list-item">
+              <div class="list-item clickable" @click=${() => this._toggleExpanded(a.id)}>
                 <span class="dot neutral"></span>
                 <div class="body">
                   <div class="row1">${a.subject}</div>
@@ -73,6 +84,9 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
                         ${formatShortDate(a.start_date, hass.language)} –
                         ${formatShortDate(a.end_date, hass.language)}
                       </div>`
+                    : nothing}
+                  ${this._expandedId === a.id
+                    ? html`<div class="full-text">${a.content}</div>`
                     : nothing}
                 </div>
               </div>
@@ -83,7 +97,22 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
     `;
   }
 
-  static styles = [librusTokens, librusSharedStyles];
+  static styles = [
+    librusTokens,
+    librusSharedStyles,
+    css`
+      .list-item.clickable {
+        cursor: pointer;
+      }
+      .full-text {
+        font-size: 0.75rem;
+        color: var(--primary-text-color);
+        margin-top: 4px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+    `,
+  ];
 }
 
 declare global {
