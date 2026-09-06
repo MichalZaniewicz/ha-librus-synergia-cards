@@ -6,8 +6,10 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t, type TranslationKey } from "./utils/localize";
+import { fetchFullMessage, type FullMessage } from "./utils/services";
 
 interface RecentMessage {
+  id: string;
   sender: string;
   topic: string;
   content: string;
@@ -30,6 +32,14 @@ const MAILBOXES: { key: string; label: TranslationKey }[] = [
 export class LibrusMessagesCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
 
+  // Click-to-expand full message content (see utils/services.ts). Keyed by
+  // message id so switching between messages, or re-rendering for an
+  // unrelated reason (a poll cycle), doesn't lose what's already loaded.
+  @state() private _expandedId?: string;
+  @state() private _fullById: Record<string, FullMessage> = {};
+  @state() private _pendingIds: Set<string> = new Set();
+  @state() private _errorIds: Set<string> = new Set();
+
   public static getConfigElement(): LovelaceCardEditor {
     return document.createElement("librus-device-editor") as LovelaceCardEditor;
   }
@@ -45,6 +55,60 @@ export class LibrusMessagesCard extends LibrusBaseCard {
 
   public getCardSize(): number {
     return 3;
+  }
+
+  /**
+   * Fetches a message's full content via the `get_message` service on
+   * first click, caches it, and toggles the expanded row. CONFIRMED (see
+   * the integration's README/changelog): this marks the message read on
+   * Librus's own servers - deliberately only ever triggered by this
+   * direct click handler, never by anything automatic.
+   */
+  private async _onMessageClick(m: RecentMessage): Promise<void> {
+    if (this._expandedId === m.id) {
+      this._expandedId = undefined;
+      return;
+    }
+    this._expandedId = m.id;
+    if (this._fullById[m.id] || this._pendingIds.has(m.id)) return;
+
+    const resolved = this._resolveEntities();
+    if ("error" in resolved || !this.hass) return;
+
+    this._pendingIds = new Set(this._pendingIds).add(m.id);
+    const nextErrors = new Set(this._errorIds);
+    nextErrors.delete(m.id);
+    this._errorIds = nextErrors;
+
+    try {
+      const full = await fetchFullMessage(this.hass, resolved.deviceId, m.id);
+      this._fullById = { ...this._fullById, [m.id]: full };
+    } catch {
+      this._errorIds = new Set(this._errorIds).add(m.id);
+    } finally {
+      const stillPending = new Set(this._pendingIds);
+      stillPending.delete(m.id);
+      this._pendingIds = stillPending;
+    }
+  }
+
+  private _renderMessageBody(m: RecentMessage): TemplateResult {
+    const hass = this.hass!;
+    if (this._expandedId !== m.id) {
+      return html`<div class="item-text"><b>${m.topic}</b> - ${m.content}</div>`;
+    }
+    const full = this._fullById[m.id];
+    if (full) {
+      return html`
+        <div class="item-text"><b>${full.topic}</b></div>
+        <div class="full-text">${full.content}</div>
+        <div class="read-notice">${t(hass, "card.messages.read_notice")}</div>
+      `;
+    }
+    if (this._errorIds.has(m.id)) {
+      return html`<div class="item-text"><b>${m.topic}</b> - ${t(hass, "card.messages.fetch_failed")}</div>`;
+    }
+    return html`<div class="item-text"><b>${m.topic}</b> - ${t(hass, "empty.loading")}</div>`;
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -89,14 +153,14 @@ export class LibrusMessagesCard extends LibrusBaseCard {
               <div class="scroll-list">
                 ${recent.slice(0, 6).map(
                   (m) => html`
-                    <div class="list-item">
+                    <div class="list-item clickable" @click=${() => this._onMessageClick(m)}>
                       <span class="dot ${m.unread ? "good" : "neutral"}"></span>
                       <div class="body">
                         <div class="row1">
                           <span>${m.sender}</span>
                           ${m.date ? html`<time>${formatShortDate(m.date, hass.language)}</time>` : nothing}
                         </div>
-                        <div class="item-text"><b>${m.topic}</b> - ${m.content}</div>
+                        ${this._renderMessageBody(m)}
                       </div>
                     </div>
                   `
@@ -108,7 +172,28 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     `;
   }
 
-  static styles = [librusTokens, librusSharedStyles];
+  static styles = [
+    librusTokens,
+    librusSharedStyles,
+    css`
+      .list-item.clickable {
+        cursor: pointer;
+      }
+      .full-text {
+        font-size: 0.75rem;
+        color: var(--primary-text-color);
+        margin-top: 4px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+      .read-notice {
+        font-size: 0.65rem;
+        color: var(--secondary-text-color);
+        font-style: italic;
+        margin-top: 6px;
+      }
+    `,
+  ];
 }
 
 declare global {

@@ -35,6 +35,8 @@ export const en = {
 
   "card.messages.title": "Messages",
   "card.messages.unavailable": "Messages module not enabled",
+  "card.messages.read_notice": "Opening marks it as read in Librus",
+  "card.messages.fetch_failed": "Couldn't load the full message",
   "mailbox.inbox": "Inbox",
   "mailbox.notes": "Notes",
   "mailbox.alerts": "Alerts",

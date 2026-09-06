@@ -36,6 +36,8 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.messages.title": "Wiadomości",
   "card.messages.unavailable": "Moduł wiadomości nie jest włączony",
+  "card.messages.read_notice": "Otwarcie oznaczy jako przeczytane w Librusie",
+  "card.messages.fetch_failed": "Nie udało się pobrać pełnej treści",
   "mailbox.inbox": "Odebrane",
   "mailbox.notes": "Uwagi",
   "mailbox.alerts": "Alerty",

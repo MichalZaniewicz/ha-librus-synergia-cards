@@ -197,7 +197,7 @@
     addEntity("sensor.unread_messages", "unread_messages", {
       mailbox_breakdown: { inbox: 1, notes: 0, alerts: 0, substitutions: 0, absences: 0, justifications: 0, trash: 0 },
       recent: [
-        { sender: "Marciszak Amelia", topic: "Zebranie z rodzicami", content: "Dzień dobry, serdecznie zapraszam na zebranie, które odbędzie się 9 września (środa)…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
+        { id: "186536", sender: "Marciszak Amelia", topic: "Zebranie z rodzicami", content: "Dzień dobry, serdecznie zapraszam na zebranie, które odbędzie się 9 września (środa)…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
       ],
     }, 1);
     addEntity("sensor.school", "school", {
@@ -321,6 +321,26 @@
           const evStart = new Date(ev.allDay ? `${ev.start}T00:00:00` : ev.start).getTime();
           return evStart >= rangeStart && evStart < rangeEnd;
         });
+      },
+      // Mocks librus_synergia.get_message (see utils/services.ts) - real
+      // full-message content this integration actually fetched from a
+      // live account, so the click-to-expand demo shows authentic text.
+      callWS: async (msg) => {
+        if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "get_message") {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          return {
+            response: {
+              id: msg.service_data.message_id,
+              sender: "Marciszak Amelia",
+              topic: "Zebranie z rodzicami",
+              content: "Dzień dobry,\nserdecznie zapraszam na zebranie, które odbędzie się 9 września (środa) o godz. 17:00 w sali 213.\n\nPodczas spotkania:\n zostanie przedstawiony plan wychowawczy na rok szkolny 2026/2027,\n zostaną rozdane dokumenty do aktualizacji,\n omówimy najważniejsze kwestie organizacyjne i wychowawcze dotyczące nowego roku szkolnego.\n\nBędzie to również okazja do przekazania najważniejszych informacji dotyczących naszej klasy i wspólnego ustalenia zasad dobrej współpracy.\n\nLiczę na Państwa obecność.\nZ wyrazami szacunku,\nAmelia Marciszak",
+              send_date: iso(new Date(today.getTime() - 2 * 86400000)),
+              read_date: iso(today),
+              has_attachment: false,
+            },
+          };
+        }
+        return {};
       },
     };
 
