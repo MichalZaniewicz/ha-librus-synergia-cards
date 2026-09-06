@@ -788,7 +788,7 @@ const de=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
             `)}
         </div>
       </ha-card>
-    `:this._message("mdi:text-box-outline",ke(i,"card.descriptive_grades.empty"))}};He.styles=[Ce,Se],e([ve()],He.prototype,"_config",void 0),He=e([de("librus-descriptive-grades-card")],He);const Ke=/obecno|present/i;let Fe=class extends ze{static getConfigElement(){return document.createElement("librus-device-editor")}static getStubConfig(){return{type:"custom:librus-attendance-card"}}setConfig(e){this._config=e,this._configuredDeviceId=e.device_id}getCardSize(){return 2}render(){if(!this._config||!this.hass)return W;this._syncTheme();const e=this._resolveEntities();if("error"in e)return e.error;const{map:t}=e,i=this.hass,s=t.attendance?i.states[t.attendance]:void 0;if(!s)return this._message("mdi:calendar-remove",ke(i,"empty.generic_error"));const a=s.attributes.breakdown??{},r=s.attributes.total_records??0,n=s.attributes.percentage,o=s.attributes.by_semester??{},c=Object.entries(o).sort(([e],[t])=>Number(e)-Number(t)),d=Number(s.state)||0,l=Object.entries(a),u=l.map(([e,t])=>({flexGrow:Math.max(t,.001),colorVar:Ke.test(e)?"var(--lc-good)":"var(--lc-bad)",title:`${e}: ${t}`}));return K`
+    `:this._message("mdi:text-box-outline",ke(i,"card.descriptive_grades.empty"))}};He.styles=[Ce,Se],e([ve()],He.prototype,"_config",void 0),He=e([de("librus-descriptive-grades-card")],He);const Ke=/^obecno|^present/i;let Fe=class extends ze{static getConfigElement(){return document.createElement("librus-device-editor")}static getStubConfig(){return{type:"custom:librus-attendance-card"}}setConfig(e){this._config=e,this._configuredDeviceId=e.device_id}getCardSize(){return 2}render(){if(!this._config||!this.hass)return W;this._syncTheme();const e=this._resolveEntities();if("error"in e)return e.error;const{map:t}=e,i=this.hass,s=t.attendance?i.states[t.attendance]:void 0;if(!s)return this._message("mdi:calendar-remove",ke(i,"empty.generic_error"));const a=s.attributes.breakdown??{},r=s.attributes.presence_by_type,n=s.attributes.total_records??0,o=s.attributes.percentage,c=s.attributes.by_semester??{},d=Object.entries(c).sort(([e],[t])=>Number(e)-Number(t)),l=Number(s.state)||0,u=Object.entries(a),h=e=>r?.[e]??Ke.test(e),v=u.map(([e,t])=>({flexGrow:Math.max(t,.001),colorVar:h(e)?"var(--lc-good)":"var(--lc-bad)",title:`${e}: ${t}`}));return K`
       <ha-card>
         <div class="header">
           <div class="icon-badge bad"><ha-icon icon="mdi:calendar-remove"></ha-icon></div>
@@ -798,22 +798,22 @@ const de=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
           </div>
         </div>
         <div class="stats">
-          ${null!=n?K`
-                <div class="stat ${n>=90?"good":n<75?"bad":""}">
-                  <div class="stat-value">${n}<span class="unit">%</span></div>
+          ${null!=o?K`
+                <div class="stat ${o>=90?"good":o<75?"bad":""}">
+                  <div class="stat-value">${o}<span class="unit">%</span></div>
                   <div class="stat-label">${ke(i,"stat.percentage")}</div>
                 </div>
               `:W}
           <div class="stat bad">
-            <div class="stat-value">${d}</div>
+            <div class="stat-value">${l}</div>
             <div class="stat-label">${ke(i,"stat.absences")}</div>
           </div>
           <div class="stat">
-            <div class="stat-value">${r}</div>
+            <div class="stat-value">${n}</div>
             <div class="stat-label">${ke(i,"stat.records")}</div>
           </div>
         </div>
-        ${u.length?function(e){return K`
+        ${v.length?function(e){return K`
     <div class="bar">
       ${e.map(e=>K`<div
             class="seg"
@@ -821,22 +821,22 @@ const de=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
             title=${e.title??""}
           ></div>`)}
     </div>
-  `}(u):W}
-        ${l.length?K`
+  `}(v):W}
+        ${u.length?K`
               <div class="legend">
-                ${l.map(([e,t])=>K`
+                ${u.map(([e,t])=>K`
                     <span class="legend-item">
-                      <span class="legend-dot ${Ke.test(e)?"good":"bad"}"></span>${e}
+                      <span class="legend-dot ${h(e)?"good":"bad"}"></span>${e}
                       <b>${t}</b>
                     </span>
                   `)}
               </div>
             `:W}
-        ${c.length>1?K`
+        ${d.length>1?K`
               <hr />
               <div class="semester-block">
                 <div class="semester-title">${ke(i,"card.attendance.by_semester")}</div>
-                ${c.map(([e,t])=>K`
+                ${d.map(([e,t])=>K`
                     <div class="semester-row">
                       <span>${ke(i,"card.attendance.semester",{n:e})}</span>
                       <span class="semester-pct">${null!=t.percentage?`${t.percentage}%`:"–"}</span>
@@ -948,7 +948,7 @@ const de=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
       <ha-card class="tile">
         <div class="icon-badge ${"negative"===r?.sentiment?"bad":"positive"===r?.sentiment?"good":""}"><ha-icon icon="mdi:alert-circle-outline"></ha-icon></div>
         <div class="tile-body">
-          <div class="subj">${a}</div>
+          <div class="subj">${a} ${ke(i,"card.behaviour_notices.title").toLowerCase()}</div>
           ${r?.category?K`<div class="meta">${r.category}</div>`:W}
         </div>
       </ha-card>
@@ -1148,7 +1148,7 @@ const de=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
           <ha-icon icon="mdi:bullhorn-outline"></ha-icon>
         </div>
         <div class="tile-body">
-          <div class="subj">${a}</div>
+          <div class="subj">${a} ${ke(i,"card.announcements.title").toLowerCase()}</div>
           ${r?K`<div class="meta">${r.subject}</div>`:W}
         </div>
       </ha-card>

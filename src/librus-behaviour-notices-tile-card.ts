@@ -55,7 +55,7 @@ export class LibrusBehaviourNoticesTileCard extends LibrusBaseCard {
       <ha-card class="tile">
         <div class="icon-badge ${badgeClass}"><ha-icon icon="mdi:alert-circle-outline"></ha-icon></div>
         <div class="tile-body">
-          <div class="subj">${count}</div>
+          <div class="subj">${count} ${t(hass, "card.behaviour_notices.title").toLowerCase()}</div>
           ${latest?.category ? html`<div class="meta">${latest.category}</div>` : nothing}
         </div>
       </ha-card>

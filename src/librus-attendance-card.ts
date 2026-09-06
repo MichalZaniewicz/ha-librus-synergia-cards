@@ -7,7 +7,16 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { segmentedBar, type BarSegment } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 
-const PRESENT_HINT = /obecno|present/i;
+// Fallback ONLY, for an older librus_synergia (pre-0.4.16) that doesn't yet
+// expose `presence_by_type` - anchored to the START of the name so it
+// doesn't match "Nieobecność" (absence), which contains "obecność" as a
+// literal substring (a real bug: both "Obecność" and "Nieobecność" used to
+// render with the same color because of that). Even anchored, this is
+// still a guess from Polish text - it can't know that "Spóźnienie"/late or
+// "Zwolnienie"/excused-release also count as presence for THIS school, only
+// `presence_by_type` (sourced from the school's own AttendanceTypes
+// config) knows that.
+const PRESENT_HINT = /^obecno|^present/i;
 
 @customElement("librus-attendance-card")
 export class LibrusAttendanceCard extends LibrusBaseCard {
@@ -43,6 +52,7 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
     if (!entity) return this._message("mdi:calendar-remove", t(hass, "empty.generic_error"));
 
     const breakdown = (entity.attributes.breakdown as Record<string, number> | undefined) ?? {};
+    const presenceByType = entity.attributes.presence_by_type as Record<string, boolean> | undefined;
     const total = (entity.attributes.total_records as number | undefined) ?? 0;
     const percentage = entity.attributes.percentage as number | null | undefined;
     const bySemester =
@@ -52,10 +62,11 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
     const semesters = Object.entries(bySemester).sort(([a], [b]) => Number(a) - Number(b));
     const absences = Number(entity.state) || 0;
     const entries = Object.entries(breakdown);
+    const isPresent = (name: string): boolean => presenceByType?.[name] ?? PRESENT_HINT.test(name);
 
     const segments: BarSegment[] = entries.map(([name, count]) => ({
       flexGrow: Math.max(count, 0.001),
-      colorVar: PRESENT_HINT.test(name) ? "var(--lc-good)" : "var(--lc-bad)",
+      colorVar: isPresent(name) ? "var(--lc-good)" : "var(--lc-bad)",
       title: `${name}: ${count}`,
     }));
 
@@ -93,7 +104,7 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
                 ${entries.map(
                   ([name, count]) => html`
                     <span class="legend-item">
-                      <span class="legend-dot ${PRESENT_HINT.test(name) ? "good" : "bad"}"></span>${name}
+                      <span class="legend-dot ${isPresent(name) ? "good" : "bad"}"></span>${name}
                       <b>${count}</b>
                     </span>
                   `

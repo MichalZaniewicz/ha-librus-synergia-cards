@@ -55,7 +55,7 @@ export class LibrusAnnouncementsTileCard extends LibrusBaseCard {
           <ha-icon icon="mdi:bullhorn-outline"></ha-icon>
         </div>
         <div class="tile-body">
-          <div class="subj">${unread}</div>
+          <div class="subj">${unread} ${t(hass, "card.announcements.title").toLowerCase()}</div>
           ${latest ? html`<div class="meta">${latest.subject}</div>` : nothing}
         </div>
       </ha-card>
