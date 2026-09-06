@@ -203,6 +203,27 @@ const de=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
     gap: 9px;
     max-height: 320px;
     overflow-y: auto;
+    /* A gutter before the scrollbar, and a slim, theme-aware thumb instead
+       of the browser's default boxy grey scrollbar (which clashes with
+       this card family's rounded, colored look and otherwise sits flush
+       against the text with no breathing room). Firefox via
+       scrollbar-width/-color, Chromium via ::-webkit-scrollbar. */
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--lc-neutral-dot) transparent;
+  }
+  .scroll-list::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scroll-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scroll-list::-webkit-scrollbar-thumb {
+    background: var(--lc-neutral-dot);
+    border-radius: 999px;
+  }
+  .scroll-list::-webkit-scrollbar-thumb:hover {
+    background: var(--lc-brand);
   }
 
   .dot {
@@ -441,6 +462,22 @@ const de=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
         gap: 8px;
         max-height: 220px;
         overflow-y: auto;
+        padding-right: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--lc-neutral-dot) transparent;
+      }
+      .sub-list::-webkit-scrollbar {
+        width: 6px;
+      }
+      .sub-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .sub-list::-webkit-scrollbar-thumb {
+        background: var(--lc-neutral-dot);
+        border-radius: 999px;
+      }
+      .sub-list::-webkit-scrollbar-thumb:hover {
+        background: var(--lc-brand);
       }
       .sub-row {
         display: flex;

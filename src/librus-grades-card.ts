@@ -124,6 +124,22 @@ export class LibrusGradesCard extends LibrusBaseCard {
         gap: 8px;
         max-height: 220px;
         overflow-y: auto;
+        padding-right: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--lc-neutral-dot) transparent;
+      }
+      .sub-list::-webkit-scrollbar {
+        width: 6px;
+      }
+      .sub-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .sub-list::-webkit-scrollbar-thumb {
+        background: var(--lc-neutral-dot);
+        border-radius: 999px;
+      }
+      .sub-list::-webkit-scrollbar-thumb:hover {
+        background: var(--lc-brand);
       }
       .sub-row {
         display: flex;

@@ -130,6 +130,27 @@ export const librusSharedStyles = css`
     gap: 9px;
     max-height: 320px;
     overflow-y: auto;
+    /* A gutter before the scrollbar, and a slim, theme-aware thumb instead
+       of the browser's default boxy grey scrollbar (which clashes with
+       this card family's rounded, colored look and otherwise sits flush
+       against the text with no breathing room). Firefox via
+       scrollbar-width/-color, Chromium via ::-webkit-scrollbar. */
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--lc-neutral-dot) transparent;
+  }
+  .scroll-list::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scroll-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scroll-list::-webkit-scrollbar-thumb {
+    background: var(--lc-neutral-dot);
+    border-radius: 999px;
+  }
+  .scroll-list::-webkit-scrollbar-thumb:hover {
+    background: var(--lc-brand);
   }
 
   .dot {
