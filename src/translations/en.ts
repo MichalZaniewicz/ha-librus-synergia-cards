@@ -79,6 +79,10 @@ export const en = {
   "card.next_lesson.title": "Next lesson",
   "card.next_lesson.empty": "No more lessons today",
   "label.in_minutes": "in {minutes} min",
+  "label.in_hours": "in {hours}h",
+  "label.in_hours_minutes": "in {hours}h {minutes}m",
+  "label.in_days": "in {days}d",
+  "label.in_days_hours": "in {days}d {hours}h",
 
   "card.agenda.title": "Agenda",
   "card.agenda.subtitle": "Upcoming",

@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { minutesUntil, formatTime } from "./utils/format";
-import { t } from "./utils/localize";
+import { t, formatCountdown } from "./utils/localize";
 
 /**
  * Reads the `timetable` calendar entity's OWN state attributes rather than
@@ -78,7 +78,7 @@ export class LibrusNextLessonTileCard extends LibrusBaseCard {
           <div class="meta">
             ${isNow
               ? t(hass, "label.now")
-              : `${formatTime(startTime.replace(" ", "T"))} · ${t(hass, "label.in_minutes", { minutes })}`}
+              : `${formatTime(startTime.replace(" ", "T"))} · ${formatCountdown(hass, minutes)}`}
             ${location ? ` · ${location}` : ""}${description ? ` · ${description}` : ""}
           </div>
         </div>

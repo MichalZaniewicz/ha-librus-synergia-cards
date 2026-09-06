@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { minutesUntil } from "./utils/format";
-import { t } from "./utils/localize";
+import { t, formatCountdown } from "./utils/localize";
 
 const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
 
@@ -95,7 +95,7 @@ export class LibrusTodayCard extends LibrusBaseCard {
                 <div class="body">
                   <div class="row1">${message}</div>
                   ${!isNow
-                    ? html`<div class="item-text">${t(hass, "label.in_minutes", { minutes: minutesUntil(new Date(startTime.replace(" ", "T")), new Date()) })}</div>`
+                    ? html`<div class="item-text">${formatCountdown(hass, minutesUntil(new Date(startTime.replace(" ", "T")), new Date()))}</div>`
                     : nothing}
                 </div>
               </div>

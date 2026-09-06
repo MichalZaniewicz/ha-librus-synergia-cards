@@ -277,7 +277,9 @@
     }
 
     // Calendars - state attributes mirror what a real HA CalendarEntity exposes.
-    const nextLessonStart = new Date(now.getTime() + 12 * 60000);
+    // 612 min out on purpose - matches a real "za 612 min" screenshot that
+    // prompted formatCountdown()'s hours/days granularity (2026-09-06).
+    const nextLessonStart = new Date(now.getTime() + 612 * 60000);
     addEntity("calendar.timetable", "timetable", {
       message: "Biologia", start_time: nextLessonStart.toISOString().replace("T", " ").slice(0, 19),
       end_time: new Date(nextLessonStart.getTime() + 45 * 60000).toISOString().replace("T", " ").slice(0, 19),

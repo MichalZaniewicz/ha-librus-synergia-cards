@@ -30,6 +30,30 @@ export function t(
   return str;
 }
 
+/**
+ * Locale-aware "in X" countdown, picking minutes/hours(+minutes)/days(+hours)
+ * granularity by magnitude - "in 612 min" for a lesson ~10h away is much
+ * harder to read at a glance than "in 10h 12m".
+ */
+export function formatCountdown(hass: LibrusHass | undefined, totalMinutes: number): string {
+  const minutes = Math.max(0, Math.round(totalMinutes));
+  if (minutes < 60) {
+    return t(hass, "label.in_minutes", { minutes });
+  }
+  if (minutes < 60 * 24) {
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    return rest === 0
+      ? t(hass, "label.in_hours", { hours })
+      : t(hass, "label.in_hours_minutes", { hours, minutes: rest });
+  }
+  const days = Math.floor(minutes / (60 * 24));
+  const hours = Math.floor((minutes % (60 * 24)) / 60);
+  return hours === 0
+    ? t(hass, "label.in_days", { days })
+    : t(hass, "label.in_days_hours", { days, hours });
+}
+
 /** Picks a `*_one` / `*_other` key pair by count - a two-way plural split. */
 export function tPlural(
   hass: LibrusHass | undefined,

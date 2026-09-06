@@ -80,6 +80,10 @@ export const pl: Record<keyof typeof en, string> = {
   "card.next_lesson.title": "Najbliższa lekcja",
   "card.next_lesson.empty": "Koniec lekcji na dziś",
   "label.in_minutes": "za {minutes} min",
+  "label.in_hours": "za {hours} godz.",
+  "label.in_hours_minutes": "za {hours} godz. {minutes} min",
+  "label.in_days": "za {days} dni",
+  "label.in_days_hours": "za {days} dni {hours} godz.",
 
   "card.agenda.title": "Terminarz",
   "card.agenda.subtitle": "Nadchodzące",
