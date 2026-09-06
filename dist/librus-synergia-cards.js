@@ -1128,8 +1128,8 @@ const de=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
           </div>
         </div>
         <div class="scroll-list">
-          ${a.map(e=>K`
-              <div class="list-item clickable" @click=${()=>this._toggleExpanded(e.id)}>
+          ${a.map((e,t)=>{const s=e.id??String(t);return K`
+              <div class="list-item clickable" @click=${()=>this._toggleExpanded(s)}>
                 <span class="dot neutral"></span>
                 <div class="body">
                   <div class="row1">${e.subject}</div>
@@ -1137,10 +1137,10 @@ const de=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
                         ${De(e.start_date,i.language)} –
                         ${De(e.end_date,i.language)}
                       </div>`:W}
-                  ${this._expandedId===e.id?K`<div class="full-text">${e.content}</div>`:W}
+                  ${this._expandedId===s?K`<div class="full-text">${e.content}</div>`:W}
                 </div>
               </div>
-            `)}
+            `})}
         </div>
       </ha-card>
     `:this._message("mdi:bullhorn-outline",ke(i,"card.announcements.empty"))}};it.styles=[Se,Ee,n`

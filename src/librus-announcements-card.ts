@@ -8,7 +8,7 @@ import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 
 interface RecentAnnouncement {
-  id: string;
+  id?: string;
   subject: string;
   content: string;
   start_date: string | null;
@@ -73,9 +73,16 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="scroll-list">
-          ${recent.map(
-            (a) => html`
-              <div class="list-item clickable" @click=${() => this._toggleExpanded(a.id)}>
+          ${recent.map((a, i) => {
+            // Fall back to the array index when `id` is missing (an
+            // ha-librus-synergia older than 0.4.17, which added this
+            // field) - REAL BUG found live: comparing against `undefined`
+            // on every row made the toggle a permanent no-op
+            // (`undefined === undefined` is always true, so it kept
+            // resetting itself back to collapsed on every click).
+            const key = a.id ?? String(i);
+            return html`
+              <div class="list-item clickable" @click=${() => this._toggleExpanded(key)}>
                 <span class="dot neutral"></span>
                 <div class="body">
                   <div class="row1">${a.subject}</div>
@@ -85,13 +92,11 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
                         ${formatShortDate(a.end_date, hass.language)}
                       </div>`
                     : nothing}
-                  ${this._expandedId === a.id
-                    ? html`<div class="full-text">${a.content}</div>`
-                    : nothing}
+                  ${this._expandedId === key ? html`<div class="full-text">${a.content}</div>` : nothing}
                 </div>
               </div>
-            `
-          )}
+            `;
+          })}
         </div>
       </ha-card>
     `;
