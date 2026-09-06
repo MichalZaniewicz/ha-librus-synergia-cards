@@ -1,6 +1,6 @@
 {
   "name": "ha-librus-synergia-cards",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "type": "module",
   "description": "Custom Lovelace cards for the librus_synergia Home Assistant integration",

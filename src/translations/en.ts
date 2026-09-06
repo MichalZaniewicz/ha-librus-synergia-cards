@@ -109,6 +109,7 @@ export const en = {
 
   "card.lucky_number.title": "Lucky number",
   "card.lucky_number.subtitle": "Today in the register",
+  "card.lucky_number.subtitle_for_date": "For {date}",
 
   "card.student.title": "Student card",
   "stat.overall_rating": "overall",

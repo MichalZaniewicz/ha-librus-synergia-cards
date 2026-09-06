@@ -48,7 +48,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | School & class | `custom:librus-school-card` | School name/address/head teacher, class, homeroom teacher, semester dates |
 | Today | `custom:librus-today-card` | Lucky number, unread messages/announcements and the next lesson in one card |
 | Week in review | `custom:librus-week-summary-card` | New grades, absences, notices and the next agenda item this week |
-| Lucky number | `custom:librus-lucky-number-card` | Today's "szczęśliwy numerek" in large type |
+| Lucky number | `custom:librus-lucky-number-card` | The latest "szczęśliwy numerek" in large type - labeled "For {date}" instead of "Today" when Librus has published the next school day's number ahead of time (requires `ha-librus-synergia` 0.4.15+) |
 | Student card | `custom:librus-student-card` | A playful trading-card style summary computed from attendance/behaviour/grades/activity |
 | Absence-free streak | `custom:librus-streak-card` | How many consecutive days since the last real absence |
 

@@ -158,7 +158,24 @@
     const DEVICE_ID = "dev1";
     const now = new Date();
     const today = new Date(now); today.setHours(0, 0, 0, 0);
-    const iso = (d) => d.toISOString().slice(0, 10);
+    // BUG FIX (2026-09-06, found live): `d.toISOString().slice(0, 10)`
+    // converts through UTC first - local midnight in a UTC+2 timezone
+    // (Warsaw, September) is 22:00 the PREVIOUS day in UTC, so every
+    // bare-date mock field built this way was silently one day too early
+    // (caught via the lucky-number card showing "Na 6 wrz" for a mock
+    // deliberately set to "tomorrow" while the harness's real wall-clock
+    // date was the 6th - should have read "7 wrz"). Build the ISO string
+    // from LOCAL year/month/day components instead, which is what every
+    // call site here actually intends (a calendar DATE, not a UTC
+    // instant) - matches the exact bug class already fixed twice this
+    // session in the real backend/card code, this time in the dev
+    // harness's own mock data.
+    const iso = (d) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    };
 
     const SUBJECTS = [
       { id: 1, name: "Matematyka" },
@@ -187,7 +204,13 @@
         "2": { total: 0, present: 0, percentage: null },
       },
     }, 1);
-    addEntity("sensor.lucky_number", "lucky_number", {}, 28);
+    // CONFIRMED live (2026-09-06): Librus can publish the NEXT school
+    // day's number a day ahead - shown here exactly as observed live on
+    // a Sunday (today has no school, "4" is actually Monday's number).
+    addEntity("sensor.lucky_number", "lucky_number", {
+      day: iso(new Date(today.getTime() + 1 * 86400000)),
+      is_today: false,
+    }, 4);
     addEntity("sensor.unread_announcements", "unread_announcements", {
       recent: [
         { subject: "Kandydaci do Rady Samorządu Uczniowskiego", content: "Zgłoszenia przyjmujemy do końca miesiąca.", start_date: iso(today), end_date: iso(new Date(today.getTime() + 29 * 86400000)), creation_date: iso(today) },

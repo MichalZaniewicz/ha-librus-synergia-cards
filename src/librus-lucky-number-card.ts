@@ -4,6 +4,7 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
+import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 
 const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
@@ -43,13 +44,27 @@ export class LibrusLuckyNumberCard extends LibrusBaseCard {
       return this._message("mdi:dice-5-outline", t(hass, "empty.generic_error"));
     }
 
+    // CONFIRMED live (integration 0.4.15+): Librus can publish the NEXT
+    // school day's number a day ahead (e.g. Monday's already visible on
+    // Sunday) - `is_today`/`day` let this card say which day it's
+    // actually for instead of always claiming "today". Older integration
+    // versions don't send these attributes yet - `is_today === undefined`
+    // falls back to the original "today" copy rather than showing
+    // anything broken.
+    const isToday = entity.attributes.is_today as boolean | null | undefined;
+    const day = entity.attributes.day as string | null | undefined;
+    const subtitle =
+      isToday === false && day
+        ? t(hass, "card.lucky_number.subtitle_for_date", { date: formatShortDate(day, hass.language) })
+        : t(hass, "card.lucky_number.subtitle");
+
     return html`
       <ha-card class="static">
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:dice-5-outline"></ha-icon></div>
           <div class="title-block">
             <div class="title">${t(hass, "card.lucky_number.title")}</div>
-            <div class="subtitle">${t(hass, "card.lucky_number.subtitle")}</div>
+            <div class="subtitle">${subtitle}</div>
           </div>
         </div>
         <div class="number-wrap">

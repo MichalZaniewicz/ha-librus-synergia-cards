@@ -110,6 +110,7 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.lucky_number.title": "Szczęśliwy numerek",
   "card.lucky_number.subtitle": "Dziś w dzienniku",
+  "card.lucky_number.subtitle_for_date": "Na {date}",
 
   "card.student.title": "Karta ucznia",
   "stat.overall_rating": "ocena ogólna",

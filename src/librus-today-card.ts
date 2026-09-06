@@ -70,7 +70,14 @@ export class LibrusTodayCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="stats">
-          ${lucky && !UNAVAILABLE.has(lucky.state)
+          ${// CONFIRMED live (integration 0.4.15+): Librus can publish
+          // the NEXT school day's number a day ahead of when it's
+          // actually "today's" - this card's whole premise is "what
+          // matters today", so only show the tile when it genuinely
+          // is today's number (older integration versions don't send
+          // is_today yet - undefined still shows it, matching the
+          // original behavior for anyone who hasn't updated).
+          lucky && !UNAVAILABLE.has(lucky.state) && lucky.attributes.is_today !== false
             ? html`<div class="stat"><div class="stat-value">${lucky.state}</div><div class="stat-label">${t(hass, "stat.lucky_number")}</div></div>`
             : nothing}
           ${messages && !UNAVAILABLE.has(messages.state)
