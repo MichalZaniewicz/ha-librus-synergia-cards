@@ -24,14 +24,22 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Grade average | `custom:librus-grades-card` | Overall weighted average and per-subject averages with comparison bars |
 | Grade log | `custom:librus-grade-log-card` | Every grade from every subject, newest first, one chronological list |
 | Subject grades | `custom:librus-subject-grades-card` | Every grade from ONE subject you pick in the card's own config |
+| Grade trend | `custom:librus-grade-trend-card` | How the overall (or one subject's) average has moved over the last 60 days, from its own state history |
+| Grade distribution | `custom:librus-grade-distribution-card` | Histogram - how many 6s/5s/4s/... across every subject |
 | Latest grade | `custom:librus-latest-grade-card` | The most recent grade across all subjects, with the teacher's comment if any |
 | Behaviour grade | `custom:librus-behaviour-grade-card` | The formal "ocena zachowania" - distinct from the free-text notices below |
 | Descriptive grades | `custom:librus-descriptive-grades-card` | Non-numeric descriptive assessment, for schools that use it |
-| Attendance | `custom:librus-attendance-card` | Real absences and lates, with the full per-type breakdown |
+| Attendance | `custom:librus-attendance-card` | Real absences and lates, full per-type breakdown, independently-computed percentage, and a per-semester breakdown |
+| Attendance tile | `custom:librus-attendance-tile-card` | Compact single-row tile - absence count + percentage |
 | Behaviour notices | `custom:librus-behaviour-notices-card` | Recent "uwagi" with category and sentiment (positive/negative/neutral) |
+| Behaviour notices tile | `custom:librus-behaviour-notices-tile-card` | Compact single-row tile - count + latest category |
 | Messages | `custom:librus-messages-card` | Unread counts across every Wiadomości mailbox, with a preview of recent inbox messages - click one to load its full content (requires `ha-librus-synergia` 0.4.11+; this marks the message read in Librus, exactly like opening it in the Librus app) |
+| Messages tile | `custom:librus-messages-tile-card` | Compact single-row tile - unread count + latest sender/topic |
+| Substitutions & alerts | `custom:librus-substitutions-card` | Full content (not just a count) for "Zastępstwa" and "Alerty" - click one to load it in full (requires `ha-librus-synergia` 0.4.13+) |
 | Announcements | `custom:librus-announcements-card` | Unread items from the school notice board |
+| Announcements tile | `custom:librus-announcements-tile-card` | Compact single-row tile - unread count + latest subject |
 | Homework assignments | `custom:librus-homework-assignments-card` | Real "zadania domowe" with due dates - distinct from the general agenda feed |
+| What's new | `custom:librus-recent-activity-card` | One chronological feed merging the most recent grades, notices, announcements and messages |
 | Today's lessons | `custom:librus-today-lessons-card` | A timeline of today's timetable, highlighting the current lesson |
 | Next lesson | `custom:librus-next-lesson-tile-card` | A single-row tile with the next (or current) lesson, for denser dashboards |
 | Agenda | `custom:librus-agenda-card` | Upcoming terminarz events, grouped by date |
@@ -56,6 +64,14 @@ type: custom:librus-grades-card
 ```yaml
 type: custom:librus-subject-grades-card
 subject_id: 42005
+```
+
+**Grade trend** uses the same subject-picker editor, but `subject_id` is *optional* there -
+leave it unset for the Overall average's trend, or set it for one subject's:
+
+```yaml
+type: custom:librus-grade-trend-card
+subject_id: 42005 # omit for the overall average
 ```
 
 ## Languages

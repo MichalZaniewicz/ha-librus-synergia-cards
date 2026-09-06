@@ -10,6 +10,18 @@ export const en = {
   "card.grades.subtitle": "All subjects",
   "card.grades.empty": "No grades yet this year",
 
+  "card.grade_trend.title": "Grade trend",
+  "card.grade_trend.subtitle": "Last {days} days",
+  "card.grade_trend.empty": "Not enough history yet",
+
+  "card.grade_distribution.title": "Grade distribution",
+  "card.grade_distribution.subtitle": "{count} grades, all subjects",
+  "card.grade_distribution.other": "other",
+
+  "card.recent_activity.title": "What's new",
+  "card.recent_activity.subtitle": "Grades, notices, announcements & messages",
+  "card.recent_activity.empty": "Nothing new yet",
+
   "card.grade_log.title": "Grade log",
   "card.grade_log.subtitle": "All subjects",
 
@@ -26,9 +38,12 @@ export const en = {
 
   "card.attendance.title": "Attendance",
   "card.attendance.subtitle": "This school year",
+  "card.attendance.by_semester": "By semester",
+  "card.attendance.semester": "Semester {n}",
   "stat.absences": "Absences",
   "stat.late": "Late",
   "stat.records": "Records",
+  "stat.percentage": "Attendance",
 
   "card.behaviour_notices.title": "Behaviour notices",
   "card.behaviour_notices.empty": "No notices",
@@ -37,6 +52,10 @@ export const en = {
   "card.messages.unavailable": "Messages module not enabled",
   "card.messages.read_notice": "Opening marks it as read in Librus",
   "card.messages.fetch_failed": "Couldn't load the full message",
+
+  "card.substitutions.title": "Substitutions & alerts",
+  "card.substitutions.subtitle": "Zastępstwa i alerty",
+  "card.substitutions.empty": "No substitutions or alerts",
   "mailbox.inbox": "Inbox",
   "mailbox.notes": "Notes",
   "mailbox.alerts": "Alerts",

@@ -44,6 +44,12 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
 
     const breakdown = (entity.attributes.breakdown as Record<string, number> | undefined) ?? {};
     const total = (entity.attributes.total_records as number | undefined) ?? 0;
+    const percentage = entity.attributes.percentage as number | null | undefined;
+    const bySemester =
+      (entity.attributes.by_semester as
+        | Record<string, { total: number; present: number; percentage: number | null }>
+        | undefined) ?? {};
+    const semesters = Object.entries(bySemester).sort(([a], [b]) => Number(a) - Number(b));
     const absences = Number(entity.state) || 0;
     const entries = Object.entries(breakdown);
 
@@ -63,6 +69,14 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="stats">
+          ${percentage != null
+            ? html`
+                <div class="stat ${percentage >= 90 ? "good" : percentage < 75 ? "bad" : ""}">
+                  <div class="stat-value">${percentage}<span class="unit">%</span></div>
+                  <div class="stat-label">${t(hass, "stat.percentage")}</div>
+                </div>
+              `
+            : nothing}
           <div class="stat bad">
             <div class="stat-value">${absences}</div>
             <div class="stat-label">${t(hass, "stat.absences")}</div>
@@ -82,6 +96,22 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
                       <span class="legend-dot ${PRESENT_HINT.test(name) ? "good" : "bad"}"></span>${name}
                       <b>${count}</b>
                     </span>
+                  `
+                )}
+              </div>
+            `
+          : nothing}
+        ${semesters.length > 1
+          ? html`
+              <hr />
+              <div class="semester-block">
+                <div class="semester-title">${t(hass, "card.attendance.by_semester")}</div>
+                ${semesters.map(
+                  ([n, s]) => html`
+                    <div class="semester-row">
+                      <span>${t(hass, "card.attendance.semester", { n })}</span>
+                      <span class="semester-pct">${s.percentage != null ? `${s.percentage}%` : "–"}</span>
+                    </div>
                   `
                 )}
               </div>
@@ -121,6 +151,23 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
       }
       .legend-dot.bad {
         background: var(--lc-bad);
+      }
+      .semester-title {
+        font-size: 0.65rem;
+        color: var(--secondary-text-color);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 4px;
+      }
+      .semester-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.78rem;
+        padding: 3px 0;
+      }
+      .semester-pct {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
       }
     `,
   ];

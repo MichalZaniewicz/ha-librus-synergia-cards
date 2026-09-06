@@ -11,6 +11,18 @@ export const pl: Record<keyof typeof en, string> = {
   "card.grades.subtitle": "Wszystkie przedmioty",
   "card.grades.empty": "Brak ocen w tym roku szkolnym",
 
+  "card.grade_trend.title": "Trend średniej",
+  "card.grade_trend.subtitle": "Ostatnie {days} dni",
+  "card.grade_trend.empty": "Za mało historii",
+
+  "card.grade_distribution.title": "Rozkład ocen",
+  "card.grade_distribution.subtitle": "{count} ocen, wszystkie przedmioty",
+  "card.grade_distribution.other": "inne",
+
+  "card.recent_activity.title": "Co nowego",
+  "card.recent_activity.subtitle": "Oceny, uwagi, ogłoszenia i wiadomości",
+  "card.recent_activity.empty": "Nic nowego",
+
   "card.grade_log.title": "Dziennik ocen",
   "card.grade_log.subtitle": "Wszystkie przedmioty",
 
@@ -27,9 +39,12 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.attendance.title": "Frekwencja",
   "card.attendance.subtitle": "W tym roku szkolnym",
+  "card.attendance.by_semester": "Wg semestru",
+  "card.attendance.semester": "Semestr {n}",
   "stat.absences": "Nieobecności",
   "stat.late": "Spóźnienia",
   "stat.records": "Rekordów",
+  "stat.percentage": "Frekwencja",
 
   "card.behaviour_notices.title": "Uwagi",
   "card.behaviour_notices.empty": "Brak uwag",
@@ -38,6 +53,10 @@ export const pl: Record<keyof typeof en, string> = {
   "card.messages.unavailable": "Moduł wiadomości nie jest włączony",
   "card.messages.read_notice": "Otwarcie oznaczy jako przeczytane w Librusie",
   "card.messages.fetch_failed": "Nie udało się pobrać pełnej treści",
+
+  "card.substitutions.title": "Zastępstwa i alerty",
+  "card.substitutions.subtitle": "Wiadomości specjalne",
+  "card.substitutions.empty": "Brak zastępstw ani alertów",
   "mailbox.inbox": "Odebrane",
   "mailbox.notes": "Uwagi",
   "mailbox.alerts": "Alerty",

@@ -181,6 +181,11 @@
       breakdown: { "Obecność": 146, "Spóźnienie": 2, "Nieobecność": 1 },
       total_records: 149,
       last_absence_date: iso(new Date(today.getTime() - 18 * 86400000)),
+      percentage: 99.3,
+      by_semester: {
+        "1": { total: 149, present: 148, percentage: 99.3 },
+        "2": { total: 0, present: 0, percentage: null },
+      },
     }, 1);
     addEntity("sensor.lucky_number", "lucky_number", {}, 28);
     addEntity("sensor.unread_announcements", "unread_announcements", {
@@ -195,9 +200,15 @@
       ],
     }, 2);
     addEntity("sensor.unread_messages", "unread_messages", {
-      mailbox_breakdown: { inbox: 1, notes: 0, alerts: 0, substitutions: 0, absences: 0, justifications: 0, trash: 0 },
+      mailbox_breakdown: { inbox: 1, notes: 0, alerts: 1, substitutions: 1, absences: 0, justifications: 0, trash: 0 },
       recent: [
-        { id: "186536", sender: "Marciszak Amelia", topic: "Zebranie z rodzicami", content: "Dzień dobry, serdecznie zapraszam na zebranie, które odbędzie się 9 września (środa)…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
+        { id: "186536", mailbox: "inbox", sender: "Marciszak Amelia", topic: "Zebranie z rodzicami", content: "Dzień dobry, serdecznie zapraszam na zebranie, które odbędzie się 9 września (środa)…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
+      ],
+      substitutions_recent: [
+        { id: "9001", mailbox: "substitutions", sender: "System zastępstw", topic: "Zmiana w planie lekcji", content: "Jutro (7 wrz) lekcja fizyki o 11:40 zostanie odwołana z powodu nieobecności nauczyciela…", date: iso(new Date(today.getTime() - 1 * 86400000)), unread: true, has_attachment: false },
+      ],
+      alerts_recent: [
+        { id: "9002", mailbox: "alerts", sender: "Dyrekcja", topic: "Alert bezpieczeństwa", content: "Przypominamy o zasadach bezpieczeństwa podczas przerw międzylekcyjnych…", date: iso(new Date(today.getTime() - 4 * 86400000)), unread: true, has_attachment: false },
       ],
     }, 1);
     addEntity("sensor.school", "school", {
@@ -303,6 +314,25 @@
       ],
     };
 
+    // Mocks GET history/period/... for librus-grade-trend-card - a plausible
+    // stepped-upward series (average only changes when a real grade lands,
+    // matching this integration's own thinning behaviour, not one point per poll).
+    function buildMockGradeHistory(steps) {
+      // Each [dayOffset, value] pair is dayOffset days BEFORE today.
+      return steps.map(([daysAgo, value]) => ({
+        state: String(value),
+        last_changed: new Date(today.getTime() - daysAgo * 86400000).toISOString(),
+      }));
+    }
+    const historyByEntity = {
+      "sensor.overall_average": buildMockGradeHistory([
+        [58, 4.1], [50, 4.1], [49, 4.25], [38, 4.25], [37, 4.4], [23, 4.4], [22, 4.55], [8, 4.55], [7, 4.68], [0, 4.68],
+      ]),
+      "sensor.subject_1_average": buildMockGradeHistory([
+        [58, 4.5], [46, 4.5], [45, 4.8], [28, 4.8], [27, 5.0], [13, 5.0], [12, 4.9], [0, 4.9],
+      ]),
+    };
+
     const hass = {
       language: "pl",
       themes: { darkMode: false },
@@ -311,16 +341,23 @@
       states,
       localize: (key) => key,
       callApi: async (method, path) => {
-        const match = /^calendars\/([^?]+)\?start=([^&]+)&end=([^&]+)/.exec(path);
-        if (!match) return [];
-        const [, entityId, startEnc, endEnc] = match;
-        const rangeStart = new Date(decodeURIComponent(startEnc)).getTime();
-        const rangeEnd = new Date(decodeURIComponent(endEnc)).getTime();
-        const all = calendarEventsByEntity[entityId] ?? [];
-        return all.filter((ev) => {
-          const evStart = new Date(ev.allDay ? `${ev.start}T00:00:00` : ev.start).getTime();
-          return evStart >= rangeStart && evStart < rangeEnd;
-        });
+        const calMatch = /^calendars\/([^?]+)\?start=([^&]+)&end=([^&]+)/.exec(path);
+        if (calMatch) {
+          const [, entityId, startEnc, endEnc] = calMatch;
+          const rangeStart = new Date(decodeURIComponent(startEnc)).getTime();
+          const rangeEnd = new Date(decodeURIComponent(endEnc)).getTime();
+          const all = calendarEventsByEntity[entityId] ?? [];
+          return all.filter((ev) => {
+            const evStart = new Date(ev.allDay ? `${ev.start}T00:00:00` : ev.start).getTime();
+            return evStart >= rangeStart && evStart < rangeEnd;
+          });
+        }
+        const historyMatch = /^history\/period\/[^?]+\?filter_entity_id=([^&]+)/.exec(path);
+        if (historyMatch) {
+          const entityId = decodeURIComponent(historyMatch[1]);
+          return [historyByEntity[entityId] ?? []];
+        }
+        return [];
       },
       // Mocks librus_synergia.get_message (see utils/services.ts) - real
       // full-message content this integration actually fetched from a
@@ -328,12 +365,30 @@
       callWS: async (msg) => {
         if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "get_message") {
           await new Promise((resolve) => setTimeout(resolve, 500));
-          return {
-            response: {
-              id: msg.service_data.message_id,
+          const fullContentByKey = {
+            "inbox:186536": {
               sender: "Marciszak Amelia",
               topic: "Zebranie z rodzicami",
               content: "Dzień dobry,\nserdecznie zapraszam na zebranie, które odbędzie się 9 września (środa) o godz. 17:00 w sali 213.\n\nPodczas spotkania:\n zostanie przedstawiony plan wychowawczy na rok szkolny 2026/2027,\n zostaną rozdane dokumenty do aktualizacji,\n omówimy najważniejsze kwestie organizacyjne i wychowawcze dotyczące nowego roku szkolnego.\n\nBędzie to również okazja do przekazania najważniejszych informacji dotyczących naszej klasy i wspólnego ustalenia zasad dobrej współpracy.\n\nLiczę na Państwa obecność.\nZ wyrazami szacunku,\nAmelia Marciszak",
+            },
+            "substitutions:9001": {
+              sender: "System zastępstw",
+              topic: "Zmiana w planie lekcji",
+              content: "Jutro (7 wrz) lekcja fizyki o 11:40 zostanie odwołana z powodu nieobecności nauczyciela.\n\nUczniowie klasy 7d w tym czasie mają zajęcia świetlicowe w sali 15.",
+            },
+            "alerts:9002": {
+              sender: "Dyrekcja",
+              topic: "Alert bezpieczeństwa",
+              content: "Przypominamy o zasadach bezpieczeństwa podczas przerw międzylekcyjnych - zakaz biegania po korytarzach i klatkach schodowych.\n\nProsimy o przypomnienie dzieciom tych zasad w domu.",
+            },
+          };
+          const key = `${msg.service_data.mailbox ?? "inbox"}:${msg.service_data.message_id}`;
+          const picked = fullContentByKey[key] ?? fullContentByKey["inbox:186536"];
+          return {
+            response: {
+              id: msg.service_data.message_id,
+              mailbox: msg.service_data.mailbox ?? "inbox",
+              ...picked,
               send_date: iso(new Date(today.getTime() - 2 * 86400000)),
               read_date: iso(today),
               has_attachment: false,
@@ -355,9 +410,16 @@
     const FULL_CARDS = [
       "librus-grades-card", "librus-grade-log-card",
       { tag: "librus-subject-grades-card", config: { type: "custom:librus-subject-grades-card", subject_id: 1 } },
+      "librus-grade-trend-card",
+      { tag: "librus-grade-trend-card", config: { type: "custom:librus-grade-trend-card", subject_id: 1 } },
+      "librus-grade-distribution-card",
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",
-      "librus-attendance-card", "librus-behaviour-notices-card", "librus-messages-card",
-      "librus-announcements-card", "librus-homework-assignments-card",
+      "librus-attendance-card", "librus-attendance-tile-card",
+      "librus-behaviour-notices-card", "librus-behaviour-notices-tile-card",
+      "librus-messages-card", "librus-messages-tile-card",
+      "librus-substitutions-card",
+      "librus-announcements-card", "librus-announcements-tile-card",
+      "librus-homework-assignments-card", "librus-recent-activity-card",
       "librus-today-lessons-card", "librus-next-lesson-tile-card", "librus-agenda-card",
       "librus-free-days-card", "librus-week-timetable-card", "librus-school-card",
       "librus-today-card", "librus-week-summary-card", "librus-lucky-number-card",

@@ -3,14 +3,22 @@ import "./librus-subject-picker-editor";
 import "./librus-grades-card";
 import "./librus-grade-log-card";
 import "./librus-subject-grades-card";
+import "./librus-grade-trend-card";
+import "./librus-grade-distribution-card";
 import "./librus-latest-grade-card";
 import "./librus-behaviour-grade-card";
 import "./librus-descriptive-grades-card";
 import "./librus-attendance-card";
+import "./librus-attendance-tile-card";
 import "./librus-behaviour-notices-card";
+import "./librus-behaviour-notices-tile-card";
 import "./librus-messages-card";
+import "./librus-messages-tile-card";
+import "./librus-substitutions-card";
 import "./librus-announcements-card";
+import "./librus-announcements-tile-card";
 import "./librus-homework-assignments-card";
+import "./librus-recent-activity-card";
 import "./librus-today-lessons-card";
 import "./librus-next-lesson-tile-card";
 import "./librus-agenda-card";
@@ -57,6 +65,18 @@ window.customCards.push(
     preview: true,
   },
   {
+    type: "librus-grade-trend-card",
+    name: "Librus - Trend średniej",
+    description: "Jak zmieniała się średnia (ogólna lub przedmiotu) w ostatnich 60 dniach.",
+    preview: true,
+  },
+  {
+    type: "librus-grade-distribution-card",
+    name: "Librus - Rozkład ocen",
+    description: "Histogram: ile było szóstek, piątek, czwórek itd. ze wszystkich przedmiotów.",
+    preview: true,
+  },
+  {
     type: "librus-latest-grade-card",
     name: "Librus - Ostatnia ocena",
     description: "Najnowsza ocena ze wszystkich przedmiotów, wraz z komentarzem nauczyciela.",
@@ -77,7 +97,13 @@ window.customCards.push(
   {
     type: "librus-attendance-card",
     name: "Librus - Frekwencja",
-    description: "Liczba realnych nieobecności i spóźnień, z rozbiciem na typy.",
+    description: "Liczba realnych nieobecności i spóźnień, z rozbiciem na typy, % i podziałem na semestr.",
+    preview: true,
+  },
+  {
+    type: "librus-attendance-tile-card",
+    name: "Librus - Frekwencja (kafelek)",
+    description: "Kompaktowy kafelek z liczbą nieobecności i frekwencją %.",
     preview: true,
   },
   {
@@ -87,9 +113,27 @@ window.customCards.push(
     preview: true,
   },
   {
+    type: "librus-behaviour-notices-tile-card",
+    name: "Librus - Uwagi (kafelek)",
+    description: "Kompaktowy kafelek z liczbą uwag i ostatnią kategorią.",
+    preview: true,
+  },
+  {
     type: "librus-messages-card",
     name: "Librus - Wiadomości",
     description: "Nieprzeczytane wiadomości ze wszystkich skrzynek i podgląd ostatnich z odebranych.",
+    preview: true,
+  },
+  {
+    type: "librus-messages-tile-card",
+    name: "Librus - Wiadomości (kafelek)",
+    description: "Kompaktowy kafelek z liczbą nieprzeczytanych i ostatnim nadawcą.",
+    preview: true,
+  },
+  {
+    type: "librus-substitutions-card",
+    name: "Librus - Zastępstwa i alerty",
+    description: "Pełna treść zastępstw i alertów - kliknij, by rozwinąć.",
     preview: true,
   },
   {
@@ -99,9 +143,21 @@ window.customCards.push(
     preview: true,
   },
   {
+    type: "librus-announcements-tile-card",
+    name: "Librus - Ogłoszenia (kafelek)",
+    description: "Kompaktowy kafelek z liczbą nieprzeczytanych ogłoszeń.",
+    preview: true,
+  },
+  {
     type: "librus-homework-assignments-card",
     name: "Librus - Zadania domowe",
     description: "Lista realnych zadań domowych z terminami.",
+    preview: true,
+  },
+  {
+    type: "librus-recent-activity-card",
+    name: "Librus - Co nowego",
+    description: "Wspólny, chronologiczny feed najnowszych ocen, uwag, ogłoszeń i wiadomości.",
     preview: true,
   },
   {
@@ -174,7 +230,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 22 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 30 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );
