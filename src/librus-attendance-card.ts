@@ -1,0 +1,133 @@
+import { html, css, nothing, type TemplateResult } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import type { LovelaceCardEditor } from "custom-card-helpers";
+import type { LibrusCardConfig } from "./utils/types";
+import { LibrusBaseCard } from "./utils/base-card";
+import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
+import { segmentedBar, type BarSegment } from "./utils/render-helpers";
+import { t } from "./utils/localize";
+
+const PRESENT_HINT = /obecno|present/i;
+
+@customElement("librus-attendance-card")
+export class LibrusAttendanceCard extends LibrusBaseCard {
+  @state() private _config?: LibrusCardConfig;
+
+  public static getConfigElement(): LovelaceCardEditor {
+    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+  }
+
+  public static getStubConfig(): LibrusCardConfig {
+    return { type: "custom:librus-attendance-card" };
+  }
+
+  public setConfig(config: LibrusCardConfig): void {
+    this._config = config;
+    this._configuredDeviceId = config.device_id;
+  }
+
+  public getCardSize(): number {
+    return 2;
+  }
+
+  protected render(): TemplateResult | typeof nothing {
+    if (!this._config || !this.hass) return nothing;
+    this._syncTheme();
+
+    const resolved = this._resolveEntities();
+    if ("error" in resolved) return resolved.error;
+    const { map } = resolved;
+    const hass = this.hass;
+
+    const entity = map.attendance ? hass.states[map.attendance] : undefined;
+    if (!entity) return this._message("mdi:calendar-remove", t(hass, "empty.generic_error"));
+
+    const breakdown = (entity.attributes.breakdown as Record<string, number> | undefined) ?? {};
+    const total = (entity.attributes.total_records as number | undefined) ?? 0;
+    const absences = Number(entity.state) || 0;
+    const entries = Object.entries(breakdown);
+
+    const segments: BarSegment[] = entries.map(([name, count]) => ({
+      flexGrow: Math.max(count, 0.001),
+      colorVar: PRESENT_HINT.test(name) ? "var(--lc-good)" : "var(--lc-bad)",
+      title: `${name}: ${count}`,
+    }));
+
+    return html`
+      <ha-card>
+        <div class="header">
+          <div class="icon-badge bad"><ha-icon icon="mdi:calendar-remove"></ha-icon></div>
+          <div class="title-block">
+            <div class="title">${t(hass, "card.attendance.title")}</div>
+            <div class="subtitle">${t(hass, "card.attendance.subtitle")}</div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat bad">
+            <div class="stat-value">${absences}</div>
+            <div class="stat-label">${t(hass, "stat.absences")}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">${total}</div>
+            <div class="stat-label">${t(hass, "stat.records")}</div>
+          </div>
+        </div>
+        ${segments.length ? segmentedBar(segments) : nothing}
+        ${entries.length
+          ? html`
+              <div class="legend">
+                ${entries.map(
+                  ([name, count]) => html`
+                    <span class="legend-item">
+                      <span class="legend-dot ${PRESENT_HINT.test(name) ? "good" : "bad"}"></span>${name}
+                      <b>${count}</b>
+                    </span>
+                  `
+                )}
+              </div>
+            `
+          : nothing}
+      </ha-card>
+    `;
+  }
+
+  static styles = [
+    librusTokens,
+    librusSharedStyles,
+    css`
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 14px;
+        font-size: 0.7rem;
+        color: var(--secondary-text-color);
+      }
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .legend-item b {
+        color: var(--primary-text-color);
+      }
+      .legend-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .legend-dot.good {
+        background: var(--lc-good);
+      }
+      .legend-dot.bad {
+        background: var(--lc-bad);
+      }
+    `,
+  ];
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "librus-attendance-card": LibrusAttendanceCard;
+  }
+}

@@ -1,0 +1,108 @@
+import { html, css, nothing, type TemplateResult } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import type { LovelaceCardEditor } from "custom-card-helpers";
+import type { LibrusCardConfig } from "./utils/types";
+import { LibrusBaseCard } from "./utils/base-card";
+import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
+import { minutesUntil } from "./utils/format";
+import { t } from "./utils/localize";
+
+const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
+
+@customElement("librus-today-card")
+export class LibrusTodayCard extends LibrusBaseCard {
+  @state() private _config?: LibrusCardConfig;
+  private _tickTimer?: ReturnType<typeof setInterval>;
+
+  public static getConfigElement(): LovelaceCardEditor {
+    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+  }
+
+  public static getStubConfig(): LibrusCardConfig {
+    return { type: "custom:librus-today-card" };
+  }
+
+  public setConfig(config: LibrusCardConfig): void {
+    this._config = config;
+    this._configuredDeviceId = config.device_id;
+  }
+
+  public getCardSize(): number {
+    return 2;
+  }
+
+  public connectedCallback(): void {
+    super.connectedCallback();
+    this._tickTimer = setInterval(() => this.requestUpdate(), 60_000);
+  }
+
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearInterval(this._tickTimer);
+  }
+
+  protected render(): TemplateResult | typeof nothing {
+    if (!this._config || !this.hass) return nothing;
+    this._syncTheme();
+
+    const resolved = this._resolveEntities();
+    if ("error" in resolved) return resolved.error;
+    const { map } = resolved;
+    const hass = this.hass;
+    const get = (key: string) => (map[key] ? hass.states[map[key]] : undefined);
+
+    const lucky = get("lucky_number");
+    const messages = get("unread_messages");
+    const announcements = get("unread_announcements");
+    const timetable = get("timetable");
+
+    const message = timetable?.attributes.message as string | undefined;
+    const startTime = timetable?.attributes.start_time as string | undefined;
+    const isNow = timetable?.state === "on";
+
+    return html`
+      <ha-card>
+        <div class="header">
+          <div class="icon-badge amber"><ha-icon icon="mdi:white-balance-sunny"></ha-icon></div>
+          <div class="title-block">
+            <div class="title">${t(hass, "card.today.title")}</div>
+            <div class="subtitle">${new Date().toLocaleDateString(hass.language, { weekday: "long", day: "numeric", month: "long" })}</div>
+          </div>
+        </div>
+        <div class="stats">
+          ${lucky && !UNAVAILABLE.has(lucky.state)
+            ? html`<div class="stat"><div class="stat-value">${lucky.state}</div><div class="stat-label">${t(hass, "stat.lucky_number")}</div></div>`
+            : nothing}
+          ${messages && !UNAVAILABLE.has(messages.state)
+            ? html`<div class="stat"><div class="stat-value">${messages.state}</div><div class="stat-label">${t(hass, "stat.unread_messages")}</div></div>`
+            : nothing}
+          ${announcements && !UNAVAILABLE.has(announcements.state)
+            ? html`<div class="stat"><div class="stat-value">${announcements.state}</div><div class="stat-label">${t(hass, "stat.new_announcements")}</div></div>`
+            : nothing}
+        </div>
+        ${message && startTime
+          ? html`
+              <hr />
+              <div class="list-item">
+                <span class="dot ${isNow ? "good" : "neutral"}"></span>
+                <div class="body">
+                  <div class="row1">${message}</div>
+                  ${!isNow
+                    ? html`<div class="item-text">${t(hass, "label.in_minutes", { minutes: minutesUntil(new Date(startTime.replace(" ", "T")), new Date()) })}</div>`
+                    : nothing}
+                </div>
+              </div>
+            `
+          : nothing}
+      </ha-card>
+    `;
+  }
+
+  static styles = [librusTokens, librusSharedStyles];
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    "librus-today-card": LibrusTodayCard;
+  }
+}

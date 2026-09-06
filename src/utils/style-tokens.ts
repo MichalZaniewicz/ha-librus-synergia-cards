@@ -1,0 +1,291 @@
+import { css } from "lit";
+
+/**
+ * Brand palette sampled from the librus_synergia integration's own brand
+ * icon (an indigo notebook with an amber bookmark ribbon - see
+ * `ha-librus-synergia/custom_components/librus_synergia/brand/icon.png`),
+ * so this card family reads as the same product. Semantic severity colors
+ * (good/warning/bad - used for attendance, sentiment, streaks) are
+ * deliberately separate from that brand accent.
+ */
+export const librusTokens = css`
+  :host {
+    --lc-brand: #4f46e5;
+    --lc-brand-strong: #3730a3;
+    --lc-brand-bg: #ebe9fc;
+    --lc-ring-track: #e4e1f7;
+    --lc-amber: #e08e1d;
+    --lc-amber-bg: #fbebd1;
+    --lc-chip-bg: rgba(79, 70, 229, 0.06);
+    --lc-good: #2e8f57;
+    --lc-good-bg: #e1f3e7;
+    --lc-warn: #e08e1d;
+    --lc-warn-bg: #fbebd1;
+    --lc-bad: #c6444b;
+    --lc-bad-bg: #f9e3e4;
+    --lc-neutral-dot: #b4b0cf;
+  }
+  :host(.dark) {
+    --lc-brand: #948cf2;
+    --lc-brand-strong: #b4acf7;
+    --lc-brand-bg: rgba(148, 140, 242, 0.16);
+    --lc-ring-track: #302d4e;
+    --lc-amber: #f3ae4e;
+    --lc-amber-bg: rgba(243, 174, 78, 0.15);
+    --lc-chip-bg: rgba(255, 255, 255, 0.06);
+    --lc-good: #5fc98a;
+    --lc-good-bg: rgba(95, 201, 138, 0.14);
+    --lc-warn: #f3ae4e;
+    --lc-warn-bg: rgba(243, 174, 78, 0.15);
+    --lc-bad: #e27c81;
+    --lc-bad-bg: rgba(226, 124, 129, 0.14);
+    --lc-neutral-dot: #6d698c;
+  }
+`;
+
+/** Layout/component classes shared by every card - keeps the family visually consistent. */
+export const librusSharedStyles = css`
+  ha-card {
+    cursor: pointer;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+  }
+  ha-card.static {
+    cursor: default;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+  .icon-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--lc-brand-bg);
+    color: var(--lc-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .icon-badge.amber {
+    background: var(--lc-amber-bg);
+    color: var(--lc-amber);
+  }
+  .icon-badge.good {
+    background: var(--lc-good-bg);
+    color: var(--lc-good);
+  }
+  .icon-badge.bad {
+    background: var(--lc-bad-bg);
+    color: var(--lc-bad);
+  }
+  .title-block {
+    min-width: 0;
+    flex: 1;
+  }
+  .title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .subtitle {
+    font-size: 0.76rem;
+    color: var(--secondary-text-color);
+    margin-top: 1px;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px dashed var(--divider-color);
+    margin: 0;
+  }
+
+  .stat-value {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar {
+    display: flex;
+    height: 9px;
+    border-radius: 5px;
+    overflow: hidden;
+    background: var(--divider-color);
+  }
+  .seg {
+    min-width: 2px;
+  }
+
+  .ring {
+    flex: none;
+  }
+
+  .scroll-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: block;
+    flex: none;
+    margin-top: 5px;
+  }
+  .dot.good {
+    background: var(--lc-good);
+  }
+  .dot.bad {
+    background: var(--lc-bad);
+  }
+  .dot.neutral {
+    background: var(--lc-neutral-dot);
+  }
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 8px;
+  }
+  .stat {
+    flex: 1 1 74px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-value {
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1.2;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+  .stat-value .unit {
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: var(--secondary-text-color);
+  }
+  .stat-label {
+    font-size: 0.66rem;
+    color: var(--secondary-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .stat.good .stat-value {
+    color: var(--lc-good);
+  }
+  .stat.bad .stat-value {
+    color: var(--lc-bad);
+  }
+
+  .list-item {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+  }
+  .list-item .body {
+    min-width: 0;
+    flex: 1;
+  }
+  .row1 {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .row1 time {
+    font-weight: 600;
+    color: var(--secondary-text-color);
+    font-size: 0.68rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .cat-label {
+    font-size: 0.65rem;
+    color: var(--lc-brand);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .item-text {
+    font-size: 0.75rem;
+    color: var(--secondary-text-color);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .quote {
+    font-size: 0.72rem;
+    color: var(--secondary-text-color);
+    font-style: italic;
+    margin-top: 3px;
+  }
+  .quote::before {
+    content: "\\201C";
+  }
+  .quote::after {
+    content: "\\201D";
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--lc-chip-bg);
+    color: var(--secondary-text-color);
+    border-radius: 999px;
+    padding: 3px 9px 3px 7px;
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+  .chip .n {
+    font-weight: 800;
+    color: var(--primary-text-color);
+  }
+  .chip.hot {
+    background: var(--lc-brand-bg);
+    color: var(--lc-brand-strong);
+  }
+  .chip.hot .n {
+    color: var(--lc-brand-strong);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--secondary-text-color);
+  }
+  .empty ha-icon {
+    --mdc-icon-size: 28px;
+    opacity: 0.7;
+  }
+  .empty .t1 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--primary-text-color);
+  }
+  .empty .t2 {
+    font-size: 0.76rem;
+    max-width: 26ch;
+  }
+`;

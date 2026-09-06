@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<title>librus-synergia-cards dev harness</title>
+<style>
+  :root {
+    --primary-text-color: #1d1b33;
+    --secondary-text-color: #6b6885;
+    --divider-color: #e1def2;
+    --card-background-color: #ffffff;
+    --ha-card-border-radius: 14px;
+    --ha-card-box-shadow: 0 1px 2px rgba(29, 27, 51, 0.05), 0 6px 16px rgba(29, 27, 51, 0.08);
+    color-scheme: light;
+  }
+  body.dark {
+    --primary-text-color: #eeecfb;
+    --secondary-text-color: #a9a5c8;
+    --divider-color: #33304f;
+    --card-background-color: #1c1a32;
+    --ha-card-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 20px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: #f3f1fb;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  body.dark {
+    background: #131226;
+  }
+  h1 {
+    color: var(--primary-text-color);
+    font-size: 1.1rem;
+  }
+  button#toggle,
+  select#lang {
+    margin-bottom: 20px;
+    margin-right: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--divider-color);
+    background: var(--card-background-color);
+    color: var(--primary-text-color);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .section {
+    color: var(--secondary-text-color);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 28px 0 10px;
+  }
+  /* Masonry/Pinterest-style packing (CSS columns) - a uniform grid leaves
+     dead space under every card shorter than its row's tallest neighbor,
+     which looks especially bad in a family with this much size variance
+     (a lucky-number tile next to a scrollable message list). */
+  .grid {
+    column-count: 4;
+    column-gap: 16px;
+  }
+  .grid > * {
+    display: block;
+    width: 100%;
+    break-inside: avoid;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 1400px) {
+    .grid { column-count: 3; }
+  }
+  @media (max-width: 1000px) {
+    .grid { column-count: 2; }
+  }
+  @media (max-width: 640px) {
+    .grid { column-count: 1; }
+  }
+</style>
+</head>
+<body>
+  <h1>librus-synergia-cards dev harness (mock hass, no live HA needed)</h1>
+  <button id="toggle" type="button">Toggle dark mode</button>
+  <select id="lang">
+    <option value="pl">Polski</option>
+    <option value="en">English</option>
+  </select>
+
+  <div class="section">Wszystkie karty</div>
+  <div class="grid" id="full"></div>
+
+  <div class="section">Stany puste / błędy</div>
+  <div class="grid" id="empty"></div>
+
+  <script type="module">
+    // Minimal stand-ins for the real HA frontend elements this bundle
+    // expects. Visual fidelity of icons doesn't matter here (they render
+    // correctly inside real Home Assistant) - this harness exists to
+    // verify each card's OWN data-binding and layout logic against
+    // realistic mock data, not to be a design proof.
+    customElements.define(
+      "ha-card",
+      class extends HTMLElement {
+        connectedCallback() {
+          if (this.shadowRoot) return;
+          const root = this.attachShadow({ mode: "open" });
+          root.innerHTML = `
+            <style>
+              :host {
+                display: block;
+                background: var(--card-background-color);
+                border-radius: var(--ha-card-border-radius, 14px);
+                box-shadow: var(--ha-card-box-shadow);
+                color: var(--primary-text-color);
+              }
+            </style>
+            <slot></slot>
+          `;
+        }
+      }
+    );
+
+    customElements.define(
+      "ha-icon",
+      class extends HTMLElement {
+        static get observedAttributes() { return ["icon"]; }
+        connectedCallback() { this._render(); }
+        attributeChangedCallback() { this._render(); }
+        _render() {
+          if (!this.shadowRoot) this.attachShadow({ mode: "open" });
+          const label = (this.getAttribute("icon") || "?").replace("mdi:", "").slice(0, 2).toUpperCase();
+          this.shadowRoot.innerHTML = `
+            <style>
+              :host { display:inline-flex; align-items:center; justify-content:center; width:1em; height:1em; font-size:20px; }
+              .dot { width:100%; height:100%; border-radius:50%; background:currentColor; opacity:0.16; display:flex; align-items:center; justify-content:center; }
+              .t { font-size:8px; font-weight:800; color:currentColor; }
+            </style>
+            <span class="dot"><span class="t">${label}</span></span>
+          `;
+        }
+      }
+    );
+
+    customElements.define(
+      "ha-select",
+      class extends HTMLElement {
+        connectedCallback() {
+          this.style.display = "none"; // editors aren't exercised in this harness
+        }
+      }
+    );
+    customElements.define("ha-list-item", class extends HTMLElement {});
+
+    // ---- Mock data (realistic values from the real account this session,
+    // plus illustrative examples for endpoints that are still empty there -
+    // see ha-librus-synergia/CLAUDE.md for exactly which is which). ----
+    const DEVICE_ID = "dev1";
+    const now = new Date();
+    const today = new Date(now); today.setHours(0, 0, 0, 0);
+    const iso = (d) => d.toISOString().slice(0, 10);
+
+    const SUBJECTS = [
+      { id: 1, name: "Matematyka" },
+      { id: 2, name: "Język polski" },
+      { id: 3, name: "Biologia" },
+      { id: 4, name: "Historia" },
+      { id: 5, name: "Wychowanie fizyczne" },
+    ];
+
+    const entities = {};
+    const states = {};
+
+    function addEntity(entityId, translationKey, attrs, state) {
+      entities[entityId] = { entity_id: entityId, device_id: DEVICE_ID, platform: "librus_synergia", translation_key: translationKey };
+      states[entityId] = { entity_id: entityId, state: String(state), attributes: attrs };
+    }
+
+    addEntity("sensor.overall_average", "overall_average", {}, "4.68");
+    addEntity("sensor.attendance", "attendance", {
+      breakdown: { "Obecność": 146, "Spóźnienie": 2, "Nieobecność": 1 },
+      total_records: 149,
+      last_absence_date: iso(new Date(today.getTime() - 18 * 86400000)),
+    }, 1);
+    addEntity("sensor.lucky_number", "lucky_number", {}, 28);
+    addEntity("sensor.unread_announcements", "unread_announcements", {
+      recent: [
+        { subject: "Kandydaci do Rady Samorządu Uczniowskiego", content: "Zgłoszenia przyjmujemy do końca miesiąca.", start_date: iso(today), end_date: iso(new Date(today.getTime() + 29 * 86400000)), creation_date: iso(today) },
+      ],
+    }, 1);
+    addEntity("sensor.behaviour_notices", "behaviour_notices", {
+      recent: [
+        { date: iso(new Date(today.getTime() - 3 * 86400000)), sentiment: "positive", category: "Praca na lekcji", text: "Aktywnie uczestniczył w dyskusji na lekcji przyrody." },
+        { date: iso(new Date(today.getTime() - 8 * 86400000)), sentiment: "neutral", category: "Kultura osobista", text: "Zapomniał stroju na WF." },
+      ],
+    }, 2);
+    addEntity("sensor.unread_messages", "unread_messages", {
+      mailbox_breakdown: { inbox: 1, notes: 0, alerts: 0, substitutions: 0, absences: 0, justifications: 0, trash: 0 },
+      recent: [
+        { sender: "Marciszak Amelia", topic: "Zebranie z rodzicami", content: "Dzień dobry, serdecznie zapraszam na zebranie, które odbędzie się 9 września (środa)…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
+      ],
+    }, 1);
+    addEntity("sensor.school", "school", {
+      town: "Wrocław", street: "ul. Kłodzka", head_teacher: "Edyta Krajewska", email: "sekretariat@zsp21.wroc.pl",
+    }, "Zespół Szkolno-Przedszkolny nr 21");
+    addEntity("sensor.school_class", "school_class", {
+      homeroom_teacher: "Amelia Marciszak",
+      school_year_start: iso(new Date(2026, 8, 1)),
+      first_semester_end: iso(new Date(2027, 0, 31)),
+      school_year_end: iso(new Date(2027, 5, 26)),
+    }, "7d");
+    addEntity("sensor.homework_assignments", "homework_assignments", {
+      recent: [
+        { topic: "Matematyka", text: "Zadania 1–5, strona 42 — ułamki dziesiętne.", due_date: iso(new Date(today.getTime() + 2 * 86400000)), date: iso(today), teacher: "Jan Kowalski" },
+        { topic: "Język polski", text: "Wypracowanie: „Moje wakacje” (min. 150 słów).", due_date: iso(new Date(today.getTime() + 6 * 86400000)), date: iso(today), teacher: "Amelia Marciszak" },
+      ],
+    }, 2);
+    addEntity("sensor.behaviour_grade", "behaviour_grade", {
+      recent: [{ short_name: "wz", value: 5, category: "zachowanie", date: iso(today), text: "Aktywny udział w akcji charytatywnej szkoły.", comments: [] }],
+    }, "wz");
+    addEntity("sensor.descriptive_grades", "descriptive_grades", {
+      recent: [{ subject: "Edukacja wczesnoszkolna", value: "Opanował materiał w stopniu bardzo dobrym, chętnie pomaga innym.", skill_id: 1, category_id: null, date: iso(today) }],
+    }, 1);
+
+    for (const s of SUBJECTS) {
+      const entityId = `sensor.subject_${s.id}_average`;
+      const grades = [
+        { value: "5", category: "Sprawdzian", date: iso(new Date(today.getTime() - 1 * 86400000)), comments: ["Świetna praca, tak trzymaj!"] },
+        { value: "4+", category: "Kartkówka", date: iso(new Date(today.getTime() - 9 * 86400000)), comments: [] },
+        { value: "4", category: "Odpowiedź", date: iso(new Date(today.getTime() - 15 * 86400000)), comments: [] },
+      ];
+      addEntity(entityId, "subject_average", {
+        subject_id: s.id,
+        subject: s.name,
+        latest_grade: grades[0].value,
+        latest_grade_date: grades[0].date,
+        latest_grade_comments: grades[0].comments,
+        grade_count: grades.length,
+        grades,
+        proposed_semester_grade: null,
+        final_grade: null,
+      }, (4 + s.id * 0.3).toFixed(2));
+    }
+
+    // Calendars - state attributes mirror what a real HA CalendarEntity exposes.
+    const nextLessonStart = new Date(now.getTime() + 12 * 60000);
+    addEntity("calendar.timetable", "timetable", {
+      message: "Biologia", start_time: nextLessonStart.toISOString().replace("T", " ").slice(0, 19),
+      end_time: new Date(nextLessonStart.getTime() + 45 * 60000).toISOString().replace("T", " ").slice(0, 19),
+      location: "sala 15", description: "K. Nowak",
+    }, "off");
+    const agendaStart = new Date(today.getTime() + 3 * 86400000);
+    addEntity("calendar.agenda", "agenda", {
+      message: "[Zebranie z Rodzicami] Zebranie z rodzicami. Organizacja roku szkolnego 2026/2027.",
+      start_time: iso(agendaStart), end_time: iso(agendaStart), all_day: true, location: null, description: null,
+    }, "off");
+    addEntity("calendar.free_days", "free_days", {
+      message: "Zimowa przerwa świąteczna", start_time: iso(new Date(today.getTime() + 83 * 86400000)), end_time: iso(new Date(today.getTime() + 92 * 86400000)), all_day: true,
+    }, "off");
+
+    // Today's lesson timeline (for librus-today-lessons-card + librus-week-timetable-card)
+    const LESSON_SUBJECTS = ["Matematyka", "Język polski", "Biologia", "Wychowanie fizyczne", "Informatyka"];
+    function buildDayEvents(day, count) {
+      const events = [];
+      let hour = 8, min = 0;
+      for (let i = 0; i < count; i++) {
+        const start = new Date(day); start.setHours(hour, min, 0, 0);
+        const end = new Date(start.getTime() + 45 * 60000);
+        events.push({
+          start: start.toISOString(), end: end.toISOString(), allDay: false,
+          summary: LESSON_SUBJECTS[(i + day.getDay()) % LESSON_SUBJECTS.length],
+          location: `sala ${10 + i}`, description: "Nauczyciel " + String.fromCharCode(65 + i),
+        });
+        min += 55; if (min >= 60) { min -= 60; hour += 1; }
+      }
+      return events;
+    }
+    // "This week" per ISO (Monday-start) - matches librus-week-timetable-card's
+    // own `mondayOf()` exactly, so its Mon-Fri query range actually finds
+    // these mock events regardless of which real weekday this harness
+    // happens to be opened on.
+    const isoWeekdayOf = (d) => { const w = d.getDay(); return w === 0 ? 7 : w; };
+    const mondayOfWeek = (d) => { const m = new Date(d); m.setDate(m.getDate() - (isoWeekdayOf(d) - 1)); m.setHours(0, 0, 0, 0); return m; };
+    const weekMonday = mondayOfWeek(today);
+    const weekdayEvents = [0, 1, 2, 3, 4].flatMap((offset) => buildDayEvents(new Date(weekMonday.getTime() + offset * 86400000), 5));
+    // librus-today-lessons-card queries exactly [today, tomorrow) - reuse
+    // the matching weekday's mock lessons when today is Mon-Fri; on a
+    // weekend (no real lessons), still show a demo set dated today so the
+    // card has something to render when previewing on a Saturday/Sunday.
+    const todayIsWeekday = isoWeekdayOf(today) <= 5;
+    const calendarEventsByEntity = {
+      "calendar.timetable": [
+        ...weekdayEvents,
+        ...(todayIsWeekday ? [] : buildDayEvents(today, 5)),
+      ],
+      "calendar.agenda": [
+        { start: iso(agendaStart), end: iso(new Date(agendaStart.getTime() + 86400000)), allDay: true, summary: "[Zebranie z Rodzicami] Zebranie z rodzicami. Organizacja roku szkolnego 2026/2027.", description: null },
+        { start: iso(new Date(today.getTime() + 9 * 86400000)), end: iso(new Date(today.getTime() + 10 * 86400000)), allDay: true, summary: "[Sprawdzian] Matematyka: Ułamki dziesiętne, dział 2.", description: null },
+      ],
+      "calendar.free_days": [
+        { start: iso(new Date(today.getTime() + 83 * 86400000)), end: iso(new Date(today.getTime() + 92 * 86400000)), allDay: true, summary: "Zimowa przerwa świąteczna" },
+        { start: iso(new Date(today.getTime() + 150 * 86400000)), end: iso(new Date(today.getTime() + 151 * 86400000)), allDay: true, summary: "Dzień wolny od zajęć dydaktycznych" },
+      ],
+    };
+
+    const hass = {
+      language: "pl",
+      themes: { darkMode: false },
+      devices: { [DEVICE_ID]: { id: DEVICE_ID, name: "E-dziennik Kacper Zaniewicz" } },
+      entities,
+      states,
+      localize: (key) => key,
+      callApi: async (method, path) => {
+        const match = /^calendars\/([^?]+)\?start=([^&]+)&end=([^&]+)/.exec(path);
+        if (!match) return [];
+        const [, entityId, startEnc, endEnc] = match;
+        const rangeStart = new Date(decodeURIComponent(startEnc)).getTime();
+        const rangeEnd = new Date(decodeURIComponent(endEnc)).getTime();
+        const all = calendarEventsByEntity[entityId] ?? [];
+        return all.filter((ev) => {
+          const evStart = new Date(ev.allDay ? `${ev.start}T00:00:00` : ev.start).getTime();
+          return evStart >= rangeStart && evStart < rangeEnd;
+        });
+      },
+    };
+
+    const emptyHass = {
+      ...hass,
+      entities: {},
+      states: {},
+      devices: {},
+      callApi: async () => [],
+    };
+
+    const FULL_CARDS = [
+      "librus-grades-card", "librus-grade-log-card",
+      { tag: "librus-subject-grades-card", config: { type: "custom:librus-subject-grades-card", subject_id: 1 } },
+      "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",
+      "librus-attendance-card", "librus-behaviour-notices-card", "librus-messages-card",
+      "librus-announcements-card", "librus-homework-assignments-card",
+      "librus-today-lessons-card", "librus-next-lesson-tile-card", "librus-agenda-card",
+      "librus-free-days-card", "librus-week-timetable-card", "librus-school-card",
+      "librus-today-card", "librus-week-summary-card", "librus-lucky-number-card",
+      "librus-student-card", "librus-streak-card",
+    ];
+
+    function mountCard(container, tag, hassObj, config) {
+      const el = document.createElement(tag);
+      el.setConfig(config || { type: `custom:${tag}` });
+      el.hass = hassObj;
+      container.appendChild(el);
+      return el;
+    }
+
+    import("../dist/librus-synergia-cards.js").then(() => {
+      const fullGrid = document.getElementById("full");
+      const cardEls = [];
+      for (const entry of FULL_CARDS) {
+        const tag = typeof entry === "string" ? entry : entry.tag;
+        const config = typeof entry === "string" ? undefined : entry.config;
+        cardEls.push(mountCard(fullGrid, tag, hass, config));
+      }
+
+      const emptyGrid = document.getElementById("empty");
+      const emptyEls = [];
+      for (const entry of FULL_CARDS) {
+        const tag = typeof entry === "string" ? entry : entry.tag;
+        const config = typeof entry === "string" ? undefined : entry.config;
+        emptyEls.push(mountCard(emptyGrid, tag, emptyHass, config));
+      }
+
+      document.getElementById("toggle").addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+        hass.themes.darkMode = document.body.classList.contains("dark");
+        emptyHass.themes.darkMode = hass.themes.darkMode;
+        [...cardEls, ...emptyEls].forEach((el) => { el.hass = { ...el.hass, themes: { darkMode: hass.themes.darkMode } }; });
+      });
+      document.getElementById("lang").addEventListener("change", (e) => {
+        hass.language = e.target.value;
+        emptyHass.language = e.target.value;
+        cardEls.forEach((el) => { el.hass = { ...hass }; });
+      });
+    });
+  </script>
+</body>
+</html>
