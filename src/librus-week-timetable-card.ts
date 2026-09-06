@@ -15,12 +15,32 @@ function isoWeekday(iso: string): number {
   return day === 0 ? 7 : day;
 }
 
+/**
+ * Monday of the week most useful to look at right now. On a school day
+ * (Mon-Fri) that's the ISO week containing today, same as ever. On a
+ * weekend (Sat/Sun) the ISO week containing today has ALREADY happened in
+ * full (Mon-Fri are all in the past) - rolling forward to next Monday
+ * instead shows the week the viewer is actually about to live through,
+ * matching how the next-lesson/today cards already favor "what's coming"
+ * over "what just happened". Confirmed live (2026-09-06): without this,
+ * opening the card on a Sunday showed a stale, mostly-elapsed week and
+ * looked broken (an all-but-empty Monday/Tuesday from before the school
+ * year had even started).
+ */
 function mondayOf(d: Date): Date {
   const monday = new Date(d);
   const weekday = isoWeekday(d.toISOString());
-  monday.setDate(monday.getDate() - (weekday - 1));
+  const daysToMonday = weekday >= 6 ? 8 - weekday : 1 - weekday;
+  monday.setDate(monday.getDate() + daysToMonday);
   monday.setHours(0, 0, 0, 0);
   return monday;
+}
+
+/** True if `d` falls on a Saturday or Sunday - decides which Monday
+ * `mondayOf` rolls forward to, and which subtitle the card shows. */
+function isWeekend(d: Date): boolean {
+  const weekday = isoWeekday(d.toISOString());
+  return weekday >= 6;
 }
 
 /** A short, deterministic abbreviation for a subject name (first syllable-ish chunk). */
@@ -95,7 +115,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     void this._fetch();
 
     if (this._events.length === 0) {
-      return this._message("mdi:calendar-week-outline", t(hass, "empty.generic_error"));
+      return this._message("mdi:calendar-week-outline", t(hass, "card.week_timetable.empty"));
     }
 
     const byDay: LibrusCalendarEvent[][] = [[], [], [], [], []];
@@ -115,7 +135,14 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
           <div class="icon-badge"><ha-icon icon="mdi:calendar-week-outline"></ha-icon></div>
           <div class="title-block">
             <div class="title">${t(hass, "card.week_timetable.title")}</div>
-            <div class="subtitle">${t(hass, "card.week_timetable.subtitle")}</div>
+            <div class="subtitle">
+              ${t(
+                hass,
+                isWeekend(new Date())
+                  ? "card.week_timetable.subtitle_upcoming"
+                  : "card.week_timetable.subtitle"
+              )}
+            </div>
           </div>
         </div>
         <div class="week-grid" style="grid-template-rows: auto repeat(${maxRows}, 1fr);">

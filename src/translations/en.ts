@@ -69,6 +69,8 @@ export const en = {
 
   "card.week_timetable.title": "Week timetable",
   "card.week_timetable.subtitle": "This week",
+  "card.week_timetable.subtitle_upcoming": "Upcoming week",
+  "card.week_timetable.empty": "No lessons found for this week",
 
   "card.school.title": "School",
   "label.head_teacher": "Head teacher",

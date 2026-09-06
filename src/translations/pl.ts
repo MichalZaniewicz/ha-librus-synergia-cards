@@ -70,6 +70,8 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.week_timetable.title": "Plan tygodniowy",
   "card.week_timetable.subtitle": "Ten tydzień",
+  "card.week_timetable.subtitle_upcoming": "Nadchodzący tydzień",
+  "card.week_timetable.empty": "Brak lekcji w tym tygodniu",
 
   "card.school.title": "Szkoła",
   "label.head_teacher": "Dyrektor",
