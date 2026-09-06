@@ -42,6 +42,24 @@ interface RecentMessage {
 const MAX_SHOWN = 15;
 
 /**
+ * Normalizes a feed item's date for chronological comparison. Grades/notes/
+ * announcements carry a bare `YYYY-MM-DD` date, while messages carry a full
+ * `YYYY-MM-DDTHH:MM:SS` timestamp. Comparing those two shapes directly with
+ * `localeCompare` still sorts different calendar days correctly (the fixed-
+ * width date prefix compares fine either way), but on the SAME day a bare
+ * date is a strict prefix of any timestamp starting with it, so it always
+ * sorts as "later" than every specific time that day - a grade added at
+ * 07:00 would show up ABOVE a message received at 20:00 the same day.
+ * Padding every bare date out to midnight gives every item the same
+ * precision, so same-day items interleave in a defined order: a bare-date
+ * item reads as "start of that day", the only sensible default when its
+ * exact time isn't known.
+ */
+function comparableTimestamp(date: string): string {
+  return date.length <= 10 ? `${date}T00:00:00` : date;
+}
+
+/**
  * One chronological feed merging the most recent grades, behaviour
  * notices, announcements and messages - every other card here only shows
  * ONE of these at a time; this is the "what's new across everything"
@@ -125,7 +143,7 @@ export class LibrusRecentActivityCard extends LibrusBaseCard {
       });
     }
 
-    items.sort((a, b) => b.date.localeCompare(a.date));
+    items.sort((a, b) => comparableTimestamp(b.date).localeCompare(comparableTimestamp(a.date)));
     const shown = items.slice(0, MAX_SHOWN);
 
     if (shown.length === 0) return this._message("mdi:bell-outline", t(hass, "card.recent_activity.empty"));
