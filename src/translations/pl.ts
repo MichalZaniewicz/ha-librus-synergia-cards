@@ -42,6 +42,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.attendance.by_semester": "Wg semestru",
   "card.attendance.semester": "Semestr {n}",
   "stat.absences": "Nieobecności",
+  "stat.unexcused": "Nieusprawiedliwione",
   "stat.excused": "Usprawiedliwione",
   "stat.late": "Spóźnienia",
   "stat.records": "Rekordów",

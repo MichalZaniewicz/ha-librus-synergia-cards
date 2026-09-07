@@ -81,6 +81,16 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
         | undefined) ?? {};
     const semesters = Object.entries(bySemester).sort(([a], [b]) => Number(a) - Number(b));
     const absences = Number(entity.state) || 0;
+    // BUG FIX (2026-09-07, found live): the blended "Nieobecności" stat
+    // meant a parent had to read the legend below to see whether the "1"
+    // needed their attention or was already resolved - split into its own
+    // two stat tiles instead, same split the tile/summary cards already
+    // use. Requires ha-librus-synergia 0.4.19+; on an older backend
+    // (`unexcused_count` absent) falls back to the original single
+    // blended stat rather than presenting a guessed split as real.
+    const unexcused = entity.attributes.unexcused_count as number | undefined;
+    const excused = entity.attributes.excused_count as number | undefined;
+    const hasSplit = unexcused !== undefined;
     const entries = Object.entries(breakdown);
     const statusColorVar: Record<AttendanceStatus, string> = {
       good: "var(--lc-good)",
@@ -112,10 +122,23 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
                 </div>
               `
             : nothing}
-          <div class="stat bad">
-            <div class="stat-value">${absences}</div>
-            <div class="stat-label">${t(hass, "stat.absences")}</div>
-          </div>
+          ${hasSplit
+            ? html`
+                <div class="stat ${unexcused! > 0 ? "bad" : ""}">
+                  <div class="stat-value">${unexcused}</div>
+                  <div class="stat-label">${t(hass, "stat.unexcused")}</div>
+                </div>
+                <div class="stat ${excused! > 0 ? "warn" : ""}">
+                  <div class="stat-value">${excused}</div>
+                  <div class="stat-label">${t(hass, "stat.excused")}</div>
+                </div>
+              `
+            : html`
+                <div class="stat bad">
+                  <div class="stat-value">${absences}</div>
+                  <div class="stat-label">${t(hass, "stat.absences")}</div>
+                </div>
+              `}
           <div class="stat">
             <div class="stat-value">${total}</div>
             <div class="stat-label">${t(hass, "stat.records")}</div>

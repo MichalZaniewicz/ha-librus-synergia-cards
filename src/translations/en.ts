@@ -41,6 +41,7 @@ export const en = {
   "card.attendance.by_semester": "By semester",
   "card.attendance.semester": "Semester {n}",
   "stat.absences": "Absences",
+  "stat.unexcused": "Unexcused",
   "stat.excused": "Excused",
   "stat.late": "Late",
   "stat.records": "Records",

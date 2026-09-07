@@ -211,6 +211,9 @@ export const librusSharedStyles = css`
   .stat.bad .stat-value {
     color: var(--lc-bad);
   }
+  .stat.warn .stat-value {
+    color: var(--lc-warn);
+  }
 
   .list-item {
     display: flex;
