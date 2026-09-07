@@ -92,6 +92,16 @@ export const en = {
   "card.free_days.empty": "No upcoming free days",
   "label.days_until": "days until",
 
+  "card.school_year.title": "End of school year",
+  "card.school_year.empty": "No school year data",
+  "label.days_until_year_end": "days until year end",
+  "label.current_semester": "Current semester",
+  "label.days_until_semester_end": "days until semester end",
+  "label.year_progress": "School year",
+
+  "card.exam_countdown.title": "Next exam",
+  "card.exam_countdown.empty": "No upcoming exams",
+
   "card.week_timetable.title": "Week timetable",
   "card.week_timetable.subtitle": "This week",
   "card.week_timetable.subtitle_upcoming": "Upcoming week",

@@ -93,6 +93,16 @@ export const pl: Record<keyof typeof en, string> = {
   "card.free_days.empty": "Brak nadchodzących dni wolnych",
   "label.days_until": "dni do",
 
+  "card.school_year.title": "Koniec roku szkolnego",
+  "card.school_year.empty": "Brak danych o roku szkolnym",
+  "label.days_until_year_end": "dni do końca roku",
+  "label.current_semester": "Aktualny semestr",
+  "label.days_until_semester_end": "dni do końca semestru",
+  "label.year_progress": "Rok szkolny",
+
+  "card.exam_countdown.title": "Najbliższy sprawdzian",
+  "card.exam_countdown.empty": "Brak nadchodzących sprawdzianów",
+
   "card.week_timetable.title": "Plan tygodniowy",
   "card.week_timetable.subtitle": "Ten tydzień",
   "card.week_timetable.subtitle_upcoming": "Nadchodzący tydzień",

@@ -43,9 +43,12 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Today's lessons | `custom:librus-today-lessons-card` | A timeline of today's timetable, highlighting the current lesson |
 | Next lesson | `custom:librus-next-lesson-tile-card` | A single-row tile with the next (or current) lesson, for denser dashboards |
 | Agenda | `custom:librus-agenda-card` | Upcoming terminarz events, grouped by date |
+| Next exam | `custom:librus-exam-countdown-card` | A countdown to the next "[Sprawdzian]"-tagged agenda item, pulled out of the general Agenda feed |
 | Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few |
+| Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break |
 | Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance |
 | School & class | `custom:librus-school-card` | School name/address/head teacher, class, homeroom teacher, semester dates |
+| End of school year | `custom:librus-school-year-card` | A countdown to the end of the school year, a progress ring for how far through it you are, and the current semester's own end date |
 | Today | `custom:librus-today-card` | Lucky number, unread messages/announcements and the next lesson in one card |
 | Week in review | `custom:librus-week-summary-card` | New grades, absences, notices and the next agenda item this week |
 | Lucky number | `custom:librus-lucky-number-card` | The latest "szczęśliwy numerek" in large type - labeled "For {date}" instead of "Today" when Librus has published the next school day's number ahead of time (requires `ha-librus-synergia` 0.4.15+) |

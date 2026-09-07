@@ -22,9 +22,12 @@ import "./librus-recent-activity-card";
 import "./librus-today-lessons-card";
 import "./librus-next-lesson-tile-card";
 import "./librus-agenda-card";
+import "./librus-exam-countdown-card";
 import "./librus-free-days-card";
+import "./librus-free-days-tile-card";
 import "./librus-week-timetable-card";
 import "./librus-school-card";
+import "./librus-school-year-card";
 import "./librus-today-card";
 import "./librus-week-summary-card";
 import "./librus-lucky-number-card";
@@ -179,9 +182,21 @@ window.customCards.push(
     preview: true,
   },
   {
+    type: "librus-exam-countdown-card",
+    name: "Librus - Najbliższy sprawdzian",
+    description: "Odliczanie do najbliższego sprawdzianu z terminarza, wyodrębnione z ogólnej listy.",
+    preview: true,
+  },
+  {
     type: "librus-free-days-card",
     name: "Librus - Dni wolne",
     description: "Odliczanie do najbliższej przerwy i lista kolejnych dni wolnych.",
+    preview: true,
+  },
+  {
+    type: "librus-free-days-tile-card",
+    name: "Librus - Dni wolne (kafelek)",
+    description: "Kompaktowy kafelek z odliczaniem do najbliższej przerwy.",
     preview: true,
   },
   {
@@ -194,6 +209,12 @@ window.customCards.push(
     type: "librus-school-card",
     name: "Librus - Szkoła i klasa",
     description: "Nazwa i adres szkoły, klasa, wychowawca, terminy semestru.",
+    preview: true,
+  },
+  {
+    type: "librus-school-year-card",
+    name: "Librus - Koniec roku szkolnego",
+    description: "Odliczanie do końca roku szkolnego, pasek postępu roku i data końca semestru.",
     preview: true,
   },
   {
@@ -230,7 +251,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 30 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 33 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );
