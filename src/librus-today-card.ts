@@ -80,18 +80,19 @@ export class LibrusTodayCard extends LibrusBaseCard {
           lucky && !UNAVAILABLE.has(lucky.state) && lucky.attributes.is_today !== false
             ? html`<div class="stat"><div class="stat-value">${lucky.state}</div><div class="stat-label">${t(hass, "stat.lucky_number")}</div></div>`
             : nothing}
-          ${messages && !UNAVAILABLE.has(messages.state)
-            ? html`<div class="stat"><div class="stat-value">${messages.state}</div><div class="stat-label">${t(hass, "stat.unread_messages")}</div></div>`
+          ${// BUG FIX (2026-09-07, found live): both tiles used the same
+          // generic "Nieprzeczytane" (Unread) label - the previous fix for
+          // the "Nowe" mislabeling made this one honest but created a new
+          // problem, two adjacent stat tiles reading "1 / Nieprzeczytane"
+          // with no way to tell messages from announcements apart. Each
+          // now names what it's actually counting (still an unread count
+          // either way - that hasn't changed), matching how the dedicated
+          // Messages/Announcements tile cards already label themselves.
+          messages && !UNAVAILABLE.has(messages.state)
+            ? html`<div class="stat"><div class="stat-value">${messages.state}</div><div class="stat-label">${t(hass, "card.messages.title")}</div></div>`
             : nothing}
-          ${// BUG FIX (2026-09-07, found live): this was labeled "Nowe"
-          // (New) but shows the announcements sensor's plain unread
-          // COUNT, unscoped to today - an announcement can sit unread for
-          // weeks and this tile would keep saying "New" the whole time.
-          // Reuse the same "unread" label the messages tile right next to
-          // it already uses - both tiles now honestly mean the same
-          // thing: how many are still unread, not "arrived today".
-          announcements && !UNAVAILABLE.has(announcements.state)
-            ? html`<div class="stat"><div class="stat-value">${announcements.state}</div><div class="stat-label">${t(hass, "stat.unread_messages")}</div></div>`
+          ${announcements && !UNAVAILABLE.has(announcements.state)
+            ? html`<div class="stat"><div class="stat-value">${announcements.state}</div><div class="stat-label">${t(hass, "card.announcements.title")}</div></div>`
             : nothing}
         </div>
         ${message && startTime

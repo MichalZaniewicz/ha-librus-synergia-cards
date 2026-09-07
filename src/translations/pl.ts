@@ -106,7 +106,6 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.today.title": "Dziś",
   "stat.lucky_number": "Numerek",
-  "stat.unread_messages": "Nieprzeczytane",
 
   "card.week_summary.title": "Tydzień w skrócie",
   "stat.new_grades": "Nowe oceny",
