@@ -24,6 +24,29 @@ export const librusTokens = css`
     --lc-bad: #c6444b;
     --lc-bad-bg: #f9e3e4;
     --lc-neutral-dot: #b4b0cf;
+    /* 16-color chart palette (grade categories, subjects, ...) - the first
+       6 alias the tokens above for continuity; the rest are new hues, kept
+       in the same muted-professional family as the brand indigo/amber.
+       Needed once a breakdown can have more distinct entries than the core
+       5-6 semantic colors sensibly cover (e.g. a real timetable's ~16
+       subjects) - found live: cycling through only 6 colors on 16 segments
+       made several of them visually indistinguishable from each other. */
+    --lc-chart-1: var(--lc-brand);
+    --lc-chart-2: var(--lc-good);
+    --lc-chart-3: var(--lc-warn);
+    --lc-chart-4: var(--lc-bad);
+    --lc-chart-5: var(--lc-brand-strong);
+    --lc-chart-6: var(--lc-neutral-dot);
+    --lc-chart-7: #0f9488;
+    --lc-chart-8: #9333ea;
+    --lc-chart-9: #c2703a;
+    --lc-chart-10: #2563a8;
+    --lc-chart-11: #db5a7b;
+    --lc-chart-12: #6b8e3d;
+    --lc-chart-13: #a8763e;
+    --lc-chart-14: #1591b0;
+    --lc-chart-15: #7c5cd4;
+    --lc-chart-16: #a68a1f;
   }
   :host(.dark) {
     --lc-brand: #948cf2;
@@ -40,6 +63,22 @@ export const librusTokens = css`
     --lc-bad: #e27c81;
     --lc-bad-bg: rgba(226, 124, 129, 0.14);
     --lc-neutral-dot: #6d698c;
+    --lc-chart-1: var(--lc-brand);
+    --lc-chart-2: var(--lc-good);
+    --lc-chart-3: var(--lc-warn);
+    --lc-chart-4: var(--lc-bad);
+    --lc-chart-5: var(--lc-brand-strong);
+    --lc-chart-6: var(--lc-neutral-dot);
+    --lc-chart-7: #7dd3c0;
+    --lc-chart-8: #c98cf2;
+    --lc-chart-9: #f2b88c;
+    --lc-chart-10: #8cc9f2;
+    --lc-chart-11: #f28ca0;
+    --lc-chart-12: #a8d16a;
+    --lc-chart-13: #d1a86a;
+    --lc-chart-14: #6ab8d1;
+    --lc-chart-15: #b88cf2;
+    --lc-chart-16: #f2e08c;
   }
 `;
 
@@ -178,6 +217,41 @@ export const librusSharedStyles = css`
   }
   .legend-item b {
     color: var(--primary-text-color);
+  }
+
+  /* A denser alternative to .legend for a breakdown with many entries
+     (subjects, categories) - found live: with 16 real subjects, the
+     wrapped-pill .legend ran to several ragged rows. A fixed 2-column
+     grid reads as a tidy list instead, same "many rows, not many pills"
+     shape a mockup (approved by the user, Variant B) compared against a
+     grouped "top N + Other" alternative for. */
+  .legend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px 14px;
+  }
+  .legend-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+    font-size: 0.72rem;
+    color: var(--secondary-text-color);
+    min-width: 0;
+  }
+  .legend-cell .dot {
+    margin-top: 0;
+  }
+  .legend-cell .name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .legend-cell b {
+    color: var(--primary-text-color);
+    font-variant-numeric: tabular-nums;
   }
 
   .scroll-list {

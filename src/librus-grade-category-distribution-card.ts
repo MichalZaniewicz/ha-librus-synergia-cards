@@ -14,16 +14,10 @@ interface GradeLogEntry {
 
 // Cycled through in insertion order (first-seen category gets the first
 // color) - categories are per-school data (Sprawdzian/Kartkówka/Odpowiedź/
-// ...), not a fixed enum this repo can hardcode colors for by name.
-const PALETTE = [
-  "var(--lc-brand)",
-  "var(--lc-good)",
-  "var(--lc-warn)",
-  "var(--lc-bad)",
-  "var(--lc-amber)",
-  "var(--lc-brand-strong)",
-  "var(--lc-neutral-dot)",
-];
+// ...), not a fixed enum this repo can hardcode colors for by name. 16
+// distinct hues (style-tokens.ts) - some schools use many more categories
+// than the 5-6 core semantic colors can tell apart at a glance.
+const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--lc-chart-${i + 1})`);
 
 /**
  * How the year's grades split across categories (Sprawdzian/Kartkówka/
@@ -93,11 +87,13 @@ export class LibrusGradeCategoryDistributionCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="chart-wrap">${donutChart(segments, { centerLabel: t(hass, "unit.grades") })}</div>
-        <div class="legend">
+        <div class="legend-grid">
           ${segments.map(
             (s) => html`
-              <span class="legend-item">
-                <span class="dot" style="background:${s.colorVar}"></span>${s.label} <b>${s.value}</b>
+              <span class="legend-cell">
+                <span class="dot" style="background:${s.colorVar}"></span>
+                <span class="name" title=${s.label}>${s.label}</span>
+                <b>${s.value}</b>
               </span>
             `
           )}

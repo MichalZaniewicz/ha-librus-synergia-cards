@@ -26,15 +26,9 @@ function mondayOf(d: Date): Date {
   return monday;
 }
 
-const PALETTE = [
-  "var(--lc-brand)",
-  "var(--lc-good)",
-  "var(--lc-warn)",
-  "var(--lc-bad)",
-  "var(--lc-amber)",
-  "var(--lc-brand-strong)",
-  "var(--lc-neutral-dot)",
-];
+// 16 distinct hues (style-tokens.ts) - a real timetable easily has more
+// subjects than the 5-6 core semantic colors can tell apart at a glance.
+const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--lc-chart-${i + 1})`);
 
 /**
  * How the week's lesson slots split across subjects - a donut counting
@@ -133,11 +127,13 @@ export class LibrusSubjectTimeCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="chart-wrap">${donutChart(segments, { centerLabel: t(hass, "unit.lessons_per_week") })}</div>
-        <div class="legend">
+        <div class="legend-grid">
           ${segments.map(
             (s) => html`
-              <span class="legend-item">
-                <span class="dot" style="background:${s.colorVar}"></span>${s.label} <b>${s.value}</b>
+              <span class="legend-cell">
+                <span class="dot" style="background:${s.colorVar}"></span>
+                <span class="name" title=${s.label}>${s.label}</span>
+                <b>${s.value}</b>
               </span>
             `
           )}
