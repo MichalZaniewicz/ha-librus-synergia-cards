@@ -218,6 +218,14 @@ export const librusSharedStyles = css`
   .legend-item b {
     color: var(--primary-text-color);
   }
+  /* .dot's margin-top:5px (below) is tuned for .list-item, where it aligns
+     a dot with the first line of a possibly-multi-line body - found live:
+     the same margin inside a single-line .legend-item pushes the dot
+     below center instead, since align-items:center no longer has a
+     symmetric box to center. */
+  .legend-item .dot {
+    margin-top: 0;
+  }
 
   /* A denser alternative to .legend for a breakdown with many entries
      (subjects, categories) - found live: with 16 real subjects, the
