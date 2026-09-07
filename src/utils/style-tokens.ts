@@ -301,6 +301,14 @@ export const librusSharedStyles = css`
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
+  /* A category badge on its own line, above the event text - found live:
+     inlining the badge into .row1 alongside larger text left it looking
+     vertically off (no shared baseline between the two font sizes in a
+     flex row with no align-items set). Its own row sidesteps the
+     alignment question entirely instead of trying to fix it in place. */
+  .cat-label-row {
+    margin-bottom: 2px;
+  }
   .item-text {
     font-size: 0.75rem;
     color: var(--secondary-text-color);

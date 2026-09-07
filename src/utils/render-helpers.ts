@@ -1,4 +1,4 @@
-import { html, nothing, type TemplateResult } from "lit";
+import { html, svg, nothing, type TemplateResult } from "lit";
 import type { HistoryPoint } from "./history";
 
 /** A single flex-grow-sized, colored segment of a horizontal stacked bar. */
@@ -158,12 +158,12 @@ export function radarChart(
     <svg width=${width} height=${height} viewBox="0 0 ${width} ${height}" class="radar-chart">
       ${rings.map(
         (ringVal) =>
-          html`<polygon
+          svg`<polygon
             points=${axes.map((_, i) => point(i, ringVal).join(",")).join(" ")}
             class="radar-grid"
           ></polygon>`
       )}
-      ${axisEnds.map(([x, y]) => html`<line x1=${cx} y1=${cy} x2=${x} y2=${y} class="radar-axis"></line>`)}
+      ${axisEnds.map(([x, y]) => svg`<line x1=${cx} y1=${cy} x2=${x} y2=${y} class="radar-axis"></line>`)}
       <polygon
         points=${dataPolygon}
         fill=${colorVar}
@@ -172,12 +172,12 @@ export function radarChart(
         stroke-width="2"
         stroke-linejoin="round"
       ></polygon>
-      ${dataPoints.map(([x, y]) => html`<circle cx=${x} cy=${y} r="3.2" fill=${colorVar}></circle>`)}
+      ${dataPoints.map(([x, y]) => svg`<circle cx=${x} cy=${y} r="3.2" fill=${colorVar}></circle>`)}
       ${axes.map((a, i) => {
         const [lx, ly] = point(i, max * 1.18);
         const cosA = Math.cos(angle(i));
         const anchor = Math.abs(cosA) < 0.3 ? "middle" : cosA > 0 ? "start" : "end";
-        return html`<text x=${lx} y=${ly + 3} text-anchor=${anchor} class="radar-label">${a.label}</text>`;
+        return svg`<text x=${lx} y=${ly + 3} text-anchor=${anchor} class="radar-label">${a.label}</text>`;
       })}
     </svg>
   `;
@@ -216,7 +216,7 @@ export function donutChart(
           .filter((s) => s.value > 0)
           .map((s) => {
             const len = (s.value / total) * circumference;
-            const arc = html`
+            const arc = svg`
               <circle
                 cx=${cx}
                 cy=${cy}
@@ -243,12 +243,12 @@ export function donutChart(
       <circle cx=${cx} cy=${cy} r=${r} fill="none" stroke="var(--divider-color)" stroke-width=${stroke}></circle>
       ${arcs}
       ${total > 0
-        ? html`
+        ? svg`
             <text x=${cx} y=${cy - 2} text-anchor="middle" class="donut-total" fill="var(--primary-text-color)">
               ${centerValue}
             </text>
             ${opts.centerLabel
-              ? html`<text x=${cx} y=${cy + 14} text-anchor="middle" class="donut-unit" fill="var(--secondary-text-color)">
+              ? svg`<text x=${cx} y=${cy + 14} text-anchor="middle" class="donut-unit" fill="var(--secondary-text-color)">
                   ${opts.centerLabel}
                 </text>`
               : nothing}

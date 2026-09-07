@@ -93,9 +93,8 @@ export class LibrusWeekSummaryCard extends LibrusBaseCard {
                 <div class="list-item">
                   <span class="dot neutral"></span>
                   <div class="body">
-                    <div class="row1">
-                      ${category ? html`<span class="cat-label">${category}</span> ${text}` : text}
-                    </div>
+                    ${category ? html`<div class="cat-label-row"><span class="cat-label">${category}</span></div>` : nothing}
+                    <div class="row1">${text}</div>
                     ${agenda?.attributes.start_time
                       ? html`<div class="item-text">${formatShortDate(String(agenda.attributes.start_time), hass.language)}</div>`
                       : nothing}
