@@ -23,3 +23,19 @@ export function daysBetween(from: Date, to: Date): number {
 export function minutesUntil(target: Date, now: Date): number {
   return Math.max(0, Math.floor((target.getTime() - now.getTime()) / 60_000));
 }
+
+const CATEGORY_RE = /^\[([^\]]+)\]\s*/;
+
+/**
+ * Splits an Agenda event's `"[Category] rest of the text"` summary
+ * (server-side prefixing, see ha-librus-synergia's coordinator.py) into
+ * its category and the remaining text. Found live: showing the raw
+ * "[Zebranie z Rodzicami] ..." bracket text inline read as unpolished -
+ * every card that displays an Agenda summary should show the category as
+ * its own label (`.cat-label`, matching how the grade/behaviour-notice
+ * cards already show a category) instead of literal brackets.
+ */
+export function parseCategory(summary: string): { category: string | null; text: string } {
+  const match = CATEGORY_RE.exec(summary);
+  return match ? { category: match[1], text: summary.slice(match[0].length) } : { category: null, text: summary };
+}

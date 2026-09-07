@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
-import { daysBetween, formatShortDate } from "./utils/format";
+import { daysBetween, formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
 
 const RANGE_DAYS = 90;
@@ -16,16 +16,11 @@ const RANGE_DAYS = 90;
 // is the best available signal without a structured "is this an exam"
 // flag, but a school using different wording for the same thing won't
 // match. Not exact, but the only signal there is.
-const CATEGORY_RE = /^\[([^\]]+)\]\s*/;
 const EXAM_CATEGORY_RE = /sprawdzian/i;
 
 function isExam(ev: LibrusCalendarEvent): boolean {
-  const match = CATEGORY_RE.exec(ev.summary);
-  return match !== null && EXAM_CATEGORY_RE.test(match[1]);
-}
-
-function stripCategory(summary: string): string {
-  return summary.replace(CATEGORY_RE, "");
+  const { category } = parseCategory(ev.summary);
+  return category !== null && EXAM_CATEGORY_RE.test(category);
 }
 
 /**
@@ -107,7 +102,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
 
     const [next, ...rest] = this._events;
     const days = daysBetween(new Date(), new Date(`${next.start}T00:00:00`));
-    const nextText = stripCategory(next.summary);
+    const nextText = parseCategory(next.summary).text;
 
     return html`
       <ha-card>
@@ -127,7 +122,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
               <hr />
               <div class="chips">
                 ${rest.slice(0, 4).map(
-                  (ev) => html`<span class="chip">${stripCategory(ev.summary)} <span class="n">${formatShortDate(ev.start, hass.language)}</span></span>`
+                  (ev) => html`<span class="chip">${parseCategory(ev.summary).text} <span class="n">${formatShortDate(ev.start, hass.language)}</span></span>`
                 )}
               </div>
             `

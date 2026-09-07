@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { mapAllByTranslationKey } from "./utils/entities";
-import { formatShortDate } from "./utils/format";
+import { formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
 
 const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
@@ -86,18 +86,23 @@ export class LibrusWeekSummaryCard extends LibrusBaseCard {
             : nothing}
         </div>
         ${agendaMessage
-          ? html`
-              <hr />
-              <div class="list-item">
-                <span class="dot neutral"></span>
-                <div class="body">
-                  <div class="row1">${agendaMessage}</div>
-                  ${agenda?.attributes.start_time
-                    ? html`<div class="item-text">${formatShortDate(String(agenda.attributes.start_time), hass.language)}</div>`
-                    : nothing}
+          ? (() => {
+              const { category, text } = parseCategory(agendaMessage);
+              return html`
+                <hr />
+                <div class="list-item">
+                  <span class="dot neutral"></span>
+                  <div class="body">
+                    <div class="row1">
+                      ${category ? html`<span class="cat-label">${category}</span> ${text}` : text}
+                    </div>
+                    ${agenda?.attributes.start_time
+                      ? html`<div class="item-text">${formatShortDate(String(agenda.attributes.start_time), hass.language)}</div>`
+                      : nothing}
+                  </div>
                 </div>
-              </div>
-            `
+              `;
+            })()
           : nothing}
       </ha-card>
     `;
