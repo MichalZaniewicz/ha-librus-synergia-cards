@@ -68,7 +68,18 @@ export class LibrusWeekSummaryCard extends LibrusBaseCard {
             <div class="stat-label">${t(hass, "stat.new_grades")}</div>
           </div>
           ${attendance && !UNAVAILABLE.has(attendance.state)
-            ? html`<div class="stat ${Number(attendance.state) > 0 ? "bad" : ""}"><div class="stat-value">${attendance.state}</div><div class="stat-label">${t(hass, "stat.absences")}</div></div>`
+            ? (() => {
+                // BUG FIX (2026-09-07, found live): this used to show the
+                // blended total (excused + unexcused) - an absence the
+                // parent had ALREADY gotten excused looked identical to
+                // one still needing attention. `unexcused_count` (requires
+                // ha-librus-synergia 0.4.19+) isolates the part that
+                // actually does; falls back to the old blended state for
+                // an older backend.
+                const unexcused = attendance.attributes.unexcused_count as number | undefined;
+                const value = unexcused ?? Number(attendance.state);
+                return html`<div class="stat ${value > 0 ? "bad" : ""}"><div class="stat-value">${value}</div><div class="stat-label">${t(hass, "stat.absences")}</div></div>`;
+              })()
             : nothing}
           ${notices && !UNAVAILABLE.has(notices.state)
             ? html`<div class="stat"><div class="stat-value">${notices.state}</div><div class="stat-label">${t(hass, "card.behaviour_notices.title")}</div></div>`

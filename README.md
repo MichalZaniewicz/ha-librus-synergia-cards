@@ -29,8 +29,8 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Latest grade | `custom:librus-latest-grade-card` | The most recent grade across all subjects, with the teacher's comment if any |
 | Behaviour grade | `custom:librus-behaviour-grade-card` | The formal "ocena zachowania" - distinct from the free-text notices below |
 | Descriptive grades | `custom:librus-descriptive-grades-card` | Non-numeric descriptive assessment, for schools that use it |
-| Attendance | `custom:librus-attendance-card` | Real absences and lates, full per-type breakdown, independently-computed percentage, and a per-semester breakdown |
-| Attendance tile | `custom:librus-attendance-tile-card` | Compact single-row tile - absence count + percentage |
+| Attendance | `custom:librus-attendance-card` | Real absences and lates, full per-type breakdown (excused absences shown in their own color, distinct from unexcused), independently-computed percentage, and a per-semester breakdown |
+| Attendance tile | `custom:librus-attendance-tile-card` | Compact single-row tile - unexcused absence count + percentage, with excused ones called out separately (requires `ha-librus-synergia` 0.4.19+) |
 | Behaviour notices | `custom:librus-behaviour-notices-card` | Recent "uwagi" with category and sentiment (positive/negative/neutral) |
 | Behaviour notices tile | `custom:librus-behaviour-notices-tile-card` | Compact single-row tile - count + latest category |
 | Messages | `custom:librus-messages-card` | Unread counts across every Wiadomości mailbox, with a preview of recent inbox messages - click one to load its full content (requires `ha-librus-synergia` 0.4.11+; this marks the message read in Librus, exactly like opening it in the Librus app) |
@@ -46,7 +46,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Next exam | `custom:librus-exam-countdown-card` | A countdown to the next "[Sprawdzian]"-tagged agenda item, pulled out of the general Agenda feed |
 | Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few |
 | Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break |
-| Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance |
+| Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted |
 | School & class | `custom:librus-school-card` | School name/address/head teacher, class, homeroom teacher, semester dates |
 | End of school year | `custom:librus-school-year-card` | A countdown to the end of the school year, a progress ring for how far through it you are, and the current semester's own end date |
 | Today | `custom:librus-today-card` | Lucky number, unread messages/announcements and the next lesson in one card |

@@ -195,15 +195,23 @@
 
     addEntity("sensor.overall_average", "overall_average", {}, "4.68");
     addEntity("sensor.attendance", "attendance", {
-      breakdown: { "Obecność": 146, "Spóźnienie": 2, "Nieobecność": 1 },
+      // Includes a real excused absence ("Nieobecność uspr.") alongside a
+      // still-open one ("Nieobecność") - confirmed live (2026-09-07) a
+      // parent excusing a real absence via Librus reclassifies its type,
+      // but the blended total looked identical either way until
+      // unexcused_count/excused_count split them.
+      breakdown: { "Obecność": 145, "Spóźnienie": 2, "Nieobecność": 1, "Nieobecność uspr.": 1 },
+      presence_by_type: { "Obecność": true, "Spóźnienie": true, "Nieobecność": false, "Nieobecność uspr.": false },
       total_records: 149,
+      unexcused_count: 1,
+      excused_count: 1,
       last_absence_date: iso(new Date(today.getTime() - 18 * 86400000)),
       percentage: 99.3,
       by_semester: {
         "1": { total: 149, present: 148, percentage: 99.3 },
         "2": { total: 0, present: 0, percentage: null },
       },
-    }, 1);
+    }, 2);
     // CONFIRMED live (2026-09-06): Librus can publish the NEXT school
     // day's number a day ahead - shown here exactly as observed live on
     // a Sunday (today has no school, "4" is actually Monday's number).

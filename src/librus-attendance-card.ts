@@ -18,6 +18,26 @@ import { t } from "./utils/localize";
 // config) knows that.
 const PRESENT_HINT = /^obecno|^present/i;
 
+// A second, purely cosmetic guess: an EXCUSED absence ("Nieobecność
+// uspr.") is still `presence_by_type: false` (the student genuinely
+// wasn't there - Librus's own IsPresenceKind correctly says so, and the
+// main absence count must keep including it), but visually lumping it in
+// with a plain unexcused "Nieobecność" under the same red/bad color hides
+// a real distinction a parent cares about: one is already resolved, the
+// other may still need action. Librus has no separate "is this an excused
+// type" flag - "uspr." (skrót od "usprawiedliwiona") is the only signal in
+// the type's own name, same class of best-effort text match as
+// PRESENT_HINT above.
+const EXCUSED_HINT = /uspr\.?/i;
+
+type AttendanceStatus = "good" | "warn" | "bad";
+
+function attendanceStatus(name: string, presenceByType: Record<string, boolean> | undefined): AttendanceStatus {
+  const isPresent = presenceByType?.[name] ?? PRESENT_HINT.test(name);
+  if (isPresent) return "good";
+  return EXCUSED_HINT.test(name) ? "warn" : "bad";
+}
+
 @customElement("librus-attendance-card")
 export class LibrusAttendanceCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
@@ -62,11 +82,15 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
     const semesters = Object.entries(bySemester).sort(([a], [b]) => Number(a) - Number(b));
     const absences = Number(entity.state) || 0;
     const entries = Object.entries(breakdown);
-    const isPresent = (name: string): boolean => presenceByType?.[name] ?? PRESENT_HINT.test(name);
+    const statusColorVar: Record<AttendanceStatus, string> = {
+      good: "var(--lc-good)",
+      warn: "var(--lc-warn)",
+      bad: "var(--lc-bad)",
+    };
 
     const segments: BarSegment[] = entries.map(([name, count]) => ({
       flexGrow: Math.max(count, 0.001),
-      colorVar: isPresent(name) ? "var(--lc-good)" : "var(--lc-bad)",
+      colorVar: statusColorVar[attendanceStatus(name, presenceByType)],
       title: `${name}: ${count}`,
     }));
 
@@ -104,7 +128,7 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
                 ${entries.map(
                   ([name, count]) => html`
                     <span class="legend-item">
-                      <span class="legend-dot ${isPresent(name) ? "good" : "bad"}"></span>${name}
+                      <span class="legend-dot ${attendanceStatus(name, presenceByType)}"></span>${name}
                       <b>${count}</b>
                     </span>
                   `
@@ -162,6 +186,9 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
       }
       .legend-dot.bad {
         background: var(--lc-bad);
+      }
+      .legend-dot.warn {
+        background: var(--lc-warn);
       }
       .semester-title {
         font-size: 0.65rem;

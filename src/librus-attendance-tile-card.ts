@@ -42,20 +42,33 @@ export class LibrusAttendanceTileCard extends LibrusBaseCard {
     const entity = map.attendance ? hass.states[map.attendance] : undefined;
     if (!entity) return this._message("mdi:calendar-remove", t(hass, "empty.generic_error"));
 
-    const absences = Number(entity.state) || 0;
     const percentage = entity.attributes.percentage as number | null | undefined;
+    // BUG FIX (2026-09-07, found live): this used to show the blended
+    // total (excused + unexcused) - an absence the parent had ALREADY
+    // gotten excused looked identical to one still needing attention.
+    // `unexcused_count`/`excused_count` (requires ha-librus-synergia
+    // 0.4.19+) split them; falls back to the old blended state (with no
+    // excused mention) for an older backend.
+    const unexcusedRaw = entity.attributes.unexcused_count as number | undefined;
+    const unexcused = unexcusedRaw ?? (Number(entity.state) || 0);
+    const excused = entity.attributes.excused_count as number | undefined;
 
     return html`
       <ha-card class="tile">
-        <div class="icon-badge ${absences === 0 ? "good" : "bad"}">
+        <div class="icon-badge ${unexcused === 0 ? "good" : "bad"}">
           <ha-icon icon="mdi:calendar-remove"></ha-icon>
         </div>
         <div class="tile-body">
           <div class="subj">
-            ${absences} ${t(hass, "stat.absences").toLowerCase()}
+            ${unexcused} ${t(hass, "stat.absences").toLowerCase()}
           </div>
-          ${percentage != null
-            ? html`<div class="meta">${t(hass, "stat.percentage")}: ${percentage}%</div>`
+          ${percentage != null || excused
+            ? html`
+                <div class="meta">
+                  ${percentage != null ? html`${t(hass, "stat.percentage")}: ${percentage}%` : nothing}
+                  ${excused ? html`${percentage != null ? " · " : ""}${excused} ${t(hass, "stat.excused").toLowerCase()}` : nothing}
+                </div>
+              `
             : nothing}
         </div>
       </ha-card>

@@ -170,6 +170,9 @@ export const librusSharedStyles = css`
   .dot.neutral {
     background: var(--lc-neutral-dot);
   }
+  .dot.warn {
+    background: var(--lc-warn);
+  }
 
   .stats {
     display: flex;

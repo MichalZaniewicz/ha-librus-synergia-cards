@@ -4,7 +4,7 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, isHappeningNow, type LibrusCalendarEvent } from "./utils/calendar";
 import { t } from "./utils/localize";
 
 const WEEKDAY_LABELS = [1, 2, 3, 4, 5]; // Mon-Fri, ISO weekday numbers
@@ -55,6 +55,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
   @state() private _events: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
   private _refreshTimer?: ReturnType<typeof setInterval>;
+  private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return document.createElement("librus-device-editor") as LovelaceCardEditor;
@@ -76,11 +77,16 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
   public connectedCallback(): void {
     super.connectedCallback();
     this._refreshTimer = setInterval(() => void this._fetch(true), 30 * 60_000);
+    // Only re-renders (no refetch) - moves the "current lesson" highlight
+    // along as one lesson ends and the next begins, without waiting for
+    // the next full calendar refresh.
+    this._tickTimer = setInterval(() => this.requestUpdate(), 30_000);
   }
 
   public disconnectedCallback(): void {
     super.disconnectedCallback();
     clearInterval(this._refreshTimer);
+    clearInterval(this._tickTimer);
   }
 
   private async _fetch(force = false): Promise<void> {
@@ -128,6 +134,8 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     const dayNames = WEEKDAY_LABELS.map((n) =>
       new Date(2026, 0, n + 4).toLocaleDateString(hass.language, { weekday: "short" })
     );
+    const now = new Date();
+    const todayColumn = isoWeekday(now.toISOString()) - 1; // -1 (or 5/6) on a weekend - no column matches
 
     return html`
       <ha-card>
@@ -150,11 +158,11 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
           ${dayNames.map((n) => html`<span class="h">${n}</span>`)}
           ${Array.from({ length: maxRows }, (_, row) => html`
             <span class="n">${row + 1}</span>
-            ${byDay.map((day) => {
+            ${byDay.map((day, dayIndex) => {
               const ev = day[row];
-              return ev
-                ? html`<div class="cell on" title=${ev.summary}>${abbreviate(ev.summary)}</div>`
-                : html`<div class="cell empty"></div>`;
+              if (!ev) return html`<div class="cell empty"></div>`;
+              const current = dayIndex === todayColumn && isHappeningNow(ev, now);
+              return html`<div class="cell on ${current ? "current" : ""}" title=${ev.summary}>${abbreviate(ev.summary)}</div>`;
             })}
           `)}
         </div>
@@ -203,6 +211,11 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
       .cell.on {
         background: var(--lc-brand-bg);
         color: var(--lc-brand-strong);
+      }
+      .cell.current {
+        background: var(--lc-brand);
+        color: #fff;
+        box-shadow: 0 0 0 2px var(--lc-brand-strong);
       }
       .cell.empty {
         background: transparent;
