@@ -83,8 +83,15 @@ export class LibrusTodayCard extends LibrusBaseCard {
           ${messages && !UNAVAILABLE.has(messages.state)
             ? html`<div class="stat"><div class="stat-value">${messages.state}</div><div class="stat-label">${t(hass, "stat.unread_messages")}</div></div>`
             : nothing}
-          ${announcements && !UNAVAILABLE.has(announcements.state)
-            ? html`<div class="stat"><div class="stat-value">${announcements.state}</div><div class="stat-label">${t(hass, "stat.new_announcements")}</div></div>`
+          ${// BUG FIX (2026-09-07, found live): this was labeled "Nowe"
+          // (New) but shows the announcements sensor's plain unread
+          // COUNT, unscoped to today - an announcement can sit unread for
+          // weeks and this tile would keep saying "New" the whole time.
+          // Reuse the same "unread" label the messages tile right next to
+          // it already uses - both tiles now honestly mean the same
+          // thing: how many are still unread, not "arrived today".
+          announcements && !UNAVAILABLE.has(announcements.state)
+            ? html`<div class="stat"><div class="stat-value">${announcements.state}</div><div class="stat-label">${t(hass, "stat.unread_messages")}</div></div>`
             : nothing}
         </div>
         ${message && startTime

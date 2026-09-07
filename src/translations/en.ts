@@ -106,7 +106,6 @@ export const en = {
   "card.today.title": "Today",
   "stat.lucky_number": "Lucky number",
   "stat.unread_messages": "Unread",
-  "stat.new_announcements": "New",
 
   "card.week_summary.title": "Week in review",
   "stat.new_grades": "New grades",
