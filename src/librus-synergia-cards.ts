@@ -8,8 +8,10 @@ import "./librus-grade-distribution-card";
 import "./librus-latest-grade-card";
 import "./librus-behaviour-grade-card";
 import "./librus-descriptive-grades-card";
+import "./librus-subject-spotlight-card";
 import "./librus-attendance-card";
 import "./librus-attendance-tile-card";
+import "./librus-attendance-heatmap-card";
 import "./librus-behaviour-notices-card";
 import "./librus-behaviour-notices-tile-card";
 import "./librus-messages-card";
@@ -98,6 +100,12 @@ window.customCards.push(
     preview: true,
   },
   {
+    type: "librus-subject-spotlight-card",
+    name: "Librus - Najlepszy i najsłabszy przedmiot",
+    description: "Dwa skrajne przedmioty wg średniej, obliczone z sensorów średnich per przedmiot.",
+    preview: true,
+  },
+  {
     type: "librus-attendance-card",
     name: "Librus - Frekwencja",
     description: "Liczba realnych nieobecności i spóźnień, z rozbiciem na typy, % i podziałem na semestr.",
@@ -107,6 +115,12 @@ window.customCards.push(
     type: "librus-attendance-tile-card",
     name: "Librus - Frekwencja (kafelek)",
     description: "Kompaktowy kafelek z liczbą nieobecności i frekwencją %.",
+    preview: true,
+  },
+  {
+    type: "librus-attendance-heatmap-card",
+    name: "Librus - Frekwencja (mapa roku)",
+    description: "Mapa dni całego roku szkolnego kolorowana wg statusu frekwencji, w stylu GitHub contributions.",
     preview: true,
   },
   {
@@ -251,7 +265,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 33 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 35 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

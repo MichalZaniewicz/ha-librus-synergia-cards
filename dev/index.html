@@ -194,6 +194,18 @@
     }
 
     addEntity("sensor.overall_average", "overall_average", {}, "4.68");
+    // New (2026-09-07): one status per calendar date, for the heatmap
+    // card - mostly "good" school days over the last several weeks, with
+    // one "bad" (matching last_absence_date below) and one "warn" thrown
+    // in so all three colors are visible in the demo.
+    const attendanceByDate = {};
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(today.getTime() - i * 86400000);
+      if (d.getDay() === 0 || d.getDay() === 6) continue; // weekends have no records
+      attendanceByDate[iso(d)] = "good";
+    }
+    attendanceByDate[iso(new Date(today.getTime() - 18 * 86400000))] = "bad";
+    attendanceByDate[iso(new Date(today.getTime() - 25 * 86400000))] = "warn";
     addEntity("sensor.attendance", "attendance", {
       // Includes a real excused absence ("Nieobecność uspr.") alongside a
       // still-open one ("Nieobecność") - confirmed live (2026-09-07) a
@@ -205,6 +217,7 @@
       total_records: 149,
       unexcused_count: 1,
       excused_count: 1,
+      by_date: attendanceByDate,
       last_absence_date: iso(new Date(today.getTime() - 18 * 86400000)),
       percentage: 99.3,
       by_semester: {
@@ -458,7 +471,8 @@
       { tag: "librus-grade-trend-card", config: { type: "custom:librus-grade-trend-card", subject_id: 1 } },
       "librus-grade-distribution-card",
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",
-      "librus-attendance-card", "librus-attendance-tile-card",
+      "librus-subject-spotlight-card",
+      "librus-attendance-card", "librus-attendance-tile-card", "librus-attendance-heatmap-card",
       "librus-behaviour-notices-card", "librus-behaviour-notices-tile-card",
       "librus-messages-card", "librus-messages-tile-card",
       "librus-substitutions-card",

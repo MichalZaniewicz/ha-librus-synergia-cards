@@ -59,12 +59,12 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
     }
     flat.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
 
-    if (flat.length === 0) return this._message("mdi:notebook-multiple-outline", t(hass, "card.grades.empty"));
+    if (flat.length === 0) return this._message("mdi:notebook-multiple", t(hass, "card.grades.empty"));
 
     return html`
       <ha-card>
         <div class="header">
-          <div class="icon-badge"><ha-icon icon="mdi:notebook-multiple-outline"></ha-icon></div>
+          <div class="icon-badge"><ha-icon icon="mdi:notebook-multiple"></ha-icon></div>
           <div class="title-block">
             <div class="title">${t(hass, "card.grade_log.title")}</div>
             <div class="subtitle">${t(hass, "card.grade_log.subtitle")}</div>
