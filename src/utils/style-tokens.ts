@@ -124,6 +124,62 @@ export const librusSharedStyles = css`
     flex: none;
   }
 
+  .radar-chart {
+    flex: none;
+  }
+  .radar-grid {
+    fill: none;
+    stroke: var(--divider-color);
+    stroke-width: 1;
+  }
+  .radar-axis {
+    stroke: var(--divider-color);
+    stroke-width: 1;
+  }
+  .radar-label {
+    fill: var(--secondary-text-color);
+    font-size: 10.5px;
+  }
+
+  .donut-chart {
+    flex: none;
+  }
+  .donut-total {
+    font-size: 20px;
+    font-weight: 800;
+  }
+  .donut-unit {
+    font-size: 9px;
+  }
+
+  /* Shared "centered chart + legend row below" layout - used by the radar
+     and donut chart cards (grades-radar, grade-category-distribution,
+     subject-time). Cards with their own bespoke legend markup (Attendance,
+     Attendance heatmap) define a local .legend/.legend-item after this in
+     their own static styles array, which wins at equal specificity. */
+  .chart-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0 8px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 0.7rem;
+    color: var(--secondary-text-color);
+    justify-content: center;
+  }
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .legend-item b {
+    color: var(--primary-text-color);
+  }
+
   .scroll-list {
     display: flex;
     flex-direction: column;

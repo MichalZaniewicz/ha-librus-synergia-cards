@@ -218,6 +218,16 @@
       unexcused_count: 1,
       excused_count: 1,
       by_date: attendanceByDate,
+      // New (2026-09-07): excused/unexcused/late counts per ISO weekday,
+      // for the weekday-breakdown chart card - matches the approved
+      // mockup's illustrative numbers exactly.
+      by_weekday: {
+        "1": { excused: 0, unexcused: 0, late: 1 },
+        "2": { excused: 0, unexcused: 1, late: 0 },
+        "3": { excused: 1, unexcused: 0, late: 0 },
+        "4": { excused: 0, unexcused: 0, late: 0 },
+        "5": { excused: 0, unexcused: 1, late: 1 },
+      },
       last_absence_date: iso(new Date(today.getTime() - 18 * 86400000)),
       percentage: 99.3,
       by_semester: {
@@ -470,9 +480,11 @@
       "librus-grade-trend-card",
       { tag: "librus-grade-trend-card", config: { type: "custom:librus-grade-trend-card", subject_id: 1 } },
       "librus-grade-distribution-card",
+      "librus-grades-radar-card", "librus-grade-category-distribution-card",
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",
       "librus-subject-spotlight-card",
       "librus-attendance-card", "librus-attendance-tile-card", "librus-attendance-heatmap-card",
+      "librus-attendance-weekday-card",
       "librus-behaviour-notices-card", "librus-behaviour-notices-tile-card",
       "librus-messages-card", "librus-messages-tile-card",
       "librus-substitutions-card",
@@ -480,7 +492,8 @@
       "librus-homework-assignments-card", "librus-recent-activity-card",
       "librus-today-lessons-card", "librus-next-lesson-tile-card", "librus-agenda-card",
       "librus-exam-countdown-card",
-      "librus-free-days-card", "librus-free-days-tile-card", "librus-week-timetable-card", "librus-school-card",
+      "librus-free-days-card", "librus-free-days-tile-card", "librus-week-timetable-card",
+      "librus-subject-time-card", "librus-school-card",
       "librus-school-year-card",
       "librus-today-card", "librus-week-summary-card", "librus-lucky-number-card",
       "librus-student-card", "librus-streak-card",

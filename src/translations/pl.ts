@@ -24,6 +24,26 @@ export const pl: Record<keyof typeof en, string> = {
   "card.grade_distribution.subtitle": "{count} ocen, wszystkie przedmioty",
   "card.grade_distribution.other": "inne",
 
+  "card.grades_radar.title": "Profil ocen",
+  "card.grades_radar.subtitle": "Wg przedmiotu",
+  "card.grades_radar.empty": "Za mało przedmiotów z ocenami",
+  "label.average": "Średnia",
+
+  "card.grade_category_distribution.title": "Oceny wg kategorii",
+  "card.grade_category_distribution.subtitle": "Sprawdziany, kartkówki, odpowiedzi…",
+  "card.grade_category_distribution.empty": "Brak ocen z przypisaną kategorią",
+  "unit.grades": "ocen",
+  "card.grade_category_distribution.uncategorized": "Bez kategorii",
+
+  "card.subject_time.title": "Podział czasu lekcji",
+  "card.subject_time.subtitle": "Lekcje w tygodniu, wg przedmiotu",
+  "card.subject_time.empty": "Brak lekcji w tym tygodniu",
+  "unit.lessons_per_week": "lekcji/tydz.",
+
+  "card.attendance_weekday.title": "Nieobecności wg dnia tygodnia",
+  "card.attendance_weekday.subtitle": "Ten rok szkolny",
+  "card.attendance_weekday.empty": "Brak nieobecności ani spóźnień",
+
   "card.recent_activity.title": "Co nowego",
   "card.recent_activity.subtitle": "Oceny, uwagi, ogłoszenia i wiadomości",
   "card.recent_activity.empty": "Nic nowego",

@@ -5,6 +5,8 @@ import "./librus-grade-log-card";
 import "./librus-subject-grades-card";
 import "./librus-grade-trend-card";
 import "./librus-grade-distribution-card";
+import "./librus-grades-radar-card";
+import "./librus-grade-category-distribution-card";
 import "./librus-latest-grade-card";
 import "./librus-behaviour-grade-card";
 import "./librus-descriptive-grades-card";
@@ -12,6 +14,7 @@ import "./librus-subject-spotlight-card";
 import "./librus-attendance-card";
 import "./librus-attendance-tile-card";
 import "./librus-attendance-heatmap-card";
+import "./librus-attendance-weekday-card";
 import "./librus-behaviour-notices-card";
 import "./librus-behaviour-notices-tile-card";
 import "./librus-messages-card";
@@ -28,6 +31,7 @@ import "./librus-exam-countdown-card";
 import "./librus-free-days-card";
 import "./librus-free-days-tile-card";
 import "./librus-week-timetable-card";
+import "./librus-subject-time-card";
 import "./librus-school-card";
 import "./librus-school-year-card";
 import "./librus-today-card";
@@ -82,6 +86,18 @@ window.customCards.push(
     preview: true,
   },
   {
+    type: "librus-grades-radar-card",
+    name: "Librus - Profil ocen (radar)",
+    description: "Wykres pajęczynowy średnich wszystkich przedmiotów na jednym wykresie.",
+    preview: true,
+  },
+  {
+    type: "librus-grade-category-distribution-card",
+    name: "Librus - Oceny wg kategorii",
+    description: "Pierścieniowy wykres: ile ocen ze sprawdzianów, kartkówek, odpowiedzi itd.",
+    preview: true,
+  },
+  {
     type: "librus-latest-grade-card",
     name: "Librus - Ostatnia ocena",
     description: "Najnowsza ocena ze wszystkich przedmiotów, wraz z komentarzem nauczyciela.",
@@ -121,6 +137,12 @@ window.customCards.push(
     type: "librus-attendance-heatmap-card",
     name: "Librus - Frekwencja (mapa roku)",
     description: "Mapa dni całego roku szkolnego kolorowana wg statusu frekwencji, w stylu GitHub contributions.",
+    preview: true,
+  },
+  {
+    type: "librus-attendance-weekday-card",
+    name: "Librus - Nieobecności wg dnia tygodnia",
+    description: "Słupek na każdy dzień tygodnia podzielony na usprawiedliwione/nieusprawiedliwione/spóźnienia.",
     preview: true,
   },
   {
@@ -220,6 +242,12 @@ window.customCards.push(
     preview: true,
   },
   {
+    type: "librus-subject-time-card",
+    name: "Librus - Podział czasu lekcji",
+    description: "Pierścieniowy wykres liczby lekcji w tygodniu na przedmiot, z planu lekcji.",
+    preview: true,
+  },
+  {
     type: "librus-school-card",
     name: "Librus - Szkoła i klasa",
     description: "Nazwa i adres szkoły, klasa, wychowawca, terminy semestru.",
@@ -265,7 +293,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 35 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 39 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

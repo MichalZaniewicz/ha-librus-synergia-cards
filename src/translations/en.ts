@@ -23,6 +23,26 @@ export const en = {
   "card.grade_distribution.subtitle": "{count} grades, all subjects",
   "card.grade_distribution.other": "other",
 
+  "card.grades_radar.title": "Grade profile",
+  "card.grades_radar.subtitle": "By subject",
+  "card.grades_radar.empty": "Not enough subjects with grades yet",
+  "label.average": "Average",
+
+  "card.grade_category_distribution.title": "Grades by category",
+  "card.grade_category_distribution.subtitle": "Tests, quizzes, answers…",
+  "card.grade_category_distribution.empty": "No categorized grades yet",
+  "unit.grades": "grades",
+  "card.grade_category_distribution.uncategorized": "Uncategorized",
+
+  "card.subject_time.title": "Lesson time split",
+  "card.subject_time.subtitle": "Lessons per week, by subject",
+  "card.subject_time.empty": "No lessons found for this week",
+  "unit.lessons_per_week": "lessons/wk",
+
+  "card.attendance_weekday.title": "Absences by weekday",
+  "card.attendance_weekday.subtitle": "This school year",
+  "card.attendance_weekday.empty": "No absences or lates recorded",
+
   "card.recent_activity.title": "What's new",
   "card.recent_activity.subtitle": "Grades, notices, announcements & messages",
   "card.recent_activity.empty": "Nothing new yet",

@@ -26,6 +26,8 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Subject grades | `custom:librus-subject-grades-card` | Every grade from ONE subject you pick in the card's own config |
 | Grade trend | `custom:librus-grade-trend-card` | How the overall (or one subject's) average has moved over the last 60 days, from its own state history |
 | Grade distribution | `custom:librus-grade-distribution-card` | Histogram - how many 6s/5s/4s/... across every subject |
+| Grade profile (radar) | `custom:librus-grades-radar-card` | Every subject's average on one spider/radar chart, so a strong or weak subject stands out at a glance |
+| Grades by category | `custom:librus-grade-category-distribution-card` | A donut of how the year's grades split across categories (Sprawdzian/Kartkówka/Odpowiedź/...) |
 | Latest grade | `custom:librus-latest-grade-card` | The most recent grade across all subjects, with the teacher's comment if any |
 | Behaviour grade | `custom:librus-behaviour-grade-card` | The formal "ocena zachowania" - distinct from the free-text notices below |
 | Descriptive grades | `custom:librus-descriptive-grades-card` | Non-numeric descriptive assessment, for schools that use it |
@@ -33,6 +35,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Attendance | `custom:librus-attendance-card` | Percentage, unexcused count and excused count as their own stat tiles (requires `ha-librus-synergia` 0.4.19+), full per-type breakdown below (excused absences in their own color, distinct from unexcused), and a per-semester breakdown |
 | Attendance tile | `custom:librus-attendance-tile-card` | Compact single-row tile - unexcused absence count + percentage, with excused ones called out separately (requires `ha-librus-synergia` 0.4.19+) |
 | Attendance heatmap | `custom:librus-attendance-heatmap-card` | A GitHub-contributions-style calendar of the school year so far, one square per school day colored by that day's worst attendance status (requires `ha-librus-synergia` 0.4.20+) |
+| Absences by weekday | `custom:librus-attendance-weekday-card` | Which weekday absences/lates tend to land on - each weekday's bar split into its own excused/unexcused/late segments (requires `ha-librus-synergia` 0.4.21+) |
 | Behaviour notices | `custom:librus-behaviour-notices-card` | Recent "uwagi" with category and sentiment (positive/negative/neutral) |
 | Behaviour notices tile | `custom:librus-behaviour-notices-tile-card` | Compact single-row tile - count + latest category |
 | Messages | `custom:librus-messages-card` | Unread counts across every Wiadomości mailbox, with a preview of recent inbox messages - click one to load its full content (requires `ha-librus-synergia` 0.4.11+; this marks the message read in Librus, exactly like opening it in the Librus app) |
@@ -49,6 +52,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few |
 | Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break |
 | Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted |
+| Lesson time split | `custom:librus-subject-time-card` | A donut of how the week's lesson slots split across subjects, from the timetable |
 | School & class | `custom:librus-school-card` | School name/address/head teacher, class, homeroom teacher, semester dates |
 | End of school year | `custom:librus-school-year-card` | A countdown to the end of the school year, a progress ring for how far through it you are, and the current semester's own end date |
 | Today | `custom:librus-today-card` | Lucky number, unread messages/announcements and the next lesson in one card |
