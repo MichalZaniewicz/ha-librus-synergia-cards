@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { librusCardEditor } from "./utils/card-editor";
 
 interface RecentAnnouncement {
   id?: string;
@@ -27,7 +28,7 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
   @state() private _expandedId?: string;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
   public static getStubConfig(): LibrusCardConfig {
@@ -63,17 +64,19 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
       return this._message("mdi:bullhorn-outline", t(hass, "card.announcements.empty"));
     }
 
+    const shown = recent.slice(0, this._config.max_items ?? 10);
+
     return html`
       <ha-card>
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:bullhorn-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.announcements.title")}</div>
+            <div class="title">${this._config.title ?? t(hass, "card.announcements.title")}</div>
             <div class="subtitle">${entity.state}</div>
           </div>
         </div>
         <div class="scroll-list">
-          ${recent.map((a, i) => {
+          ${shown.map((a, i) => {
             // Fall back to the array index when `id` is missing (an
             // ha-librus-synergia older than 0.4.17, which added this
             // field) - REAL BUG found live: comparing against `undefined`

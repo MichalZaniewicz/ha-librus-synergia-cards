@@ -7,8 +7,9 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
 import { formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
+import { librusCardEditor } from "./utils/card-editor";
 
-const RANGE_DAYS = 14;
+const DEFAULT_RANGE_DAYS = 14;
 
 @customElement("librus-agenda-card")
 export class LibrusAgendaCard extends LibrusBaseCard {
@@ -18,7 +19,7 @@ export class LibrusAgendaCard extends LibrusBaseCard {
   private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
   public static getStubConfig(): LibrusCardConfig {
@@ -51,11 +52,12 @@ export class LibrusAgendaCard extends LibrusBaseCard {
     const entityId = resolved.map.agenda;
     if (!entityId) return;
 
+    const rangeDays = this._config.days_ahead ?? DEFAULT_RANGE_DAYS;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const end = new Date(today);
-    end.setDate(end.getDate() + RANGE_DAYS);
-    const cacheKey = `${entityId}:${today.toDateString()}`;
+    end.setDate(end.getDate() + rangeDays);
+    const cacheKey = `${entityId}:${today.toDateString()}:${rangeDays}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
@@ -93,7 +95,7 @@ export class LibrusAgendaCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:calendar-text-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.agenda.title")}</div>
+            <div class="title">${this._config.title ?? t(hass, "card.agenda.title")}</div>
             <div class="subtitle">${t(hass, "card.agenda.subtitle")}</div>
           </div>
         </div>

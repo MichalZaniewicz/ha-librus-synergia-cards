@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { mapAllByTranslationKey } from "./utils/entities";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { librusCardEditor } from "./utils/card-editor";
 
 interface GradeLogEntry {
   value: string;
@@ -19,7 +20,7 @@ interface FlatGrade extends GradeLogEntry {
   subject: string;
 }
 
-const MAX_SHOWN = 25;
+const DEFAULT_MAX = 25;
 
 /** All grades, from every subject, in one chronological log. */
 @customElement("librus-grade-log-card")
@@ -27,7 +28,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
   public static getStubConfig(): LibrusCardConfig {
@@ -61,17 +62,19 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
 
     if (flat.length === 0) return this._message("mdi:notebook-multiple", t(hass, "card.grades.empty"));
 
+    const max = this._config.max_items ?? DEFAULT_MAX;
+
     return html`
       <ha-card>
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:notebook-multiple"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.grade_log.title")}</div>
+            <div class="title">${this._config.title ?? t(hass, "card.grade_log.title")}</div>
             <div class="subtitle">${t(hass, "card.grade_log.subtitle")}</div>
           </div>
         </div>
         <div class="scroll-list">
-          ${flat.slice(0, MAX_SHOWN).map(
+          ${flat.slice(0, max).map(
             (g) => html`
               <div class="list-item">
                 <div class="grade-chip">${g.value}</div>

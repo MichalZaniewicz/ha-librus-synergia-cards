@@ -8,9 +8,26 @@ declare module "custom-card-helpers" {
   }
 }
 
-/** Every widget in this repo currently takes the same, minimal config. */
+/**
+ * Card config. `device_id` is the only field every card reads; the rest
+ * are optional per-card overrides surfaced by `librus-card-editor` (see
+ * `utils/card-editor.ts` for which card exposes which). All optional, so
+ * a bare `{ type: ... }` stays valid.
+ */
 export interface LibrusCardConfig extends LovelaceCardConfig {
   device_id?: string;
+  /** Header title override. */
+  title?: string;
+  /** Numeric Librus subject id, for the per-subject cards. */
+  subject_id?: number;
+  /** Row cap for the list cards. */
+  max_items?: number;
+  /** Forward-looking window, in days (Agenda). */
+  days_ahead?: number;
+  /** History window, in days (grade trend). */
+  days?: number;
+  /** Which mailbox the Messages card reads. */
+  mailbox?: string;
 }
 
 /** Entity registry entry shape available on `hass.entities` (HA 2024.8+). */

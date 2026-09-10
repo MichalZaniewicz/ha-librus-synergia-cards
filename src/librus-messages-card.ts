@@ -7,9 +7,11 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t, type TranslationKey } from "./utils/localize";
 import { fetchFullMessage, type FullMessage } from "./utils/services";
+import { librusCardEditor } from "./utils/card-editor";
 
 interface RecentMessage {
   id: string;
+  mailbox?: string;
   sender: string;
   topic: string;
   content: string;
@@ -17,6 +19,14 @@ interface RecentMessage {
   unread: boolean;
   has_attachment: boolean;
 }
+
+/** Which sensor attribute holds each mailbox's preview list. */
+const RECENT_ATTR: Record<string, string> = {
+  inbox: "recent",
+  substitutions: "substitutions_recent",
+  alerts: "alerts_recent",
+  justifications: "justifications_recent",
+};
 
 const MAILBOXES: { key: string; label: TranslationKey }[] = [
   { key: "inbox", label: "mailbox.inbox" },
@@ -41,11 +51,15 @@ export class LibrusMessagesCard extends LibrusBaseCard {
   @state() private _errorIds: Set<string> = new Set();
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
   public static getStubConfig(): LibrusCardConfig {
     return { type: "custom:librus-messages-card" };
+  }
+
+  private get _mailbox(): string {
+    return this._config?.mailbox && RECENT_ATTR[this._config.mailbox] ? this._config.mailbox : "inbox";
   }
 
   public setConfig(config: LibrusCardConfig): void {
@@ -75,13 +89,14 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     const resolved = this._resolveEntities();
     if ("error" in resolved || !this.hass) return;
 
+    const mailbox = m.mailbox ?? this._mailbox;
     this._pendingIds = new Set(this._pendingIds).add(m.id);
     const nextErrors = new Set(this._errorIds);
     nextErrors.delete(m.id);
     this._errorIds = nextErrors;
 
     try {
-      const full = await fetchFullMessage(this.hass, resolved.deviceId, m.id);
+      const full = await fetchFullMessage(this.hass, resolved.deviceId, m.id, mailbox);
       this._fullById = { ...this._fullById, [m.id]: full };
     } catch {
       this._errorIds = new Set(this._errorIds).add(m.id);
@@ -125,23 +140,26 @@ export class LibrusMessagesCard extends LibrusBaseCard {
       return this._message("mdi:email-outline", t(hass, "card.messages.unavailable"));
     }
 
+    const mailbox = this._mailbox;
     const breakdown = (entity.attributes.mailbox_breakdown as Record<string, number> | undefined) ?? {};
-    const recent = (entity.attributes.recent as RecentMessage[] | undefined) ?? [];
+    const recent =
+      (entity.attributes[RECENT_ATTR[mailbox]] as RecentMessage[] | undefined) ?? [];
     const unread = Number(entity.state) || 0;
+    const max = this._config.max_items ?? 6;
 
     return html`
       <ha-card>
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:email-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.messages.title")}</div>
-            <div class="subtitle">${t(hass, "mailbox.inbox")}</div>
+            <div class="title">${this._config.title ?? t(hass, "card.messages.title")}</div>
+            <div class="subtitle">${t(hass, `mailbox.${mailbox}` as TranslationKey)}</div>
           </div>
         </div>
         <div class="chips">
           ${MAILBOXES.map(
             ({ key, label }) => html`
-              <span class="chip ${key === "inbox" && unread > 0 ? "hot" : ""}"
+              <span class="chip ${key === mailbox ? "hot" : ""}"
                 >${t(hass, label)} <span class="n">${breakdown[key] ?? 0}</span></span
               >
             `
@@ -151,7 +169,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
           ? html`
               <hr />
               <div class="scroll-list">
-                ${recent.slice(0, 6).map(
+                ${recent.slice(0, max).map(
                   (m) => html`
                     <div class="list-item clickable" @click=${() => this._onMessageClick(m)}>
                       <span class="dot ${m.unread ? "good" : "neutral"}"></span>

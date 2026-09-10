@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { mapAllByTranslationKey } from "./utils/entities";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { librusCardEditor } from "./utils/card-editor";
 
 interface FeedItem {
   date: string;
@@ -39,7 +40,7 @@ interface RecentMessage {
   date: string | null;
 }
 
-const MAX_SHOWN = 15;
+const DEFAULT_MAX = 15;
 
 /**
  * Normalizes a feed item's date for chronological comparison. Grades/notes/
@@ -70,7 +71,7 @@ export class LibrusRecentActivityCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
   public static getStubConfig(): LibrusCardConfig {
@@ -144,7 +145,7 @@ export class LibrusRecentActivityCard extends LibrusBaseCard {
     }
 
     items.sort((a, b) => comparableTimestamp(b.date).localeCompare(comparableTimestamp(a.date)));
-    const shown = items.slice(0, MAX_SHOWN);
+    const shown = items.slice(0, this._config.max_items ?? DEFAULT_MAX);
 
     if (shown.length === 0) return this._message("mdi:bell-outline", t(hass, "card.recent_activity.empty"));
 
@@ -153,7 +154,7 @@ export class LibrusRecentActivityCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:bell-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.recent_activity.title")}</div>
+            <div class="title">${this._config.title ?? t(hass, "card.recent_activity.title")}</div>
             <div class="subtitle">${t(hass, "card.recent_activity.subtitle")}</div>
           </div>
         </div>

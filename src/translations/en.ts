@@ -6,6 +6,15 @@ export const en = {
   "empty.loading": "Loading…",
   "empty.generic_error": "Something went wrong",
 
+  "editor.student": "Student",
+  "editor.subject": "Subject",
+  "editor.subject_auto": "Overall / all subjects",
+  "editor.title": "Card title (optional)",
+  "editor.max_items": "Max rows shown",
+  "editor.days_ahead": "Days ahead",
+  "editor.days_back": "Days of history",
+  "editor.mailbox": "Mailbox",
+
   "card.grades.title": "Grade average",
   "card.grades.subtitle": "All subjects",
   "card.grades.empty": "No grades yet this year",

@@ -1,5 +1,5 @@
 import "./librus-device-editor";
-import "./librus-subject-picker-editor";
+import "./utils/card-editor";
 import "./librus-grades-card";
 import "./librus-grade-log-card";
 import "./librus-subject-grades-card";

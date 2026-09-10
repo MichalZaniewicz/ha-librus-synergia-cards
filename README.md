@@ -101,6 +101,21 @@ Dashboards → Resources → add `/local/librus-synergia-cards.js` as a JavaScri
 
 Requires [`ha-librus-synergia`](https://github.com/MichalZaniewicz/ha-librus-synergia) already set up.
 
+### Card options
+
+Every card works with zero config. A visual editor (the ⚙ / "Edit" pane) exposes the options a
+card supports:
+
+| Option | Cards | |
+|---|---|---|
+| Student | all | Only shown when more than one child's e-dziennik is configured |
+| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend | Header title override |
+| `max_items` | Grade log, Recent activity, Announcements, Messages | Row cap |
+| `days_ahead` | Agenda | How far forward to look (default 14) |
+| `days` | Grade trend | How much history to chart (default 60) |
+| `subject_id` | Subject grades, Grade trend | Pick one subject (Grade trend defaults to the overall average) |
+| `mailbox` | Messages | `inbox` / `substitutions` / `alerts` / `justifications` |
+
 ## Design
 
 Every card is a real `ha-card`, so it inherits your Home Assistant theme's colors, radius and
@@ -134,11 +149,12 @@ and empty state, with a light/dark toggle and a language switcher.
    (`segmentedBar`, `progressRing`) before writing new CSS/SVG - most layouts in this family are
    built entirely from those two files.
 3. Register it in [`src/librus-synergia-cards.ts`](src/librus-synergia-cards.ts) (one `import` + one
-   `window.customCards.push(...)` entry). `getConfigElement()` can almost always just return
-   `document.createElement("librus-device-editor")` - every card's config is currently just an
-   optional `device_id`, except **Subject grades**, which uses
-   [`src/librus-subject-picker-editor.ts`](src/librus-subject-picker-editor.ts) for its extra
-   `subject_id` field.
+   `window.customCards.push(...)` entry). For `getConfigElement()`: return
+   `document.createElement("librus-device-editor")` if a student picker is all it needs, or
+   `librusCardEditor()` from [`src/utils/card-editor.ts`](src/utils/card-editor.ts) and add a
+   `EDITOR_FIELDS` entry (keyed by the card's `custom:` type) for extra controls - `title`,
+   `max_items`, `days_ahead`, `days`, a `subject` picker, or a `mailbox` select. The editor renders
+   the student picker automatically whenever more than one Librus device exists.
 4. Every user-facing string goes through `t(hass, key)` from
    [`src/utils/localize.ts`](src/utils/localize.ts) - add the key to
    [`src/translations/en.ts`](src/translations/en.ts) first (the canonical key list) and

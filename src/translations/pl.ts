@@ -7,6 +7,15 @@ export const pl: Record<keyof typeof en, string> = {
   "empty.loading": "Wczytywanie…",
   "empty.generic_error": "Coś poszło nie tak",
 
+  "editor.student": "Uczeń",
+  "editor.subject": "Przedmiot",
+  "editor.subject_auto": "Ogólna / wszystkie przedmioty",
+  "editor.title": "Tytuł karty (opcjonalnie)",
+  "editor.max_items": "Maks. liczba wierszy",
+  "editor.days_ahead": "Dni do przodu",
+  "editor.days_back": "Dni historii",
+  "editor.mailbox": "Skrzynka",
+
   "card.grades.title": "Średnia ocen",
   "card.grades.subtitle": "Wszystkie przedmioty",
   "card.grades.empty": "Brak ocen w tym roku szkolnym",

@@ -6,7 +6,8 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { mapAllByTranslationKey } from "./utils/entities";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
-import type { LibrusSubjectCardConfig } from "./librus-subject-picker-editor";
+import type { LibrusCardConfig } from "./utils/types";
+import { librusCardEditor } from "./utils/card-editor";
 
 interface GradeLogEntry {
   value: string;
@@ -18,21 +19,21 @@ interface GradeLogEntry {
 /**
  * Shows the full grade log for ONE subject, chosen in the card's own
  * config (`subject_id`) - not just device_id like every other card here.
- * Uses `librus-subject-picker-editor` for its visual config UI.
+ * The shared `librus-card-editor` renders its subject picker.
  */
 @customElement("librus-subject-grades-card")
 export class LibrusSubjectGradesCard extends LibrusBaseCard {
-  @state() private _config?: LibrusSubjectCardConfig;
+  @state() private _config?: LibrusCardConfig;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-subject-picker-editor") as unknown as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
-  public static getStubConfig(): LibrusSubjectCardConfig {
+  public static getStubConfig(): LibrusCardConfig {
     return { type: "custom:librus-subject-grades-card" };
   }
 
-  public setConfig(config: LibrusSubjectCardConfig): void {
+  public setConfig(config: LibrusCardConfig): void {
     this._config = config;
     this._configuredDeviceId = config.device_id;
   }

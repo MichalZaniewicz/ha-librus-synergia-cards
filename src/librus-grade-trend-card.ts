@@ -7,9 +7,10 @@ import { mapAllByTranslationKey } from "./utils/entities";
 import { fetchNumericHistory, type HistoryPoint } from "./utils/history";
 import { lineChart } from "./utils/render-helpers";
 import { t } from "./utils/localize";
-import type { LibrusSubjectCardConfig } from "./librus-subject-picker-editor";
+import type { LibrusCardConfig } from "./utils/types";
+import { librusCardEditor } from "./utils/card-editor";
 
-const HISTORY_DAYS = 60;
+const DEFAULT_HISTORY_DAYS = 60;
 
 /**
  * How the overall (or one subject's) grade average has moved over the
@@ -22,22 +23,26 @@ const HISTORY_DAYS = 60;
  */
 @customElement("librus-grade-trend-card")
 export class LibrusGradeTrendCard extends LibrusBaseCard {
-  @state() private _config?: LibrusSubjectCardConfig;
+  @state() private _config?: LibrusCardConfig;
   @state() private _points: HistoryPoint[] = [];
   private _fetchedFor?: string;
   private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-subject-picker-editor") as unknown as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
-  public static getStubConfig(): LibrusSubjectCardConfig {
+  public static getStubConfig(): LibrusCardConfig {
     return { type: "custom:librus-grade-trend-card" };
   }
 
-  public setConfig(config: LibrusSubjectCardConfig): void {
+  public setConfig(config: LibrusCardConfig): void {
     this._config = config;
     this._configuredDeviceId = config.device_id;
+  }
+
+  private get _historyDays(): number {
+    return this._config?.days ?? DEFAULT_HISTORY_DAYS;
   }
 
   public getCardSize(): number {
@@ -71,8 +76,8 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
     if (!this.hass || !entityId) return;
 
     const end = new Date();
-    const start = new Date(end.getTime() - HISTORY_DAYS * 86_400_000);
-    const cacheKey = `${entityId}:${end.toDateString()}`;
+    const start = new Date(end.getTime() - this._historyDays * 86_400_000);
+    const cacheKey = `${entityId}:${end.toDateString()}:${this._historyDays}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
@@ -116,8 +121,8 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:chart-line"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${subjectName ?? t(hass, "card.grade_trend.title")}</div>
-            <div class="subtitle">${t(hass, "card.grade_trend.subtitle", { days: HISTORY_DAYS })}</div>
+            <div class="title">${this._config.title ?? subjectName ?? t(hass, "card.grade_trend.title")}</div>
+            <div class="subtitle">${t(hass, "card.grade_trend.subtitle", { days: this._historyDays })}</div>
           </div>
           <div class="trend ${trendClass}">
             <ha-icon icon=${trendIcon}></ha-icon>
