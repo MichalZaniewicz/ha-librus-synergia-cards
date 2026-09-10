@@ -13,6 +13,7 @@ export const en = {
   "editor.max_items": "Max rows shown",
   "editor.days_ahead": "Days ahead",
   "editor.days_back": "Days of history",
+  "editor.target": "Target average",
   "editor.mailbox": "Mailbox",
 
   "card.grades.title": "Grade average",
@@ -176,4 +177,18 @@ export const en = {
   "card.streak.title": "Absence-free streak",
   "card.streak.subtitle": "Current streak",
   "label.days": "days",
+
+  "card.grade_goal.title": "Grade goal",
+  "card.grade_goal.subtitle_overall": "Overall average",
+  "card.grade_goal.empty": "No grades yet to track a goal against",
+  "card.grade_goal.reached": "Goal reached 🎉",
+  "label.current": "Now",
+  "label.target": "Target",
+  "label.to_go": "to go",
+  "label.sixes_needed": "≈ {n} more top grades",
+
+  "card.bell_schedule.title": "Today's schedule",
+  "card.bell_schedule.empty": "No bell schedule yet — needs ha-librus-synergia with the bell_schedule attribute",
+  "label.lesson_short": "L{n}",
+  "label.after_school": "School's out for today",
 } as const;

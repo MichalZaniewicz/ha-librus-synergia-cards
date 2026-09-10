@@ -271,9 +271,34 @@
         { id: "9003", mailbox: "justifications", sender: "Wychowawca", topic: "Usprawiedliwienie nieobecności", content: "Twoje usprawiedliwienie nieobecności z dnia 3 września oczekuje na akceptację wychowawcy.", date: iso(today), unread: true, has_attachment: false },
       ],
     }, 1);
+    // Bell schedule built around the real wall-clock now so the
+    // bell-schedule card always has a "current" period to highlight in the
+    // demo, whatever time it's opened. 45-min slots, period 3 straddles now.
+    const hm = (d) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+    const bellSchedule = [];
+    for (let i = 0; i < 6; i++) {
+      const s = new Date(now.getTime() + ((i - 2) * 55 - 15) * 60000);
+      bellSchedule.push({ lesson_no: i + 1, start: hm(s), end: hm(new Date(s.getTime() + 45 * 60000)) });
+    }
     addEntity("sensor.school", "school", {
       town: "Wrocław", street: "ul. Kłodzka", head_teacher: "Edyta Krajewska", email: "sekretariat@zsp21.wroc.pl",
+      bell_schedule: bellSchedule,
     }, "Zespół Szkolno-Przedszkolny nr 21");
+    addEntity("sensor.current_lesson", "current_lesson", {
+      lesson_no: 3, start: bellSchedule[2].start, end: bellSchedule[2].end, minutes_left: 20,
+      teacher: "K. Nowak", classroom: "sala 15", is_substitution: false,
+    }, "Biologia");
+    addEntity("sensor.next_lesson", "next_lesson", {
+      lesson_no: 4, start: bellSchedule[3].start, end: bellSchedule[3].end, minutes_until: 40,
+      teacher: "A. Marciszak", classroom: "sala 22", is_substitution: false,
+    }, "Język polski");
+    addEntity("sensor.next_exam", "next_exam", {
+      days_until: 3, subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne",
+      upcoming: [
+        { date: iso(new Date(today.getTime() + 3 * 86400000)), subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne" },
+        { date: iso(new Date(today.getTime() + 9 * 86400000)), subject: "Historia", category: "Sprawdzian", content: "Rozdział 2" },
+      ],
+    }, iso(new Date(today.getTime() + 3 * 86400000)));
     addEntity("sensor.school_class", "school_class", {
       homeroom_teacher: "Amelia Marciszak",
       school_year_start: iso(new Date(2026, 8, 1)),
@@ -479,6 +504,8 @@
       { tag: "librus-subject-grades-card", config: { type: "custom:librus-subject-grades-card", subject_id: 1 } },
       "librus-grade-trend-card",
       { tag: "librus-grade-trend-card", config: { type: "custom:librus-grade-trend-card", subject_id: 1 } },
+      { tag: "librus-grade-goal-card", config: { type: "custom:librus-grade-goal-card", target: 5.0 } },
+      { tag: "librus-grade-goal-card", config: { type: "custom:librus-grade-goal-card", subject_id: 1, target: 4.5 } },
       "librus-grade-distribution-card",
       "librus-grades-radar-card", "librus-grade-category-distribution-card",
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",
@@ -493,6 +520,7 @@
       "librus-today-lessons-card", "librus-next-lesson-tile-card", "librus-agenda-card",
       "librus-exam-countdown-card",
       "librus-free-days-card", "librus-free-days-tile-card", "librus-week-timetable-card",
+      "librus-bell-schedule-card",
       "librus-subject-time-card", "librus-school-card",
       "librus-school-year-card",
       "librus-today-card", "librus-week-summary-card", "librus-lucky-number-card",

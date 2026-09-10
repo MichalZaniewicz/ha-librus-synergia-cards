@@ -26,6 +26,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   days_ahead?: number;
   /** History window, in days (grade trend). */
   days?: number;
+  /** Target average for the grade-goal card. */
+  target?: number;
   /** Which mailbox the Messages card reads. */
   mailbox?: string;
 }

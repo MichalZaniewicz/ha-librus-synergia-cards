@@ -17,7 +17,14 @@ import { t, type TranslationKey } from "./localize";
 type EditorField =
   | { kind: "subject" }
   | { kind: "text"; key: "title"; label: TranslationKey }
-  | { kind: "number"; key: "max_items" | "days_ahead" | "days"; label: TranslationKey; min: number; max: number }
+  | {
+      kind: "number";
+      key: "max_items" | "days_ahead" | "days" | "target";
+      label: TranslationKey;
+      min: number;
+      max: number;
+      float?: boolean;
+    }
   | { kind: "select"; key: "mailbox"; label: TranslationKey; options: { value: string; label: TranslationKey }[] };
 
 const MAILBOX_OPTIONS: { value: string; label: TranslationKey }[] = [
@@ -55,6 +62,12 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     { kind: "number", key: "days", label: "editor.days_back", min: 7, max: 180 },
   ],
   "custom:librus-subject-grades-card": [{ kind: "subject" }],
+  "custom:librus-grade-goal-card": [
+    { kind: "subject" },
+    { kind: "number", key: "target", label: "editor.target", min: 1, max: 6, float: true },
+    TITLE_FIELD,
+  ],
+  "custom:librus-bell-schedule-card": [TITLE_FIELD],
 };
 
 export function librusCardEditor(): LovelaceCardEditor {
@@ -152,9 +165,10 @@ export class LibrusCardEditor extends LitElement {
           label=${t(hass, field.label)}
           min=${field.min}
           max=${field.max}
+          step=${field.float ? "0.05" : "1"}
           .value=${config[field.key] !== undefined ? String(config[field.key]) : ""}
           @change=${(ev: Event) =>
-            this._onNumber(field.key, (ev.target as HTMLInputElement).value, field.min, field.max)}
+            this._onNumber(field, (ev.target as HTMLInputElement).value)}
         ></ha-textfield>
       `;
     }
@@ -192,9 +206,14 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ [key]: value.trim() || undefined });
   }
 
-  private _onNumber(key: string, raw: string, min: number, max: number): void {
-    const n = Number.parseInt(raw, 10);
-    this._patch({ [key]: Number.isNaN(n) ? undefined : Math.min(max, Math.max(min, n)) });
+  private _onNumber(field: { key: string; min: number; max: number; float?: boolean }, raw: string): void {
+    const parsed = field.float ? Number.parseFloat(raw) : Number.parseInt(raw, 10);
+    if (Number.isNaN(parsed)) {
+      this._patch({ [field.key]: undefined });
+      return;
+    }
+    const clamped = Math.min(field.max, Math.max(field.min, parsed));
+    this._patch({ [field.key]: field.float ? Math.round(clamped * 100) / 100 : clamped });
   }
 
   /** Merge a patch into the config, dropping keys set back to `undefined`. */

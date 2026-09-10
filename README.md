@@ -25,6 +25,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Grade log | `custom:librus-grade-log-card` | Every grade from every subject, newest first, one chronological list |
 | Subject grades | `custom:librus-subject-grades-card` | Every grade from ONE subject you pick in the card's own config |
 | Grade trend | `custom:librus-grade-trend-card` | How the overall (or one subject's) average has moved over the last 60 days, from its own state history |
+| Grade goal | `custom:librus-grade-goal-card` | Progress ring toward a target average you pick (overall or one subject), plus a rough "how many more top grades" estimate |
 | Grade distribution | `custom:librus-grade-distribution-card` | Histogram - how many 6s/5s/4s/... across every subject |
 | Grade profile (radar) | `custom:librus-grades-radar-card` | Every subject's average on one spider/radar chart, so a strong or weak subject stands out at a glance |
 | Grades by category | `custom:librus-grade-category-distribution-card` | A donut of how the year's grades split across categories (Sprawdzian/Kartkówka/Odpowiedź/...) |
@@ -52,6 +53,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few |
 | Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break |
 | Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted |
+| Today's schedule | `custom:librus-bell-schedule-card` | The day's period grid (bell times), current period highlighted, past ones dimmed - needs the integration's `bell_schedule` attribute |
 | Lesson time split | `custom:librus-subject-time-card` | A donut of how the week's lesson slots split across subjects, from the timetable |
 | School & class | `custom:librus-school-card` | School name/address/head teacher, class, homeroom teacher, semester dates |
 | End of school year | `custom:librus-school-year-card` | A countdown to the end of the school year, a progress ring for how far through it you are, and the current semester's own end date |
@@ -109,11 +111,12 @@ card supports:
 | Option | Cards | |
 |---|---|---|
 | Student | all | Only shown when more than one child's e-dziennik is configured |
-| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend | Header title override |
+| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule | Header title override |
 | `max_items` | Grade log, Recent activity, Announcements, Messages | Row cap |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days` | Grade trend | How much history to chart (default 60) |
-| `subject_id` | Subject grades, Grade trend | Pick one subject (Grade trend defaults to the overall average) |
+| `subject_id` | Subject grades, Grade trend, Grade goal | Pick one subject (Grade trend / Grade goal default to the overall average) |
+| `target` | Grade goal | Target average, e.g. `4.5` |
 | `mailbox` | Messages | `inbox` / `substitutions` / `alerts` / `justifications` |
 
 ## Design

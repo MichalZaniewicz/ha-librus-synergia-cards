@@ -4,6 +4,7 @@ import "./librus-grades-card";
 import "./librus-grade-log-card";
 import "./librus-subject-grades-card";
 import "./librus-grade-trend-card";
+import "./librus-grade-goal-card";
 import "./librus-grade-distribution-card";
 import "./librus-grades-radar-card";
 import "./librus-grade-category-distribution-card";
@@ -31,6 +32,7 @@ import "./librus-exam-countdown-card";
 import "./librus-free-days-card";
 import "./librus-free-days-tile-card";
 import "./librus-week-timetable-card";
+import "./librus-bell-schedule-card";
 import "./librus-subject-time-card";
 import "./librus-school-card";
 import "./librus-school-year-card";
@@ -77,6 +79,12 @@ window.customCards.push(
     type: "librus-grade-trend-card",
     name: "Librus - Trend średniej",
     description: "Jak zmieniała się średnia (ogólna lub przedmiotu) w ostatnich 60 dniach.",
+    preview: true,
+  },
+  {
+    type: "librus-grade-goal-card",
+    name: "Librus - Cel oceny",
+    description: "Postęp do wybranej docelowej średniej (ogólnej lub z przedmiotu) + ile ocen brakuje.",
     preview: true,
   },
   {
@@ -242,6 +250,12 @@ window.customCards.push(
     preview: true,
   },
   {
+    type: "librus-bell-schedule-card",
+    name: "Librus - Plan dnia",
+    description: "Rozkład dzwonków na dziś z podświetleniem bieżącej lekcji.",
+    preview: true,
+  },
+  {
     type: "librus-subject-time-card",
     name: "Librus - Podział czasu lekcji",
     description: "Pierścieniowy wykres liczby lekcji w tygodniu na przedmiot, z planu lekcji.",
@@ -293,7 +307,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 39 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 41 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

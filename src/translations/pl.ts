@@ -14,6 +14,7 @@ export const pl: Record<keyof typeof en, string> = {
   "editor.max_items": "Maks. liczba wierszy",
   "editor.days_ahead": "Dni do przodu",
   "editor.days_back": "Dni historii",
+  "editor.target": "Docelowa średnia",
   "editor.mailbox": "Skrzynka",
 
   "card.grades.title": "Średnia ocen",
@@ -177,4 +178,18 @@ export const pl: Record<keyof typeof en, string> = {
   "card.streak.title": "Seria bez nieobecności",
   "card.streak.subtitle": "Aktualna passa",
   "label.days": "dni",
+
+  "card.grade_goal.title": "Cel oceny",
+  "card.grade_goal.subtitle_overall": "Średnia ogólna",
+  "card.grade_goal.empty": "Brak ocen, na których można oprzeć cel",
+  "card.grade_goal.reached": "Cel osiągnięty 🎉",
+  "label.current": "Teraz",
+  "label.target": "Cel",
+  "label.to_go": "do celu",
+  "label.sixes_needed": "≈ jeszcze {n}× ocena maksymalna",
+
+  "card.bell_schedule.title": "Plan dnia",
+  "card.bell_schedule.empty": "Brak rozkładu dzwonków — wymaga ha-librus-synergia z atrybutem bell_schedule",
+  "label.lesson_short": "L{n}",
+  "label.after_school": "Lekcje na dziś zakończone",
 };
