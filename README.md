@@ -56,7 +56,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break |
 | Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted |
 | Today's schedule | `custom:librus-bell-schedule-card` | The day's period grid (bell times), current period highlighted, past ones dimmed - needs the integration's `bell_schedule` attribute |
-| Lesson time split | `custom:librus-subject-time-card` | A donut of how the week's lesson slots split across subjects, from the timetable |
+| Lesson time split | `custom:librus-subject-time-card` | A ranked horizontal bar chart of how the week's lesson slots split across subjects, from the timetable |
 | School & class | `custom:librus-school-card` | School name/address/head teacher, class, homeroom teacher, semester dates |
 | End of school year | `custom:librus-school-year-card` | A countdown to the end of the school year, a progress ring for how far through it you are, and the current semester's own end date |
 | Today | `custom:librus-today-card` | Lucky number, unread messages/announcements and the next lesson in one card |

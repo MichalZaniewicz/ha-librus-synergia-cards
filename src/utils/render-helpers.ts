@@ -24,6 +24,40 @@ export function segmentedBar(segments: BarSegment[]): TemplateResult {
   `;
 }
 
+export interface HBarRow {
+  label: string;
+  value: number;
+  colorVar: string;
+}
+
+/**
+ * A ranked horizontal bar chart - one row per item (label, proportional
+ * bar, value), bar width relative to the largest value. Rows are drawn in
+ * the order given, so sort before calling. Styles live in
+ * `librusSharedStyles` (`.hbar-*`).
+ */
+export function hBarChart(rows: HBarRow[]): TemplateResult {
+  const max = Math.max(1, ...rows.map((r) => r.value));
+  return html`
+    <div class="hbar-chart">
+      ${rows.map(
+        (r) => html`
+          <div class="hbar-row">
+            <span class="hbar-label" title=${r.label}>${r.label}</span>
+            <span class="hbar-track">
+              <span
+                class="hbar-fill"
+                style="width:${Math.round((r.value / max) * 100)}%;background:${r.colorVar}"
+              ></span>
+            </span>
+            <b class="hbar-val">${r.value}</b>
+          </div>
+        `
+      )}
+    </div>
+  `;
+}
+
 /**
  * A circular progress ring (grade averages, streaks, ...).
  * Self-contained SVG root so it's safe to splice into any `html` template.

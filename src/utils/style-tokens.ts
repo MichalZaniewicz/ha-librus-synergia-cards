@@ -159,6 +159,43 @@ export const librusSharedStyles = css`
     min-width: 2px;
   }
 
+  /* Ranked horizontal bar chart (hBarChart in render-helpers) - one row
+     per item: label, proportional bar, value. */
+  .hbar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .hbar-row {
+    display: grid;
+    grid-template-columns: minmax(0, 6.5rem) 1fr auto;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+  }
+  .hbar-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--secondary-text-color);
+  }
+  .hbar-track {
+    height: 10px;
+    border-radius: 5px;
+    background: var(--divider-color);
+    overflow: hidden;
+  }
+  .hbar-fill {
+    display: block;
+    height: 100%;
+    border-radius: 5px;
+    min-width: 3px;
+  }
+  .hbar-val {
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+  }
+
   .ring {
     flex: none;
   }

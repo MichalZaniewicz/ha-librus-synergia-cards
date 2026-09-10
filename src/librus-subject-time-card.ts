@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
-import { donutChart, type DonutSegment } from "./utils/render-helpers";
+import { hBarChart, type HBarRow } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 
 function isoWeekday(iso: string): number {
@@ -31,10 +31,12 @@ function mondayOf(d: Date): Date {
 const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--lc-chart-${i + 1})`);
 
 /**
- * How the week's lesson slots split across subjects - a donut counting
- * timetable periods per subject (Mon-Sat, same week `librus-week-
- * timetable-card` shows), not real clock hours - Librus doesn't report a
- * per-lesson duration, and every period is the same length in practice.
+ * How the week's lesson slots split across subjects - a ranked horizontal
+ * bar chart counting timetable periods per subject (Mon-Sat, same week
+ * `librus-week-timetable-card` shows), not real clock hours: Librus
+ * doesn't report a per-lesson duration, and every period is the same
+ * length in practice. A bar chart reads as "X vs Y" far better than a
+ * donut for a dozen-plus categories.
  */
 @customElement("librus-subject-time-card")
 export class LibrusSubjectTimeCard extends LibrusBaseCard {
@@ -102,7 +104,7 @@ export class LibrusSubjectTimeCard extends LibrusBaseCard {
     void this._fetch();
 
     if (this._events.length === 0) {
-      return this._message("mdi:chart-donut-variant", t(hass, "card.subject_time.empty"));
+      return this._message("mdi:chart-bar", t(hass, "card.subject_time.empty"));
     }
 
     const counts = new Map<string, number>();
@@ -110,34 +112,24 @@ export class LibrusSubjectTimeCard extends LibrusBaseCard {
       if (!ev.summary) continue;
       counts.set(ev.summary, (counts.get(ev.summary) ?? 0) + 1);
     }
-    const entries = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-    const segments: DonutSegment[] = entries.map(([subject, value], i) => ({
-      value,
-      colorVar: PALETTE[i % PALETTE.length],
-      label: subject,
-    }));
+    const rows: HBarRow[] = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([subject, value], i) => ({
+        label: subject,
+        value,
+        colorVar: PALETTE[i % PALETTE.length],
+      }));
 
     return html`
       <ha-card>
         <div class="header">
-          <div class="icon-badge"><ha-icon icon="mdi:chart-donut-variant"></ha-icon></div>
+          <div class="icon-badge"><ha-icon icon="mdi:chart-bar"></ha-icon></div>
           <div class="title-block">
             <div class="title">${t(hass, "card.subject_time.title")}</div>
             <div class="subtitle">${t(hass, "card.subject_time.subtitle")}</div>
           </div>
         </div>
-        <div class="chart-wrap">${donutChart(segments, { centerLabel: t(hass, "unit.lessons_per_week") })}</div>
-        <div class="legend-grid">
-          ${segments.map(
-            (s) => html`
-              <span class="legend-cell">
-                <span class="dot" style="background:${s.colorVar}"></span>
-                <span class="name" title=${s.label}>${s.label}</span>
-                <b>${s.value}</b>
-              </span>
-            `
-          )}
-        </div>
+        ${hBarChart(rows)}
       </ha-card>
     `;
   }

@@ -363,7 +363,9 @@
     }, "off");
 
     // Today's lesson timeline (for librus-today-lessons-card + librus-week-timetable-card)
-    const LESSON_SUBJECTS = ["Matematyka", "Język polski", "Biologia", "Wychowanie fizyczne", "Informatyka"];
+    // Weighted so the lesson-time-split bar chart shows varied bar lengths
+    // (Matematyka/Polski really do appear more often than WF).
+    const LESSON_SUBJECTS = ["Matematyka", "Matematyka", "Język polski", "Język polski", "Matematyka", "Biologia", "Język polski", "Biologia", "Wychowanie fizyczne", "Informatyka", "Matematyka"];
     function buildDayEvents(day, count) {
       const events = [];
       let hour = 8, min = 0;

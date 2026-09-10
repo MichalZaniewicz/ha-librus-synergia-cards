@@ -273,7 +273,7 @@ window.customCards.push(
   {
     type: "librus-subject-time-card",
     name: "Librus - Podział czasu lekcji",
-    description: "Pierścieniowy wykres liczby lekcji w tygodniu na przedmiot, z planu lekcji.",
+    description: "Poziomy wykres słupkowy liczby lekcji w tygodniu na przedmiot, z planu lekcji.",
     preview: true,
   },
   {
