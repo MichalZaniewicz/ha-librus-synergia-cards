@@ -206,4 +206,10 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.homework_checklist.title": "Zadania do odhaczenia",
   "card.homework_checklist.progress": "{done}/{total} zrobione",
+
+  "card.semester_comparison.title": "Porównanie semestrów",
+  "card.semester_comparison.subtitle": "Semestr 1 vs 2, wg przedmiotu",
+  "card.semester_comparison.empty": "Brak średnich semestralnych",
+  "card.semester_comparison.s1": "Sem 1",
+  "card.semester_comparison.s2": "Sem 2",
 };

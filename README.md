@@ -27,6 +27,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Grade trend | `custom:librus-grade-trend-card` | How the overall (or one subject's) average has moved over the last 60 days, from its own state history |
 | Grade goal | `custom:librus-grade-goal-card` | Progress ring toward a target average you pick (overall or one subject), plus a rough "how many more top grades" estimate |
 | Grade simulator | `custom:librus-grade-simulator-card` | Tap a grade + weight and see where the chosen subject's average would land (rough estimate) |
+| Semester comparison | `custom:librus-semester-comparison-card` | Semester 1 vs 2 average per subject, side by side, with the change - fills in as semester 2 data lands |
 | Grade distribution | `custom:librus-grade-distribution-card` | Histogram - how many 6s/5s/4s/... across every subject |
 | Grade profile (radar) | `custom:librus-grades-radar-card` | Every subject's average on one spider/radar chart, so a strong or weak subject stands out at a glance |
 | Grades by category | `custom:librus-grade-category-distribution-card` | A donut of how the year's grades split across categories (Sprawdzian/Kartkówka/Odpowiedź/...) |
@@ -114,7 +115,7 @@ card supports:
 | Option | Cards | |
 |---|---|---|
 | Student | all | Only shown when more than one child's e-dziennik is configured |
-| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, Homework checklist | Header title override |
+| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, Homework checklist, Semester comparison | Header title override |
 | `max_items` | Grade log, Recent activity, Announcements, Messages, Homework checklist | Row cap |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days` | Grade trend | How much history to chart (default 60) |

@@ -71,6 +71,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-bell-schedule-card": [TITLE_FIELD],
   "custom:librus-tomorrow-card": [TITLE_FIELD],
   "custom:librus-grade-simulator-card": [{ kind: "subject" }],
+  "custom:librus-semester-comparison-card": [TITLE_FIELD],
 };
 
 export function librusCardEditor(): LovelaceCardEditor {

@@ -331,6 +331,7 @@
         { value: "4+", category: "Kartkówka", date: iso(new Date(today.getTime() - 9 * 86400000)), comments: [] },
         { value: "4", category: "Odpowiedź", date: iso(new Date(today.getTime() - 15 * 86400000)), comments: [] },
       ];
+      const avg = 4 + s.id * 0.3;
       addEntity(entityId, "subject_average", {
         subject_id: s.id,
         subject: s.name,
@@ -341,7 +342,12 @@
         grades,
         proposed_semester_grade: null,
         final_grade: null,
-      }, (4 + s.id * 0.3).toFixed(2));
+        average_arithmetic: Math.round(avg * 100) / 100,
+        // S1 fixed, S2 drifts a bit each way so the comparison card shows
+        // both up and down deltas.
+        average_semester_1: Math.round((avg - 0.2) * 100) / 100,
+        average_semester_2: Math.round((avg + (s.id % 2 ? 0.15 : -0.35)) * 100) / 100,
+      }, avg.toFixed(2));
     }
 
     // Calendars - state attributes mirror what a real HA CalendarEntity exposes.
@@ -517,6 +523,7 @@
       { tag: "librus-grade-goal-card", config: { type: "custom:librus-grade-goal-card", target: 5.0 } },
       { tag: "librus-grade-goal-card", config: { type: "custom:librus-grade-goal-card", subject_id: 1, target: 4.5 } },
       { tag: "librus-grade-simulator-card", config: { type: "custom:librus-grade-simulator-card", subject_id: 2 } },
+      "librus-semester-comparison-card",
       "librus-grade-distribution-card",
       "librus-grades-radar-card", "librus-grade-category-distribution-card",
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",

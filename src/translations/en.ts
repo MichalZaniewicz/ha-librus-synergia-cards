@@ -205,4 +205,10 @@ export const en = {
 
   "card.homework_checklist.title": "Homework checklist",
   "card.homework_checklist.progress": "{done}/{total} done",
+
+  "card.semester_comparison.title": "Semester comparison",
+  "card.semester_comparison.subtitle": "Semester 1 vs 2, by subject",
+  "card.semester_comparison.empty": "No semester averages yet",
+  "card.semester_comparison.s1": "Sem 1",
+  "card.semester_comparison.s2": "Sem 2",
 } as const;

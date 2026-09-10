@@ -6,6 +6,7 @@ import "./librus-subject-grades-card";
 import "./librus-grade-trend-card";
 import "./librus-grade-goal-card";
 import "./librus-grade-simulator-card";
+import "./librus-semester-comparison-card";
 import "./librus-grade-distribution-card";
 import "./librus-grades-radar-card";
 import "./librus-grade-category-distribution-card";
@@ -94,6 +95,12 @@ window.customCards.push(
     type: "librus-grade-simulator-card",
     name: "Librus - Symulator ocen",
     description: "A gdyby następna ocena to __ (waga __)? Zobacz, gdzie wylądowałaby średnia z przedmiotu.",
+    preview: true,
+  },
+  {
+    type: "librus-semester-comparison-card",
+    name: "Librus - Porównanie semestrów",
+    description: "Średnia z semestru 1 i 2 dla każdego przedmiotu obok siebie, ze zmianą.",
     preview: true,
   },
   {
@@ -328,7 +335,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 44 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 45 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );
