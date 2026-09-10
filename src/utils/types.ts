@@ -1,4 +1,4 @@
-import type { HomeAssistant, LovelaceCardConfig } from "custom-card-helpers";
+import type { ActionConfig, HomeAssistant, LovelaceCardConfig } from "custom-card-helpers";
 
 // custom-card-helpers' Themes type predates `darkMode`, which the real
 // frontend has sent for years - augment rather than casting at every call site.
@@ -30,6 +30,9 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   target?: number;
   /** Which mailbox the Messages card reads. */
   mailbox?: string;
+  /** Tap behaviour for the glanceable cards (navigate / more-info / url / call-service).
+   * Configured via YAML - see the README. */
+  tap_action?: ActionConfig;
 }
 
 /** Entity registry entry shape available on `hass.entities` (HA 2024.8+). */

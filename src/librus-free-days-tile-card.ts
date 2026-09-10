@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
 import { daysBetween } from "./utils/format";
 import { t } from "./utils/localize";
+import { tapActionHandler } from "./utils/actions";
 
 const RANGE_DAYS = 240;
 
@@ -88,7 +89,7 @@ export class LibrusFreeDaysTileCard extends LibrusBaseCard {
     const days = daysBetween(new Date(), new Date(`${next.start}T00:00:00`));
 
     return html`
-      <ha-card class="tile">
+      <ha-card class="tile" @click=${tapActionHandler(this, this._config.tap_action, resolved.map.free_days)}>
         <div class="icon-badge amber"><ha-icon icon="mdi:beach"></ha-icon></div>
         <div class="tile-body">
           <div class="subj">${days} ${t(hass, "label.days").toLowerCase()}</div>

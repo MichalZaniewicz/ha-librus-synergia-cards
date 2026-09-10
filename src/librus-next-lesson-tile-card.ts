@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { minutesUntil, formatTime } from "./utils/format";
 import { t, formatCountdown } from "./utils/localize";
+import { tapActionHandler } from "./utils/actions";
 
 /**
  * Reads the `timetable` calendar entity's OWN state attributes rather than
@@ -71,7 +72,7 @@ export class LibrusNextLessonTileCard extends LibrusBaseCard {
     const description = entity.attributes.description as string | undefined;
 
     return html`
-      <ha-card class="tile">
+      <ha-card class="tile" @click=${tapActionHandler(this, this._config.tap_action, map.timetable)}>
         <div class="icon-badge ${isNow ? "good" : ""}"><ha-icon icon="mdi:clock-outline"></ha-icon></div>
         <div class="tile-body">
           <div class="subj">${message}</div>

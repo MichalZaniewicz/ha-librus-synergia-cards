@@ -5,6 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
+import { tapActionHandler } from "./utils/actions";
 
 interface RecentMessage {
   sender: string;
@@ -53,7 +54,7 @@ export class LibrusMessagesTileCard extends LibrusBaseCard {
     const latest = recent[0];
 
     return html`
-      <ha-card class="tile">
+      <ha-card class="tile" @click=${tapActionHandler(this, this._config.tap_action, map.unread_messages)}>
         <div class="icon-badge ${unread > 0 ? "amber" : ""}">
           <ha-icon icon="mdi:email-outline"></ha-icon>
         </div>

@@ -5,6 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
+import { tapActionHandler } from "./utils/actions";
 
 interface RecentAnnouncement {
   subject: string;
@@ -50,7 +51,7 @@ export class LibrusAnnouncementsTileCard extends LibrusBaseCard {
     const latest = recent[0];
 
     return html`
-      <ha-card class="tile">
+      <ha-card class="tile" @click=${tapActionHandler(this, this._config.tap_action, map.unread_announcements)}>
         <div class="icon-badge ${unread > 0 ? "amber" : ""}">
           <ha-icon icon="mdi:bullhorn-outline"></ha-icon>
         </div>

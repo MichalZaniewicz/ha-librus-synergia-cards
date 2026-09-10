@@ -5,6 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
+import { tapActionHandler } from "./utils/actions";
 
 interface RecentNote {
   category: string | null;
@@ -52,7 +53,7 @@ export class LibrusBehaviourNoticesTileCard extends LibrusBaseCard {
     const badgeClass = latest?.sentiment === "negative" ? "bad" : latest?.sentiment === "positive" ? "good" : "";
 
     return html`
-      <ha-card class="tile">
+      <ha-card class="tile" @click=${tapActionHandler(this, this._config.tap_action, map.behaviour_notices)}>
         <div class="icon-badge ${badgeClass}"><ha-icon icon="mdi:alert-circle-outline"></ha-icon></div>
         <div class="tile-body">
           <div class="subj">${count} ${t(hass, "card.behaviour_notices.title").toLowerCase()}</div>
