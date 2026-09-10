@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { daysBetween } from "./utils/format";
 import { t } from "./utils/localize";
+import { tapActionHandler, isActionable } from "./utils/actions";
 
 const FLAME_COUNT = 10;
 const FLAME_STEP_DAYS = 3;
@@ -57,7 +58,10 @@ export class LibrusStreakCard extends LibrusBaseCard {
     const litFlames = Math.min(FLAME_COUNT, Math.ceil(days / FLAME_STEP_DAYS));
 
     return html`
-      <ha-card class="static">
+      <ha-card
+        class=${isActionable(this._config.tap_action) ? "" : "static"}
+        @click=${tapActionHandler(this, this._config.tap_action, map.attendance)}
+      >
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:fire"></ha-icon></div>
           <div class="title-block">

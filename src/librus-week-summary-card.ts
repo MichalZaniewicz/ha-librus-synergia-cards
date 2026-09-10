@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { mapAllByTranslationKey } from "./utils/entities";
 import { formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
+import { tapActionHandler } from "./utils/actions";
 
 const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
 
@@ -55,7 +56,7 @@ export class LibrusWeekSummaryCard extends LibrusBaseCard {
     const agendaMessage = agenda?.attributes.message as string | undefined;
 
     return html`
-      <ha-card>
+      <ha-card @click=${tapActionHandler(this, this._config.tap_action, map.overall_average)}>
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:calendar-check-outline"></ha-icon></div>
           <div class="title-block">

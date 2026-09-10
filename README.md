@@ -121,7 +121,7 @@ card supports:
 | `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator | Pick one subject (Grade trend / Grade goal default to the overall average) |
 | `target` | Grade goal | Target average, e.g. `4.5` |
 | `mailbox` | Messages | `inbox` / `substitutions` / `alerts` / `justifications` |
-| `tap_action` | the tile cards + Student card | Standard Lovelace action config (YAML) - `navigate`, `more-info`, `url`, `perform-action`, `none` |
+| `tap_action` | the glanceable cards: all six tiles, Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Absence-free streak | Standard Lovelace action config (YAML) - `navigate`, `more-info`, `url`, `perform-action`, `none` |
 
 `tap_action` is set in YAML (no visual-editor field yet), e.g.:
 

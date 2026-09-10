@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t, formatCountdown } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
+import { tapActionHandler } from "./utils/actions";
 
 interface BellPeriod {
   lesson_no: number;
@@ -94,7 +95,7 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
     }
 
     return html`
-      <ha-card>
+      <ha-card @click=${tapActionHandler(this, this._config.tap_action, map.school)}>
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:bell-outline"></ha-icon></div>
           <div class="title-block">

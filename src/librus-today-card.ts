@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { minutesUntil } from "./utils/format";
 import { t, formatCountdown } from "./utils/localize";
+import { tapActionHandler } from "./utils/actions";
 
 const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
 
@@ -61,7 +62,7 @@ export class LibrusTodayCard extends LibrusBaseCard {
     const isNow = timetable?.state === "on";
 
     return html`
-      <ha-card>
+      <ha-card @click=${tapActionHandler(this, this._config.tap_action, map.timetable)}>
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:white-balance-sunny"></ha-icon></div>
           <div class="title-block">

@@ -8,6 +8,7 @@ import { mapAllByTranslationKey } from "./utils/entities";
 import { progressRing } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
+import { tapActionHandler } from "./utils/actions";
 
 interface GradeLogEntry {
   value: string;
@@ -93,7 +94,7 @@ export class LibrusGradeGoalCard extends LibrusBaseCard {
         : null;
 
     return html`
-      <ha-card>
+      <ha-card @click=${tapActionHandler(this, this._config.tap_action, entityId)}>
         <div class="header">
           <div class="icon-badge ${reached ? "good" : ""}">
             <ha-icon icon=${reached ? "mdi:flag-checkered" : "mdi:target"}></ha-icon>

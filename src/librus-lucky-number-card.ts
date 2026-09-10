@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { tapActionHandler, isActionable } from "./utils/actions";
 
 const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
 
@@ -59,7 +60,10 @@ export class LibrusLuckyNumberCard extends LibrusBaseCard {
         : t(hass, "card.lucky_number.subtitle");
 
     return html`
-      <ha-card class="static">
+      <ha-card
+        class=${isActionable(this._config.tap_action) ? "" : "static"}
+        @click=${tapActionHandler(this, this._config.tap_action, map.lucky_number)}
+      >
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:dice-5-outline"></ha-icon></div>
           <div class="title-block">

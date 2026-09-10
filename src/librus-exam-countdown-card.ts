@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
 import { daysBetween, formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
+import { tapActionHandler } from "./utils/actions";
 
 const RANGE_DAYS = 90;
 const BAD_STATES = new Set(["unknown", "unavailable", ""]);
@@ -151,7 +152,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
     const days = daysBetween(new Date(), new Date(`${next.date.slice(0, 10)}T00:00:00`));
 
     return html`
-      <ha-card>
+      <ha-card @click=${tapActionHandler(this, this._config.tap_action, resolved.map.next_exam || resolved.map.agenda)}>
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:clipboard-text-outline"></ha-icon></div>
           <div class="title-block">

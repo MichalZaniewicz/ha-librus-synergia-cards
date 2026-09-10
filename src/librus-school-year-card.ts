@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { progressRing } from "./utils/render-helpers";
 import { daysBetween, formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { tapActionHandler } from "./utils/actions";
 
 /**
  * Countdown to the end of the school year, plus a "how far through it are
@@ -80,7 +81,7 @@ export class LibrusSchoolYearCard extends LibrusBaseCard {
     const semesterDaysLeft = Math.max(0, daysBetween(today, new Date(`${currentSemesterEndIso}T00:00:00`)));
 
     return html`
-      <ha-card>
+      <ha-card @click=${tapActionHandler(this, this._config.tap_action, map.school_class)}>
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:party-popper"></ha-icon></div>
           <div class="title-block">
