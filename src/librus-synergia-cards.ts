@@ -118,7 +118,7 @@ window.customCards.push(
   {
     type: "librus-grade-category-distribution-card",
     name: "Librus - Oceny wg kategorii",
-    description: "Pierścieniowy wykres: ile ocen ze sprawdzianów, kartkówek, odpowiedzi itd.",
+    description: "Poziomy wykres słupkowy: ile ocen ze sprawdzianów, kartkówek, odpowiedzi itd.",
     preview: true,
   },
   {

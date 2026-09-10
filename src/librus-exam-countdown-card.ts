@@ -8,6 +8,7 @@ import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar"
 import { daysBetween, formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
 import { tapActionHandler } from "./utils/actions";
+import { librusCardEditor } from "./utils/card-editor";
 
 const RANGE_DAYS = 90;
 const BAD_STATES = new Set(["unknown", "unavailable", ""]);
@@ -19,12 +20,17 @@ const BAD_STATES = new Set(["unknown", "unavailable", ""]);
 // flag, but a school using different wording for the same thing won't
 // match. Not exact, but the only signal there is. Only used as a FALLBACK
 // now - the `next_exam` sensor (ha-librus-synergia with next_exam) does
-// the same detection server-side and is preferred when present.
-const EXAM_CATEGORY_RE = /sprawdzian/i;
+// the same detection server-side and is preferred when present. The
+// keyword list is overridable per card via the `exam_keywords` option.
+const DEFAULT_EXAM_KEYWORDS = "sprawdzian";
 
-function isExam(ev: LibrusCalendarEvent): boolean {
-  const { category } = parseCategory(ev.summary);
-  return category !== null && EXAM_CATEGORY_RE.test(category);
+function examRegex(keywords: string | undefined): RegExp {
+  const parts = (keywords || DEFAULT_EXAM_KEYWORDS)
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return new RegExp(parts.length ? parts.join("|") : DEFAULT_EXAM_KEYWORDS, "i");
 }
 
 interface SensorExam {
@@ -55,7 +61,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
   private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
   public static getStubConfig(): LibrusCardConfig {
@@ -118,13 +124,20 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
     today.setHours(0, 0, 0, 0);
     const end = new Date(today);
     end.setDate(end.getDate() + RANGE_DAYS);
-    const cacheKey = `${entityId}:${today.toDateString()}`;
+    const kw = this._config.exam_keywords || DEFAULT_EXAM_KEYWORDS;
+    const cacheKey = `${entityId}:${today.toDateString()}:${kw}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
+    const re = examRegex(this._config.exam_keywords);
     try {
       const events = await fetchCalendarEvents(this.hass, entityId, today, end);
-      this._events = events.filter(isExam).sort((a, b) => a.start.localeCompare(b.start));
+      this._events = events
+        .filter((ev) => {
+          const { category } = parseCategory(ev.summary);
+          return category !== null && re.test(category);
+        })
+        .sort((a, b) => a.start.localeCompare(b.start));
     } catch {
       this._events = [];
     }

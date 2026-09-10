@@ -93,12 +93,17 @@
   <div class="section">Stany puste / błędy</div>
   <div class="grid" id="empty"></div>
 
+  <!-- Real MDI glyph paths for the ha-icon stand-in below, so the harness
+       (and the docs screenshots taken from it) match what Home Assistant
+       renders. Offline subset - just the icons these cards actually use;
+       regenerate with tools/gen-icons if a card starts using a new one. -->
+  <script src="./icons.js"></script>
+
   <script type="module">
     // Minimal stand-ins for the real HA frontend elements this bundle
-    // expects. Visual fidelity of icons doesn't matter here (they render
-    // correctly inside real Home Assistant) - this harness exists to
-    // verify each card's OWN data-binding and layout logic against
-    // realistic mock data, not to be a design proof.
+    // expects - this harness exists to verify each card's OWN data-binding
+    // and layout logic against realistic mock data. Icons are proxied to
+    // Iconify's MDI set so the rendered result matches Home Assistant.
     customElements.define(
       "ha-card",
       class extends HTMLElement {
@@ -129,8 +134,19 @@
         attributeChangedCallback() { this._render(); }
         _render() {
           if (!this.shadowRoot) this.attachShadow({ mode: "open" });
-          const label = (this.getAttribute("icon") || "?").replace("mdi:", "").slice(0, 2).toUpperCase();
-          this.shadowRoot.innerHTML = `
+          const raw = this.getAttribute("icon") || "mdi:help-circle";
+          const name = raw.replace(/^\w+:/, "");
+          const body = (typeof MDI_ICONS !== "undefined" && MDI_ICONS[name]) || "";
+          const label = name.slice(0, 2).toUpperCase();
+          this.shadowRoot.innerHTML = body
+            ? `
+            <style>
+              :host { display:inline-flex; align-items:center; justify-content:center; width:1em; height:1em; }
+              svg { width:1em; height:1em; display:block; }
+            </style>
+            <svg viewBox="0 0 24 24" fill="currentColor">${body}</svg>
+          `
+            : `
             <style>
               :host { display:inline-flex; align-items:center; justify-content:center; width:1em; height:1em; font-size:20px; }
               .dot { width:100%; height:100%; border-radius:50%; background:currentColor; opacity:0.16; display:flex; align-items:center; justify-content:center; }
@@ -280,9 +296,12 @@
     // demo, whatever time it's opened. 45-min slots, period 3 straddles now.
     const hm = (d) => d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
     const bellSchedule = [];
-    for (let i = 0; i < 6; i++) {
+    const bellSlots = [];
+    for (let i = 0; i < 5; i++) {
       const s = new Date(now.getTime() + ((i - 2) * 55 - 15) * 60000);
-      bellSchedule.push({ lesson_no: i + 1, start: hm(s), end: hm(new Date(s.getTime() + 45 * 60000)) });
+      const e = new Date(s.getTime() + 45 * 60000);
+      bellSchedule.push({ lesson_no: i + 1, start: hm(s), end: hm(e) });
+      bellSlots.push({ start: s, end: e });
     }
     addEntity("sensor.school", "school", {
       town: "Wrocław", street: "ul. Kłodzka", head_teacher: "Edyta Krajewska", email: "sekretariat@zsp21.wroc.pl",
@@ -294,7 +313,7 @@
     }, "Biologia");
     addEntity("sensor.next_lesson", "next_lesson", {
       lesson_no: 4, start: bellSchedule[3].start, end: bellSchedule[3].end, minutes_until: 40,
-      teacher: "A. Marciszak", classroom: "sala 22", is_substitution: false,
+      date: iso(today), teacher: "A. Marciszak", classroom: "sala 22", is_substitution: false,
     }, "Język polski");
     addEntity("sensor.next_exam", "next_exam", {
       days_until: Math.round((tomorrowDay.getTime() - today.getTime()) / 86400000),
@@ -400,11 +419,25 @@
     // the matching weekday's mock lessons when today is Mon-Fri; on a
     // weekend (no real lessons), still show a demo set dated today so the
     // card has something to render when previewing on a Saturday/Sunday.
-    const todayIsWeekday = isoWeekdayOf(today) <= 5;
+    // Today's timetable aligned to the bell schedule so the bell-schedule
+    // card can fill each period row with its subject/room - in real Librus
+    // data both come from the same Timetables endpoint, so they always line
+    // up. Replaces whatever this-week set covered today.
+    const todayBellEvents = bellSlots.map((slot, i) => ({
+      start: slot.start.toISOString(),
+      end: slot.end.toISOString(),
+      allDay: false,
+      summary: LESSON_SUBJECTS[(i + today.getDay()) % LESSON_SUBJECTS.length],
+      location: `sala ${10 + i}`,
+      description: "Nauczyciel " + String.fromCharCode(65 + i),
+    }));
+    const weekdayEventsExToday = weekdayEvents.filter(
+      (ev) => new Date(ev.start).toDateString() !== today.toDateString()
+    );
     const calendarEventsByEntity = {
       "calendar.timetable": [
-        ...weekdayEvents,
-        ...(todayIsWeekday ? [] : buildDayEvents(today, 5)),
+        ...weekdayEventsExToday,
+        ...todayBellEvents,
         ...(tomorrowCovered ? [] : buildDayEvents(tomorrowDay, 5)),
       ],
       "calendar.agenda": [

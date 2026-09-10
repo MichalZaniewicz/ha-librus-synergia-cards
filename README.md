@@ -30,7 +30,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Semester comparison | `custom:librus-semester-comparison-card` | Semester 1 vs 2 average per subject, side by side, with the change - fills in as semester 2 data lands |
 | Grade distribution | `custom:librus-grade-distribution-card` | Histogram - how many 6s/5s/4s/... across every subject |
 | Grade profile (radar) | `custom:librus-grades-radar-card` | Every subject's average on one spider/radar chart, so a strong or weak subject stands out at a glance |
-| Grades by category | `custom:librus-grade-category-distribution-card` | A donut of how the year's grades split across categories (Sprawdzian/Kartkówka/Odpowiedź/...) |
+| Grades by category | `custom:librus-grade-category-distribution-card` | A ranked horizontal bar chart of how the year's grades split across categories (Sprawdzian/Kartkówka/Odpowiedź/...) |
 | Latest grade | `custom:librus-latest-grade-card` | The most recent grade across all subjects, with the teacher's comment if any |
 | Behaviour grade | `custom:librus-behaviour-grade-card` | The formal "ocena zachowania" - distinct from the free-text notices below |
 | Descriptive grades | `custom:librus-descriptive-grades-card` | Non-numeric descriptive assessment, for schools that use it |
@@ -115,13 +115,15 @@ card supports:
 | Option | Cards | |
 |---|---|---|
 | Student | all | Only shown when more than one child's e-dziennik is configured |
-| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, Homework checklist, Semester comparison | Header title override |
+| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, Homework checklist, Semester comparison, Next exam | Header title override |
 | `max_items` | Grade log, Recent activity, Announcements, Messages, Homework checklist | Row cap |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days` | Grade trend | How much history to chart (default 60) |
 | `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator | Pick one subject (Grade trend / Grade goal default to the overall average) |
 | `target` | Grade goal | Target average, e.g. `4.5` |
 | `mailbox` | Messages | `inbox` / `substitutions` / `alerts` / `justifications` |
+| `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
+| `exam_keywords` | Next exam | Comma-separated Agenda-category keywords that count as an exam (default `sprawdzian`), e.g. `sprawdzian, praca klasowa, egzamin` |
 | `tap_action` | the glanceable cards: all six tiles, Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Absence-free streak | Standard Lovelace action config (YAML) - `navigate`, `more-info`, `url`, `perform-action`, `none` |
 
 `tap_action` is set in YAML (no visual-editor field yet), e.g.:
@@ -169,9 +171,10 @@ and empty state, with a light/dark toggle and a language switcher.
    `window.customCards.push(...)` entry). For `getConfigElement()`: return
    `document.createElement("librus-device-editor")` if a student picker is all it needs, or
    `librusCardEditor()` from [`src/utils/card-editor.ts`](src/utils/card-editor.ts) and add a
-   `EDITOR_FIELDS` entry (keyed by the card's `custom:` type) for extra controls - `title`,
-   `max_items`, `days_ahead`, `days`, a `subject` picker, or a `mailbox` select. The editor renders
-   the student picker automatically whenever more than one Librus device exists.
+   `EDITOR_FIELDS` entry (keyed by the card's `custom:` type) for extra controls - a `text` field
+   (`title`, `exam_keywords`), a `number` (`max_items`, `days_ahead`, `days`, `target`), a `boolean`
+   (`show_saturday`), a `subject` picker, or a `select` (`mailbox`). The editor renders the student
+   picker automatically whenever more than one Librus device exists.
 4. Every user-facing string goes through `t(hass, key)` from
    [`src/utils/localize.ts`](src/utils/localize.ts) - add the key to
    [`src/translations/en.ts`](src/translations/en.ts) first (the canonical key list) and

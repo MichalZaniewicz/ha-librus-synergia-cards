@@ -4,10 +4,10 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, isHappeningNow, type LibrusCalendarEvent } from "./utils/calendar";
-import { t } from "./utils/localize";
-
-const WEEKDAY_LABELS = [1, 2, 3, 4, 5]; // Mon-Fri, ISO weekday numbers
+import { fetchCalendarEvents, isHappeningNow, hasEnded, type LibrusCalendarEvent } from "./utils/calendar";
+import { t, formatCountdown } from "./utils/localize";
+import { minutesUntil } from "./utils/format";
+import { librusCardEditor } from "./utils/card-editor";
 
 function isoWeekday(iso: string): number {
   const d = new Date(iso);
@@ -58,11 +58,15 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
   private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
   public static getStubConfig(): LibrusCardConfig {
     return { type: "custom:librus-week-timetable-card" };
+  }
+
+  private get _dayCount(): number {
+    return this._config?.show_saturday ? 6 : 5;
   }
 
   public setConfig(config: LibrusCardConfig): void {
@@ -97,14 +101,14 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     if (!entityId) return;
 
     const monday = mondayOf(new Date());
-    const saturday = new Date(monday);
-    saturday.setDate(saturday.getDate() + 5);
-    const cacheKey = `${entityId}:${monday.toDateString()}`;
+    const rangeEnd = new Date(monday);
+    rangeEnd.setDate(rangeEnd.getDate() + this._dayCount);
+    const cacheKey = `${entityId}:${monday.toDateString()}:${this._dayCount}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
     try {
-      this._events = await fetchCalendarEvents(this.hass, entityId, monday, saturday);
+      this._events = await fetchCalendarEvents(this.hass, entityId, monday, rangeEnd);
     } catch {
       this._events = [];
     }
@@ -124,18 +128,26 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
       return this._message("mdi:calendar-week-outline", t(hass, "card.week_timetable.empty"));
     }
 
-    const byDay: LibrusCalendarEvent[][] = [[], [], [], [], []];
+    const dayCount = this._dayCount;
+    const byDay: LibrusCalendarEvent[][] = Array.from({ length: dayCount }, () => []);
     for (const ev of this._events) {
       const weekday = isoWeekday(ev.start);
-      if (weekday >= 1 && weekday <= 5) byDay[weekday - 1].push(ev);
+      if (weekday >= 1 && weekday <= dayCount) byDay[weekday - 1].push(ev);
     }
     byDay.forEach((day) => day.sort((a, b) => a.start.localeCompare(b.start)));
     const maxRows = Math.max(...byDay.map((d) => d.length), 1);
-    const dayNames = WEEKDAY_LABELS.map((n) =>
-      new Date(2026, 0, n + 4).toLocaleDateString(hass.language, { weekday: "short" })
+    const dayNames = Array.from({ length: dayCount }, (_, i) =>
+      new Date(2026, 0, i + 5).toLocaleDateString(hass.language, { weekday: "short" })
     );
     const now = new Date();
-    const todayColumn = isoWeekday(now.toISOString()) - 1; // -1 (or 5/6) on a weekend - no column matches
+    const todayColumn = isoWeekday(now.toISOString()) - 1; // out of range on days not shown
+
+    // "Break now": today has a lesson already ended and one still to come,
+    // but none happening right now.
+    const todayEvents = todayColumn >= 0 && todayColumn < dayCount ? byDay[todayColumn] : [];
+    const lessonNow = todayEvents.find((e) => isHappeningNow(e, now));
+    const nextToday = todayEvents.find((e) => new Date(e.start) > now);
+    const breakNow = !lessonNow && !!nextToday && todayEvents.some((e) => hasEnded(e, now));
 
     return html`
       <ha-card>
@@ -144,16 +156,23 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
           <div class="title-block">
             <div class="title">${t(hass, "card.week_timetable.title")}</div>
             <div class="subtitle">
-              ${t(
-                hass,
-                isWeekend(new Date())
-                  ? "card.week_timetable.subtitle_upcoming"
-                  : "card.week_timetable.subtitle"
-              )}
+              ${breakNow
+                ? t(hass, "card.week_timetable.break_now", {
+                    minutes: minutesUntil(new Date(nextToday!.start), now),
+                  })
+                : t(
+                    hass,
+                    isWeekend(new Date())
+                      ? "card.week_timetable.subtitle_upcoming"
+                      : "card.week_timetable.subtitle"
+                  )}
             </div>
           </div>
         </div>
-        <div class="week-grid" style="grid-template-rows: auto repeat(${maxRows}, 1fr);">
+        <div
+          class="week-grid"
+          style="grid-template-columns: 24px repeat(${dayCount}, 1fr); grid-template-rows: auto repeat(${maxRows}, 1fr);"
+        >
           <span class="h"></span>
           ${dayNames.map((n) => html`<span class="h">${n}</span>`)}
           ${Array.from({ length: maxRows }, (_, row) => html`
@@ -162,7 +181,11 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
               const ev = day[row];
               if (!ev) return html`<div class="cell empty"></div>`;
               const current = dayIndex === todayColumn && isHappeningNow(ev, now);
-              return html`<div class="cell on ${current ? "current" : ""}" title=${ev.summary}>${abbreviate(ev.summary)}</div>`;
+              const next = breakNow && dayIndex === todayColumn && ev === nextToday;
+              return html`<div
+                class="cell on ${current ? "current" : ""} ${next ? "next" : ""}"
+                title=${ev.summary}
+              >${abbreviate(ev.summary)}</div>`;
             })}
           `)}
         </div>
@@ -176,7 +199,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     css`
       .week-grid {
         display: grid;
-        grid-template-columns: 24px repeat(5, 1fr);
+        grid-template-columns: 24px repeat(5, 1fr); /* overridden inline per show_saturday */
         gap: 4px;
         font-size: 0.62rem;
       }
@@ -216,6 +239,13 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         background: var(--lc-brand);
         color: #fff;
         box-shadow: 0 0 0 2px var(--lc-brand-strong);
+      }
+      /* The lesson coming up right after the break we're currently in. */
+      .cell.next {
+        background: var(--lc-brand-bg);
+        color: var(--lc-brand-strong);
+        outline: 2px dashed var(--lc-brand);
+        outline-offset: -2px;
       }
       .cell.empty {
         background: transparent;

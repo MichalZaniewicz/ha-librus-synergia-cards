@@ -30,6 +30,10 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   target?: number;
   /** Which mailbox the Messages card reads. */
   mailbox?: string;
+  /** Include Saturday in the week-timetable / lesson-time cards. */
+  show_saturday?: boolean;
+  /** Comma-separated category keywords the exam-countdown card treats as an exam. */
+  exam_keywords?: string;
   /** Tap behaviour for the glanceable cards (navigate / more-info / url / call-service).
    * Configured via YAML - see the README. */
   tap_action?: ActionConfig;

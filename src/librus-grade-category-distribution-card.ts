@@ -1,11 +1,11 @@
-import { html, nothing, type TemplateResult } from "lit";
+import { html, type TemplateResult, nothing } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { mapAllByTranslationKey } from "./utils/entities";
-import { donutChart, type DonutSegment } from "./utils/render-helpers";
+import { hBarChart, type HBarRow } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 
 interface GradeLogEntry {
@@ -21,10 +21,9 @@ const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--lc-chart-${i + 1})`)
 
 /**
  * How the year's grades split across categories (Sprawdzian/Kartkówka/
- * Odpowiedź/...) - a donut over the same `grades` attribute
- * `librus-grade-log-card`/`librus-grade-distribution-card` already read,
- * just grouped by `category` instead of by numeric value. No backend
- * changes needed.
+ * Odpowiedź/...) - a ranked horizontal bar chart over the same `grades`
+ * attribute `librus-grade-log-card`/`librus-grade-distribution-card`
+ * already read, just grouped by `category` instead of by numeric value.
  */
 @customElement("librus-grade-category-distribution-card")
 export class LibrusGradeCategoryDistributionCard extends LibrusBaseCard {
@@ -70,34 +69,27 @@ export class LibrusGradeCategoryDistributionCard extends LibrusBaseCard {
       return this._message("mdi:chart-donut", t(hass, "card.grade_category_distribution.empty"));
     }
 
-    const entries = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-    const segments: DonutSegment[] = entries.map(([category, value], i) => ({
-      value,
-      colorVar: PALETTE[i % PALETTE.length],
-      label: category === "__uncategorized" ? t(hass, "card.grade_category_distribution.uncategorized") : category,
-    }));
+    const rows: HBarRow[] = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([category, value], i) => ({
+        label:
+          category === "__uncategorized"
+            ? t(hass, "card.grade_category_distribution.uncategorized")
+            : category,
+        value,
+        colorVar: PALETTE[i % PALETTE.length],
+      }));
 
     return html`
       <ha-card>
         <div class="header">
-          <div class="icon-badge"><ha-icon icon="mdi:chart-donut"></ha-icon></div>
+          <div class="icon-badge"><ha-icon icon="mdi:chart-bar"></ha-icon></div>
           <div class="title-block">
             <div class="title">${t(hass, "card.grade_category_distribution.title")}</div>
             <div class="subtitle">${t(hass, "card.grade_category_distribution.subtitle")}</div>
           </div>
         </div>
-        <div class="chart-wrap">${donutChart(segments, { centerLabel: t(hass, "unit.grades") })}</div>
-        <div class="legend-grid">
-          ${segments.map(
-            (s) => html`
-              <span class="legend-cell">
-                <span class="dot" style="background:${s.colorVar}"></span>
-                <span class="name" title=${s.label}>${s.label}</span>
-                <b>${s.value}</b>
-              </span>
-            `
-          )}
-        </div>
+        ${hBarChart(rows)}
       </ha-card>
     `;
   }

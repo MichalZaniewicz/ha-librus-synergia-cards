@@ -16,7 +16,8 @@ import { t, type TranslationKey } from "./localize";
 
 type EditorField =
   | { kind: "subject" }
-  | { kind: "text"; key: "title"; label: TranslationKey }
+  | { kind: "text"; key: "title" | "exam_keywords"; label: TranslationKey }
+  | { kind: "boolean"; key: "show_saturday"; label: TranslationKey }
   | {
       kind: "number";
       key: "max_items" | "days_ahead" | "days" | "target";
@@ -72,6 +73,16 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-tomorrow-card": [TITLE_FIELD],
   "custom:librus-grade-simulator-card": [{ kind: "subject" }],
   "custom:librus-semester-comparison-card": [TITLE_FIELD],
+  "custom:librus-week-timetable-card": [
+    { kind: "boolean", key: "show_saturday", label: "editor.show_saturday" },
+  ],
+  "custom:librus-subject-time-card": [
+    { kind: "boolean", key: "show_saturday", label: "editor.show_saturday" },
+  ],
+  "custom:librus-exam-countdown-card": [
+    TITLE_FIELD,
+    { kind: "text", key: "exam_keywords", label: "editor.exam_keywords" },
+  ],
 };
 
 export function librusCardEditor(): LovelaceCardEditor {
@@ -85,6 +96,21 @@ export class LibrusCardEditor extends LitElement {
 
   public setConfig(config: LibrusCardConfig): void {
     this._config = config;
+  }
+
+  protected async firstUpdated(): Promise<void> {
+    // On first paint an <ha-select>'s value can be applied before its
+    // <ha-list-item>s upgrade, so it shows the raw value instead of the
+    // option label. Re-assigning the value once the items exist fixes it.
+    await this.updateComplete;
+    this.renderRoot
+      .querySelectorAll<Element & { value: string }>("ha-select")
+      .forEach((sel) => {
+        const v = sel.value;
+        if (!v) return;
+        sel.value = "";
+        sel.value = v;
+      });
   }
 
   private get _fields(): EditorField[] {
@@ -116,8 +142,13 @@ export class LibrusCardEditor extends LitElement {
               <ha-select
                 label=${t(hass, "editor.student")}
                 .value=${config.device_id ?? ""}
-                @selected=${this._onDeviceSelected}
-                @closed=${(e: Event) => e.stopPropagation()}
+                naturalMenuWidth
+                fixedMenuPosition
+                @selected=${(e: Event) => this._pickDevice(e)}
+                @closed=${(e: Event) => {
+                  e.stopPropagation();
+                  this._pickDevice(e);
+                }}
               >
                 ${devices.map((id) => {
                   const device = hass.devices?.[id];
@@ -131,8 +162,13 @@ export class LibrusCardEditor extends LitElement {
               <ha-select
                 label=${t(hass, "editor.subject")}
                 .value=${config.subject_id !== undefined ? String(config.subject_id) : ""}
-                @selected=${(ev: CustomEvent<{ index: number }>) => this._onSubjectSelected(ev, subjects)}
-                @closed=${(e: Event) => e.stopPropagation()}
+                naturalMenuWidth
+                fixedMenuPosition
+                @selected=${(e: Event) => this._pickSubject(e)}
+                @closed=${(e: Event) => {
+                  e.stopPropagation();
+                  this._pickSubject(e);
+                }}
               >
                 <ha-list-item .value=${""}>${t(hass, "editor.subject_auto")}</ha-list-item>
                 ${subjects.map((s) =>
@@ -161,6 +197,17 @@ export class LibrusCardEditor extends LitElement {
         ></ha-textfield>
       `;
     }
+    if (field.kind === "boolean") {
+      return html`
+        <ha-formfield label=${t(hass, field.label)}>
+          <ha-switch
+            .checked=${Boolean(config[field.key])}
+            @change=${(ev: Event) =>
+              this._patch({ [field.key]: (ev.target as HTMLInputElement).checked || undefined })}
+          ></ha-switch>
+        </ha-formfield>
+      `;
+    }
     if (field.kind === "number") {
       return html`
         <ha-textfield
@@ -181,9 +228,13 @@ export class LibrusCardEditor extends LitElement {
       <ha-select
         label=${t(hass, field.label)}
         .value=${(config[field.key] as string | undefined) ?? field.options[0].value}
-        @selected=${(ev: CustomEvent<{ index: number }>) =>
-          this._patch({ [field.key]: field.options[ev.detail.index]?.value })}
-        @closed=${(e: Event) => e.stopPropagation()}
+        naturalMenuWidth
+        fixedMenuPosition
+        @selected=${(e: Event) => this._pickSelect(field, e)}
+        @closed=${(e: Event) => {
+          e.stopPropagation();
+          this._pickSelect(field, e);
+        }}
       >
         ${field.options.map(
           (o) => html`<ha-list-item .value=${o.value}>${t(hass, o.label)}</ha-list-item>`
@@ -192,21 +243,40 @@ export class LibrusCardEditor extends LitElement {
     `;
   }
 
-  private _onDeviceSelected(ev: CustomEvent<{ index: number }>): void {
-    const id = findLibrusDeviceIds(this.hass!)[ev.detail.index];
-    if (id) this._patch({ device_id: id });
+  /**
+   * Read the current value straight off an `<ha-select>`. Its `selected`
+   * event does not reliably cross the element's shadow boundary in current
+   * HA frontends (so `ev.detail.index` is unusable here), but `closed`
+   * does, and by then `ha-select.value` already reflects the pick.
+   */
+  private static _selectValue(ev: Event): string {
+    const el = ev.currentTarget as (Element & { value?: string }) | null;
+    return el?.value ?? "";
   }
 
-  private _onSubjectSelected(
-    ev: CustomEvent<{ index: number }>,
-    subjects: { subjectId?: number }[]
-  ): void {
-    // index 0 is the "auto / overall" option; real subjects follow.
-    const subjectId = ev.detail.index === 0 ? undefined : subjects[ev.detail.index - 1]?.subjectId;
-    this._patch({ subject_id: subjectId });
+  private _pickDevice(ev: Event): void {
+    const id = LibrusCardEditor._selectValue(ev);
+    if (id && id !== this._config?.device_id) this._patch({ device_id: id });
   }
 
-  private _onText(key: "title", value: string): void {
+  private _pickSubject(ev: Event): void {
+    const raw = LibrusCardEditor._selectValue(ev);
+    const next = raw === "" ? undefined : Number(raw);
+    if (next === this._config?.subject_id) return;
+    this._patch({ subject_id: Number.isNaN(next as number) ? undefined : next });
+  }
+
+  private _pickSelect(field: { key: "mailbox"; options: { value: string }[] }, ev: Event): void {
+    const value = LibrusCardEditor._selectValue(ev);
+    if (!value) return;
+    const current = (this._config?.[field.key] as string | undefined) ?? field.options[0].value;
+    if (value === current) return;
+    // Storing the first option (the default) as an explicit value is noise;
+    // drop back to "unset" so the card falls through to its own default.
+    this._patch({ [field.key]: value === field.options[0].value ? undefined : value });
+  }
+
+  private _onText(key: "title" | "exam_keywords", value: string): void {
     this._patch({ [key]: value.trim() || undefined });
   }
 

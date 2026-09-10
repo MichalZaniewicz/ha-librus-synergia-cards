@@ -27,8 +27,13 @@ export class LibrusDeviceEditor extends LitElement {
       <ha-select
         label="Uczeń / Student"
         .value=${this._config.device_id ?? ""}
-        @selected=${this._onSelected}
-        @closed=${(e: Event) => e.stopPropagation()}
+        naturalMenuWidth
+        fixedMenuPosition
+        @selected=${(e: Event) => this._onSelected(e)}
+        @closed=${(e: Event) => {
+          e.stopPropagation();
+          this._onSelected(e);
+        }}
       >
         ${devices.map((id) => {
           const device = this.hass!.devices?.[id];
@@ -39,10 +44,11 @@ export class LibrusDeviceEditor extends LitElement {
     `;
   }
 
-  private _onSelected(ev: CustomEvent<{ index: number }>): void {
-    const devices = findLibrusDeviceIds(this.hass!);
-    const deviceId = devices[ev.detail.index];
-    if (!deviceId || !this._config) return;
+  private _onSelected(ev: Event): void {
+    // `ha-select`'s `selected` event does not reliably cross its shadow
+    // boundary; `closed` does, and `ha-select.value` is up to date by then.
+    const deviceId = (ev.currentTarget as (Element & { value?: string }) | null)?.value;
+    if (!deviceId || !this._config || deviceId === this._config.device_id) return;
     const newConfig = { ...this._config, device_id: deviceId };
     this.dispatchEvent(
       new CustomEvent("config-changed", { detail: { config: newConfig }, bubbles: true, composed: true })

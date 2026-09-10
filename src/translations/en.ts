@@ -15,6 +15,8 @@ export const en = {
   "editor.days_back": "Days of history",
   "editor.target": "Target average",
   "editor.mailbox": "Mailbox",
+  "editor.show_saturday": "Show Saturday",
+  "editor.exam_keywords": "Exam category keywords (comma-separated)",
 
   "card.grades.title": "Grade average",
   "card.grades.subtitle": "All subjects",
@@ -149,6 +151,7 @@ export const en = {
   "card.week_timetable.title": "Week timetable",
   "card.week_timetable.subtitle": "This week",
   "card.week_timetable.subtitle_upcoming": "Upcoming week",
+  "card.week_timetable.break_now": "Break — next lesson in {minutes} min",
   "card.week_timetable.empty": "No lessons found for this week",
 
   "card.school.title": "School",
