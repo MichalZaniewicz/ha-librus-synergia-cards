@@ -5,6 +5,7 @@ import "./librus-grade-log-card";
 import "./librus-subject-grades-card";
 import "./librus-grade-trend-card";
 import "./librus-grade-goal-card";
+import "./librus-grade-simulator-card";
 import "./librus-grade-distribution-card";
 import "./librus-grades-radar-card";
 import "./librus-grade-category-distribution-card";
@@ -37,6 +38,7 @@ import "./librus-subject-time-card";
 import "./librus-school-card";
 import "./librus-school-year-card";
 import "./librus-today-card";
+import "./librus-tomorrow-card";
 import "./librus-week-summary-card";
 import "./librus-lucky-number-card";
 import "./librus-student-card";
@@ -85,6 +87,12 @@ window.customCards.push(
     type: "librus-grade-goal-card",
     name: "Librus - Cel oceny",
     description: "Postęp do wybranej docelowej średniej (ogólnej lub z przedmiotu) + ile ocen brakuje.",
+    preview: true,
+  },
+  {
+    type: "librus-grade-simulator-card",
+    name: "Librus - Symulator ocen",
+    description: "A gdyby następna ocena to __ (waga __)? Zobacz, gdzie wylądowałaby średnia z przedmiotu.",
     preview: true,
   },
   {
@@ -280,6 +288,12 @@ window.customCards.push(
     preview: true,
   },
   {
+    type: "librus-tomorrow-card",
+    name: "Librus - Jutro",
+    description: "Następny dzień nauki: lekcje, zadania na termin i sprawdziany (ogarnia weekend).",
+    preview: true,
+  },
+  {
     type: "librus-week-summary-card",
     name: "Librus - Tydzień w skrócie",
     description: "Nowe oceny, nieobecności, uwagi i najbliższe wydarzenie w tym tygodniu.",
@@ -307,7 +321,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 41 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 43 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

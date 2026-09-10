@@ -176,6 +176,10 @@
       const day = String(d.getDate()).padStart(2, "0");
       return `${y}-${m}-${day}`;
     };
+    // Next Mon-Fri after `from` (skips the weekend) - for librus-tomorrow-card.
+    const nextSchoolDay = (from) => { const d = new Date(from); d.setHours(0,0,0,0); d.setDate(d.getDate()+1); while (d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()+1); return d; };
+    const tomorrowDay = nextSchoolDay(today);
+    const tomorrowIso = iso(tomorrowDay);
 
     const SUBJECTS = [
       { id: 1, name: "Matematyka" },
@@ -293,12 +297,13 @@
       teacher: "A. Marciszak", classroom: "sala 22", is_substitution: false,
     }, "Język polski");
     addEntity("sensor.next_exam", "next_exam", {
-      days_until: 3, subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne",
+      days_until: Math.round((tomorrowDay.getTime() - today.getTime()) / 86400000),
+      subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne",
       upcoming: [
-        { date: iso(new Date(today.getTime() + 3 * 86400000)), subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne" },
+        { date: tomorrowIso, subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne" },
         { date: iso(new Date(today.getTime() + 9 * 86400000)), subject: "Historia", category: "Sprawdzian", content: "Rozdział 2" },
       ],
-    }, iso(new Date(today.getTime() + 3 * 86400000)));
+    }, tomorrowIso);
     addEntity("sensor.school_class", "school_class", {
       homeroom_teacher: "Amelia Marciszak",
       school_year_start: iso(new Date(2026, 8, 1)),
@@ -307,7 +312,7 @@
     }, "7d");
     addEntity("sensor.homework_assignments", "homework_assignments", {
       recent: [
-        { topic: "Matematyka", text: "Zadania 1-5, strona 42 - ułamki dziesiętne.", due_date: iso(new Date(today.getTime() + 2 * 86400000)), date: iso(today), teacher: "Jan Kowalski" },
+        { topic: "Matematyka", text: "Zadania 1-5, strona 42 - ułamki dziesiętne.", due_date: tomorrowIso, date: iso(today), teacher: "Jan Kowalski" },
         { topic: "Język polski", text: "Wypracowanie: „Moje wakacje” (min. 150 słów).", due_date: iso(new Date(today.getTime() + 6 * 86400000)), date: iso(today), teacher: "Amelia Marciszak" },
       ],
     }, 2);
@@ -381,6 +386,7 @@
     const mondayOfWeek = (d) => { const m = new Date(d); m.setDate(m.getDate() - (isoWeekdayOf(d) - 1)); m.setHours(0, 0, 0, 0); return m; };
     const weekMonday = mondayOfWeek(today);
     const weekdayEvents = [0, 1, 2, 3, 4].flatMap((offset) => buildDayEvents(new Date(weekMonday.getTime() + offset * 86400000), 5));
+    const tomorrowCovered = tomorrowDay.getTime() < weekMonday.getTime() + 5 * 86400000;
     // librus-today-lessons-card queries exactly [today, tomorrow) - reuse
     // the matching weekday's mock lessons when today is Mon-Fri; on a
     // weekend (no real lessons), still show a demo set dated today so the
@@ -390,6 +396,7 @@
       "calendar.timetable": [
         ...weekdayEvents,
         ...(todayIsWeekday ? [] : buildDayEvents(today, 5)),
+        ...(tomorrowCovered ? [] : buildDayEvents(tomorrowDay, 5)),
       ],
       "calendar.agenda": [
         { start: iso(agendaStart), end: iso(new Date(agendaStart.getTime() + 86400000)), allDay: true, summary: "[Zebranie z Rodzicami] Zebranie z rodzicami. Organizacja roku szkolnego 2026/2027.", description: null },
@@ -506,6 +513,7 @@
       { tag: "librus-grade-trend-card", config: { type: "custom:librus-grade-trend-card", subject_id: 1 } },
       { tag: "librus-grade-goal-card", config: { type: "custom:librus-grade-goal-card", target: 5.0 } },
       { tag: "librus-grade-goal-card", config: { type: "custom:librus-grade-goal-card", subject_id: 1, target: 4.5 } },
+      { tag: "librus-grade-simulator-card", config: { type: "custom:librus-grade-simulator-card", subject_id: 2 } },
       "librus-grade-distribution-card",
       "librus-grades-radar-card", "librus-grade-category-distribution-card",
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",
@@ -523,7 +531,7 @@
       "librus-bell-schedule-card",
       "librus-subject-time-card", "librus-school-card",
       "librus-school-year-card",
-      "librus-today-card", "librus-week-summary-card", "librus-lucky-number-card",
+      "librus-today-card", "librus-tomorrow-card", "librus-week-summary-card", "librus-lucky-number-card",
       "librus-student-card", "librus-streak-card",
     ];
 

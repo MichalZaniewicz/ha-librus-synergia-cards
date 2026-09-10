@@ -192,4 +192,15 @@ export const pl: Record<keyof typeof en, string> = {
   "card.bell_schedule.empty": "Brak rozkładu dzwonków — wymaga ha-librus-synergia z atrybutem bell_schedule",
   "label.lesson_short": "L{n}",
   "label.after_school": "Lekcje na dziś zakończone",
+
+  "card.tomorrow.title": "Jutro",
+  "card.tomorrow.empty": "Nic zaplanowanego na następny dzień nauki",
+  "card.tomorrow.lessons": "lekcji",
+  "card.tomorrow.starts": "Początek",
+  "card.tomorrow.ends": "Koniec",
+  "card.tomorrow.homework": "Zadania na termin: {n}",
+
+  "card.grade_simulator.subtitle": "A gdyby… (szacunkowo)",
+  "card.grade_simulator.empty": "Wybierz przedmiot, który ma oceny",
+  "label.weight": "Waga",
 };

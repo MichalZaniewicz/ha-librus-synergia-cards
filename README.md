@@ -26,6 +26,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Subject grades | `custom:librus-subject-grades-card` | Every grade from ONE subject you pick in the card's own config |
 | Grade trend | `custom:librus-grade-trend-card` | How the overall (or one subject's) average has moved over the last 60 days, from its own state history |
 | Grade goal | `custom:librus-grade-goal-card` | Progress ring toward a target average you pick (overall or one subject), plus a rough "how many more top grades" estimate |
+| Grade simulator | `custom:librus-grade-simulator-card` | Tap a grade + weight and see where the chosen subject's average would land (rough estimate) |
 | Grade distribution | `custom:librus-grade-distribution-card` | Histogram - how many 6s/5s/4s/... across every subject |
 | Grade profile (radar) | `custom:librus-grades-radar-card` | Every subject's average on one spider/radar chart, so a strong or weak subject stands out at a glance |
 | Grades by category | `custom:librus-grade-category-distribution-card` | A donut of how the year's grades split across categories (Sprawdzian/Kartkówka/Odpowiedź/...) |
@@ -58,6 +59,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | School & class | `custom:librus-school-card` | School name/address/head teacher, class, homeroom teacher, semester dates |
 | End of school year | `custom:librus-school-year-card` | A countdown to the end of the school year, a progress ring for how far through it you are, and the current semester's own end date |
 | Today | `custom:librus-today-card` | Lucky number, unread messages/announcements and the next lesson in one card |
+| Tomorrow | `custom:librus-tomorrow-card` | The next school day (skips the weekend): its lessons, plus any homework due or exam that day |
 | Week in review | `custom:librus-week-summary-card` | New grades, absences, notices and the next agenda item this week |
 | Lucky number | `custom:librus-lucky-number-card` | The latest "szczęśliwy numerek" in large type - labeled "For {date}" instead of "Today" when Librus has published the next school day's number ahead of time (requires `ha-librus-synergia` 0.4.15+) |
 | Student card | `custom:librus-student-card` | A playful trading-card style summary computed from attendance/behaviour/grades/activity |
@@ -111,11 +113,11 @@ card supports:
 | Option | Cards | |
 |---|---|---|
 | Student | all | Only shown when more than one child's e-dziennik is configured |
-| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule | Header title override |
+| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow | Header title override |
 | `max_items` | Grade log, Recent activity, Announcements, Messages | Row cap |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days` | Grade trend | How much history to chart (default 60) |
-| `subject_id` | Subject grades, Grade trend, Grade goal | Pick one subject (Grade trend / Grade goal default to the overall average) |
+| `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator | Pick one subject (Grade trend / Grade goal default to the overall average) |
 | `target` | Grade goal | Target average, e.g. `4.5` |
 | `mailbox` | Messages | `inbox` / `substitutions` / `alerts` / `justifications` |
 

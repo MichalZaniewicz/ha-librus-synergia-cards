@@ -191,4 +191,15 @@ export const en = {
   "card.bell_schedule.empty": "No bell schedule yet — needs ha-librus-synergia with the bell_schedule attribute",
   "label.lesson_short": "L{n}",
   "label.after_school": "School's out for today",
+
+  "card.tomorrow.title": "Tomorrow",
+  "card.tomorrow.empty": "Nothing scheduled for the next school day",
+  "card.tomorrow.lessons": "lessons",
+  "card.tomorrow.starts": "Starts",
+  "card.tomorrow.ends": "Ends",
+  "card.tomorrow.homework": "Homework due: {n}",
+
+  "card.grade_simulator.subtitle": "What if… (rough estimate)",
+  "card.grade_simulator.empty": "Pick a subject that has grades",
+  "label.weight": "Weight",
 } as const;
