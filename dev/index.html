@@ -312,10 +312,11 @@
     }, "7d");
     addEntity("sensor.homework_assignments", "homework_assignments", {
       recent: [
-        { topic: "Matematyka", text: "Zadania 1-5, strona 42 - ułamki dziesiętne.", due_date: tomorrowIso, date: iso(today), teacher: "Jan Kowalski" },
-        { topic: "Język polski", text: "Wypracowanie: „Moje wakacje” (min. 150 słów).", due_date: iso(new Date(today.getTime() + 6 * 86400000)), date: iso(today), teacher: "Amelia Marciszak" },
+        { id: 101, topic: "Matematyka", text: "Zadania 1-5, strona 42 - ułamki dziesiętne.", due_date: tomorrowIso, date: iso(today), teacher: "Jan Kowalski" },
+        { id: 102, topic: "Język polski", text: "Wypracowanie: „Moje wakacje” (min. 150 słów).", due_date: iso(new Date(today.getTime() + 6 * 86400000)), date: iso(today), teacher: "Amelia Marciszak" },
+        { id: 103, topic: "Biologia", text: "Notatka o fotosyntezie.", due_date: iso(new Date(today.getTime() + 4 * 86400000)), date: iso(today), teacher: "K. Nowak" },
       ],
-    }, 2);
+    }, 3);
     addEntity("sensor.behaviour_grade", "behaviour_grade", {
       recent: [{ short_name: "wz", value: 5, category: "zachowanie", date: iso(today), text: "Aktywny udział w akcji charytatywnej szkoły.", comments: [] }],
     }, "wz");
@@ -524,7 +525,7 @@
       "librus-messages-card", "librus-messages-tile-card",
       "librus-substitutions-card",
       "librus-announcements-card", "librus-announcements-tile-card",
-      "librus-homework-assignments-card", "librus-recent-activity-card",
+      "librus-homework-assignments-card", "librus-homework-checklist-card", "librus-recent-activity-card",
       "librus-today-lessons-card", "librus-next-lesson-tile-card", "librus-agenda-card",
       "librus-exam-countdown-card",
       "librus-free-days-card", "librus-free-days-tile-card", "librus-week-timetable-card",

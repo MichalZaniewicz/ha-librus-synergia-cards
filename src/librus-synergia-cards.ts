@@ -25,6 +25,7 @@ import "./librus-substitutions-card";
 import "./librus-announcements-card";
 import "./librus-announcements-tile-card";
 import "./librus-homework-assignments-card";
+import "./librus-homework-checklist-card";
 import "./librus-recent-activity-card";
 import "./librus-today-lessons-card";
 import "./librus-next-lesson-tile-card";
@@ -210,6 +211,12 @@ window.customCards.push(
     preview: true,
   },
   {
+    type: "librus-homework-checklist-card",
+    name: "Librus - Zadania do odhaczenia",
+    description: "Zadania domowe z polem wyboru - odhaczone lądują na dole (stan zapisany lokalnie w przeglądarce).",
+    preview: true,
+  },
+  {
     type: "librus-recent-activity-card",
     name: "Librus - Co nowego",
     description: "Wspólny, chronologiczny feed najnowszych ocen, uwag, ogłoszeń i wiadomości.",
@@ -321,7 +328,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 43 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 44 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

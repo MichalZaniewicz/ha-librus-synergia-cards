@@ -203,4 +203,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.grade_simulator.subtitle": "A gdyby… (szacunkowo)",
   "card.grade_simulator.empty": "Wybierz przedmiot, który ma oceny",
   "label.weight": "Waga",
+
+  "card.homework_checklist.title": "Zadania do odhaczenia",
+  "card.homework_checklist.progress": "{done}/{total} zrobione",
 };

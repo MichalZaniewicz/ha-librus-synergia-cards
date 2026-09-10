@@ -9,13 +9,16 @@ import { daysBetween, formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
 
 const RANGE_DAYS = 90;
+const BAD_STATES = new Set(["unknown", "unavailable", ""]);
 // Agenda events are prefixed "[Category] ..." server-side (HomeWorks/
 // Categories, e.g. "Sprawdzian"/"Wycieczka"/"Apel"/"Konkurs"/"Diagnoza").
 // That category list is fetched per-school, not a fixed enum this client
 // can rely on - "sprawdzian" (the common Polish word for a written test)
 // is the best available signal without a structured "is this an exam"
 // flag, but a school using different wording for the same thing won't
-// match. Not exact, but the only signal there is.
+// match. Not exact, but the only signal there is. Only used as a FALLBACK
+// now - the `next_exam` sensor (ha-librus-synergia with next_exam) does
+// the same detection server-side and is preferred when present.
 const EXAM_CATEGORY_RE = /sprawdzian/i;
 
 function isExam(ev: LibrusCalendarEvent): boolean {
@@ -23,11 +26,25 @@ function isExam(ev: LibrusCalendarEvent): boolean {
   return category !== null && EXAM_CATEGORY_RE.test(category);
 }
 
+interface SensorExam {
+  date: string;
+  subject: string | null;
+  category: string | null;
+  content: string | null;
+}
+
+/** Normalized "date + one-line label" for an upcoming exam, from either
+ * the next_exam sensor or the Agenda calendar fallback. */
+interface ExamRef {
+  date: string;
+  text: string;
+}
+
 /**
- * A focused countdown to the NEXT upcoming test/exam, pulled out of the
- * general Agenda feed - the full Agenda card mixes these in with
- * meetings/trips/everything else, so this answers "when's my next
- * sprawdzian?" without having to scan the whole list.
+ * A focused countdown to the NEXT upcoming test/exam. Prefers the
+ * integration's `next_exam` sensor (server-side detection + an `upcoming`
+ * list); falls back to scanning the Agenda calendar for "[Sprawdzian]"-
+ * prefixed events when that sensor isn't present.
  */
 @customElement("librus-exam-countdown-card")
 export class LibrusExamCountdownCard extends LibrusBaseCard {
@@ -63,10 +80,36 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
     clearInterval(this._refreshTimer);
   }
 
+  private _sensorExams(): ExamRef[] | undefined {
+    if (!this.hass) return undefined;
+    const resolved = this._resolveEntities();
+    if ("error" in resolved) return undefined;
+    const entity = resolved.map.next_exam ? this.hass.states[resolved.map.next_exam] : undefined;
+    if (!entity || BAD_STATES.has(entity.state)) return undefined;
+
+    const todayIso = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD, local
+    const list = (entity.attributes.upcoming as SensorExam[] | undefined) ?? [];
+    const refs = list
+      .filter((e) => e.date >= todayIso)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((e) => ({
+        date: e.date,
+        text: [e.subject, e.content].filter(Boolean).join(" — ") || e.category || "",
+      }));
+    // Sensor present but `upcoming` empty/older integration - still honour
+    // its own state (the next exam's date) with the subject attribute.
+    if (refs.length === 0) {
+      return [{ date: entity.state, text: (entity.attributes.subject as string | undefined) ?? "" }];
+    }
+    return refs;
+  }
+
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
     const resolved = this._resolveEntities();
     if ("error" in resolved) return;
+    // The next_exam sensor covers this - skip the calendar scan entirely.
+    if (this._sensorExams() !== undefined) return;
     const entityId = resolved.map.agenda;
     if (!entityId) return;
 
@@ -96,13 +139,16 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
 
     void this._fetch();
 
-    if (this._events.length === 0) {
+    const exams: ExamRef[] =
+      this._sensorExams() ??
+      this._events.map((ev) => ({ date: ev.start, text: parseCategory(ev.summary).text }));
+
+    if (exams.length === 0) {
       return this._message("mdi:clipboard-text-outline", t(hass, "card.exam_countdown.empty"));
     }
 
-    const [next, ...rest] = this._events;
-    const days = daysBetween(new Date(), new Date(`${next.start}T00:00:00`));
-    const nextText = parseCategory(next.summary).text;
+    const [next, ...rest] = exams;
+    const days = daysBetween(new Date(), new Date(`${next.date.slice(0, 10)}T00:00:00`));
 
     return html`
       <ha-card>
@@ -110,19 +156,19 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
           <div class="icon-badge"><ha-icon icon="mdi:clipboard-text-outline"></ha-icon></div>
           <div class="title-block">
             <div class="title">${t(hass, "card.exam_countdown.title")}</div>
-            <div class="subtitle">${formatShortDate(next.start, hass.language)}</div>
+            <div class="subtitle">${formatShortDate(next.date, hass.language)}</div>
           </div>
         </div>
         <div class="countdown">
           <span class="big">${days}</span>
-          <span class="unit">${t(hass, "label.days_until")}<br /><b>${nextText}</b></span>
+          <span class="unit">${t(hass, "label.days_until")}<br /><b>${next.text}</b></span>
         </div>
         ${rest.length
           ? html`
               <hr />
               <div class="chips">
                 ${rest.slice(0, 4).map(
-                  (ev) => html`<span class="chip">${parseCategory(ev.summary).text} <span class="n">${formatShortDate(ev.start, hass.language)}</span></span>`
+                  (e) => html`<span class="chip">${e.text} <span class="n">${formatShortDate(e.date, hass.language)}</span></span>`
                 )}
               </div>
             `

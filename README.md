@@ -46,11 +46,12 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Announcements | `custom:librus-announcements-card` | Unread items from the school notice board - click one to expand its full content (requires `ha-librus-synergia` 0.4.17+; no read-marking side effect, unlike Wiadomości) |
 | Announcements tile | `custom:librus-announcements-tile-card` | Compact single-row tile - unread count + latest subject |
 | Homework assignments | `custom:librus-homework-assignments-card` | Real "zadania domowe" with due dates - distinct from the general agenda feed |
+| Homework checklist | `custom:librus-homework-checklist-card` | The same list with a tick-box per item; ticked items drop to the bottom (done state is per-browser, in `localStorage`) |
 | What's new | `custom:librus-recent-activity-card` | One chronological feed merging the most recent grades, notices, announcements and messages |
 | Today's lessons | `custom:librus-today-lessons-card` | A timeline of today's timetable, highlighting the current lesson |
 | Next lesson | `custom:librus-next-lesson-tile-card` | A single-row tile with the next (or current) lesson, for denser dashboards |
 | Agenda | `custom:librus-agenda-card` | Upcoming terminarz events, grouped by date |
-| Next exam | `custom:librus-exam-countdown-card` | A countdown to the next "[Sprawdzian]"-tagged agenda item, pulled out of the general Agenda feed |
+| Next exam | `custom:librus-exam-countdown-card` | A countdown to the next test/exam - uses the integration's `next_exam` sensor when present, otherwise scans the Agenda feed for "[Sprawdzian]"-tagged items |
 | Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few |
 | Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break |
 | Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted |
@@ -113,8 +114,8 @@ card supports:
 | Option | Cards | |
 |---|---|---|
 | Student | all | Only shown when more than one child's e-dziennik is configured |
-| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow | Header title override |
-| `max_items` | Grade log, Recent activity, Announcements, Messages | Row cap |
+| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, Homework checklist | Header title override |
+| `max_items` | Grade log, Recent activity, Announcements, Messages, Homework checklist | Row cap |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days` | Grade trend | How much history to chart (default 60) |
 | `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator | Pick one subject (Grade trend / Grade goal default to the overall average) |

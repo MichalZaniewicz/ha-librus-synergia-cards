@@ -202,4 +202,7 @@ export const en = {
   "card.grade_simulator.subtitle": "What if… (rough estimate)",
   "card.grade_simulator.empty": "Pick a subject that has grades",
   "label.weight": "Weight",
+
+  "card.homework_checklist.title": "Homework checklist",
+  "card.homework_checklist.progress": "{done}/{total} done",
 } as const;

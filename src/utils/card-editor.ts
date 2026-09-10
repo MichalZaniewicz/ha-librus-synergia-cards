@@ -47,6 +47,7 @@ const MAX_ITEMS_FIELD = (max: number): EditorField => ({
 export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-grade-log-card": [TITLE_FIELD, MAX_ITEMS_FIELD(100)],
   "custom:librus-recent-activity-card": [TITLE_FIELD, MAX_ITEMS_FIELD(50)],
+  "custom:librus-homework-checklist-card": [TITLE_FIELD, MAX_ITEMS_FIELD(30)],
   "custom:librus-announcements-card": [TITLE_FIELD, MAX_ITEMS_FIELD(20)],
   "custom:librus-agenda-card": [
     TITLE_FIELD,
