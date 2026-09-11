@@ -45,6 +45,7 @@ import "./librus-week-summary-card";
 import "./librus-lucky-number-card";
 import "./librus-student-card";
 import "./librus-streak-card";
+import "./librus-rank-card";
 
 interface CustomCardEntry {
   type: string;
@@ -327,15 +328,21 @@ window.customCards.push(
   },
   {
     type: "librus-streak-card",
-    name: "Librus - Seria bez nieobecności",
-    description: "Licznik kolejnych dni bez nieobecności.",
+    name: "Librus - Passy",
+    description: "Trzy serie: bez nieobecności, bez uwag, dobrych ocen z rzędu.",
+    preview: true,
+  },
+  {
+    type: "librus-rank-card",
+    name: "Librus - Ranga",
+    description: "Brąz/Srebro/Złoto/Diament wg średniej ocen, z pierścieniem postępu do kolejnej rangi.",
     preview: true,
   }
 );
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 45 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 46 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

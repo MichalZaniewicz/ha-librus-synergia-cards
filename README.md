@@ -65,7 +65,8 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Week in review | `custom:librus-week-summary-card` | New grades, absences, notices and the next agenda item this week |
 | Lucky number | `custom:librus-lucky-number-card` | The latest "szczęśliwy numerek" in large type - labeled "For {date}" instead of "Today" when Librus has published the next school day's number ahead of time (requires `ha-librus-synergia` 0.4.15+) |
 | Student card | `custom:librus-student-card` | A playful trading-card style summary computed from attendance/behaviour/grades/activity |
-| Absence-free streak | `custom:librus-streak-card` | How many consecutive days since the last real absence |
+| Streaks | `custom:librus-streak-card` | Three "passy": days without an absence, days without a negative behaviour note, consecutive good grades in a row (requires `ha-librus-synergia` 0.6.0+ for the two new ones - falls back to the old attendance-only computation on an older backend) |
+| Rank | `custom:librus-rank-card` | Cosmetic Bronze/Silver/Gold/Diamond tier from your overall average, as a progress ring toward the next one up (requires `ha-librus-synergia` 0.6.0+) |
 
 Each card auto-detects your child's device - **zero YAML required** for the common case of one student.
 If you ever have more than one, the card's visual editor shows a device picker.
@@ -124,7 +125,7 @@ card supports:
 | `mailbox` | Messages | `inbox` / `substitutions` / `alerts` / `justifications` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
 | `exam_keywords` | Next exam | Comma-separated Agenda-category keywords that count as an exam (default `sprawdzian`), e.g. `sprawdzian, praca klasowa, egzamin` |
-| `tap_action` | the glanceable cards: all six tiles, Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Absence-free streak | Standard Lovelace action config (YAML) - `navigate`, `more-info`, `url`, `perform-action`, `none` |
+| `tap_action` | the glanceable cards: all six tiles, Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Streaks, Rank | Standard Lovelace action config (YAML) - `navigate`, `more-info`, `url`, `perform-action`, `none` |
 
 `tap_action` is set in YAML (no visual-editor field yet), e.g.:
 

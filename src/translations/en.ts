@@ -177,9 +177,19 @@ export const en = {
   "stat.grades_score": "Grades",
   "stat.activity_score": "Activity",
 
-  "card.streak.title": "Absence-free streak",
-  "card.streak.subtitle": "Current streak",
+  "card.streak.title": "Streaks",
+  "card.streak.attendance": "No absences",
+  "card.streak.behaviour": "Good behaviour",
+  "card.streak.grades": "Good grades",
   "label.days": "days",
+
+  "card.rank.title": "Rank",
+  "rank.bronze": "Bronze",
+  "rank.silver": "Silver",
+  "rank.gold": "Gold",
+  "rank.diamond": "Diamond",
+  "label.to_next_rank": "to next rank",
+  "label.top_rank": "Top rank reached",
 
   "card.grade_goal.title": "Grade goal",
   "card.grade_goal.subtitle_overall": "Overall average",

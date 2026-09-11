@@ -255,6 +255,15 @@
         "2": { total: 0, present: 0, percentage: null },
       },
     }, 2);
+    // New (ha-librus-synergia 0.6.0): gamification sensors - streaks and a
+    // cosmetic rank tier. attendance_streak intentionally matches
+    // last_absence_date above (18 days) so librus-streak-card's
+    // dedicated-sensor path and its old attribute-fallback path would
+    // agree if compared side by side.
+    addEntity("sensor.attendance_streak", "attendance_streak", {}, 18);
+    addEntity("sensor.behaviour_streak", "behaviour_streak", {}, 42);
+    addEntity("sensor.good_grade_streak", "good_grade_streak", {}, 7);
+    addEntity("sensor.rank", "rank", { average: 4.68, points_to_next_tier: 0.32 }, "gold");
     // CONFIRMED live (2026-09-06): Librus can publish the NEXT school
     // day's number a day ahead - shown here exactly as observed live on
     // a Sunday (today has no school, "4" is actually Monday's number).
@@ -575,7 +584,7 @@
       "librus-subject-time-card", "librus-school-card",
       "librus-school-year-card",
       "librus-today-card", "librus-tomorrow-card", "librus-week-summary-card", "librus-lucky-number-card",
-      "librus-student-card", "librus-streak-card",
+      "librus-student-card", "librus-streak-card", "librus-rank-card",
     ];
 
     function mountCard(container, tag, hassObj, config) {

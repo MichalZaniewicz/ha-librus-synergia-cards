@@ -47,6 +47,14 @@ export const librusTokens = css`
     --lc-chart-14: #1591b0;
     --lc-chart-15: #7c5cd4;
     --lc-chart-16: #a68a1f;
+    /* Rank tiers (librus-rank-card) - Gold deliberately reuses --lc-amber
+       above rather than a near-duplicate hue. */
+    --lc-bronze: #b87333;
+    --lc-bronze-bg: #f1e2d3;
+    --lc-silver: #7c8794;
+    --lc-silver-bg: #e6e9ec;
+    --lc-diamond: #1f9cb8;
+    --lc-diamond-bg: #d9f1f6;
   }
   :host(.dark) {
     --lc-brand: #948cf2;
@@ -79,6 +87,12 @@ export const librusTokens = css`
     --lc-chart-14: #6ab8d1;
     --lc-chart-15: #b88cf2;
     --lc-chart-16: #f2e08c;
+    --lc-bronze: #d9925a;
+    --lc-bronze-bg: rgba(217, 146, 90, 0.16);
+    --lc-silver: #a7b0ba;
+    --lc-silver-bg: rgba(167, 176, 186, 0.16);
+    --lc-diamond: #4dd0e8;
+    --lc-diamond-bg: rgba(77, 208, 232, 0.16);
   }
 `;
 
@@ -122,6 +136,18 @@ export const librusSharedStyles = css`
   .icon-badge.bad {
     background: var(--lc-bad-bg);
     color: var(--lc-bad);
+  }
+  .icon-badge.bronze {
+    background: var(--lc-bronze-bg);
+    color: var(--lc-bronze);
+  }
+  .icon-badge.silver {
+    background: var(--lc-silver-bg);
+    color: var(--lc-silver);
+  }
+  .icon-badge.diamond {
+    background: var(--lc-diamond-bg);
+    color: var(--lc-diamond);
   }
   .title-block {
     min-width: 0;

@@ -9,8 +9,9 @@ Card ideas raised but not built yet. Not a roadmap.
   the overall one).
 - **Month mini-calendar** — a month grid highlighting exam days and free
   days. More work than the linear `librus-exam-countdown-card`.
-- **Teacher directory** — homeroom + subject teachers. Thin until the
-  integration exposes subject teachers (only homeroom is available now).
+- **Teacher directory** — homeroom + subject teachers. No longer blocked:
+  `ha-librus-synergia` 0.6.0 added a `subject_teachers` attribute
+  (subject name -> sorted teacher list) on the School sensor.
 - **Multi-student switcher** — flip a dashboard view between students. A
   card can't drive other cards' `device_id`, so this needs a different
   mechanism (a helper + conditional cards, or a dashboard-level trick).
@@ -24,7 +25,8 @@ Card ideas raised but not built yet. Not a roadmap.
 - **Per-card options not yet exposed**: `icon` / `compact` on every card,
   category-keyword list for `librus-exam-countdown-card`, Mon-Fri vs
   Mon-Sat range for the timetable cards, term scope for the attendance
-  cards, streak-type for `librus-streak-card`.
+  cards. (The old "streak-type" idea is moot now - `librus-streak-card`
+  shows all three streaks together rather than one configurable type.)
 - **List-card filters** — category filter / sort / date range for
   `librus-grade-log-card` and `librus-grades-card` (only `max_items` so
   far).

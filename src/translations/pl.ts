@@ -178,9 +178,19 @@ export const pl: Record<keyof typeof en, string> = {
   "stat.grades_score": "Oceny",
   "stat.activity_score": "Aktywność",
 
-  "card.streak.title": "Seria bez nieobecności",
-  "card.streak.subtitle": "Aktualna passa",
+  "card.streak.title": "Passy",
+  "card.streak.attendance": "Bez nieobecności",
+  "card.streak.behaviour": "Dobre zachowanie",
+  "card.streak.grades": "Dobre oceny",
   "label.days": "dni",
+
+  "card.rank.title": "Ranga",
+  "rank.bronze": "Brąz",
+  "rank.silver": "Srebro",
+  "rank.gold": "Złoto",
+  "rank.diamond": "Diament",
+  "label.to_next_rank": "do kolejnej rangi",
+  "label.top_rank": "Osiągnięto najwyższą rangę",
 
   "card.grade_goal.title": "Cel oceny",
   "card.grade_goal.subtitle_overall": "Średnia ogólna",
