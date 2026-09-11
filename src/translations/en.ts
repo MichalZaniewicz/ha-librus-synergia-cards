@@ -184,6 +184,7 @@ export const en = {
   "label.days": "days",
 
   "card.rank.title": "Rank",
+  "card.rank.empty": "No grades yet to compute a rank",
   "rank.bronze": "Bronze",
   "rank.silver": "Silver",
   "rank.gold": "Gold",

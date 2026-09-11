@@ -74,8 +74,19 @@ export class LibrusRankCard extends LibrusBaseCard {
     const hass = this.hass;
 
     const entity = map.rank ? hass.states[map.rank] : undefined;
-    if (!entity || UNAVAILABLE.has(entity.state) || !isRank(entity.state)) {
-      return this._message("mdi:trophy-outline", t(hass, "empty.generic_error"));
+    if (!entity) {
+      return this._message("mdi:alert-circle-outline", t(hass, "empty.generic_error"));
+    }
+    // FOUND LIVE (2026-09-11): the entity existing with state "unknown" is
+    // the NORMAL, expected state for an account with no numeric grades yet
+    // (the backend sensor can't compute a tier without an average to rank)
+    // - not an error. Showing the generic "something went wrong" message
+    // for this was actively misleading (a real device/entity problem looks
+    // identical to "no grades yet" otherwise) - same "empty state, not an
+    // error state" precedent as librus-grade-goal-card's own
+    // card.grade_goal.empty.
+    if (UNAVAILABLE.has(entity.state) || !isRank(entity.state)) {
+      return this._message("mdi:trophy-outline", t(hass, "card.rank.empty"));
     }
     const tier = entity.state;
     const average = entity.attributes.average as number | undefined;

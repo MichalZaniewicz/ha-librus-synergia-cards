@@ -185,6 +185,7 @@ export const pl: Record<keyof typeof en, string> = {
   "label.days": "dni",
 
   "card.rank.title": "Ranga",
+  "card.rank.empty": "Brak jeszcze ocen do wyliczenia rangi",
   "rank.bronze": "Brąz",
   "rank.silver": "Srebro",
   "rank.gold": "Złoto",
