@@ -481,7 +481,9 @@
     const hass = {
       language: "pl",
       themes: { darkMode: false },
-      devices: { [DEVICE_ID]: { id: DEVICE_ID, name: "E-dziennik Kacper Zaniewicz" } },
+      devices: {
+        [DEVICE_ID]: { id: DEVICE_ID, name: "E-dziennik Kacper Zaniewicz", config_entries: ["dev1_entry"] },
+      },
       entities,
       states,
       localize: (key) => key,
@@ -547,6 +549,23 @@
         }
         return {};
       },
+      // Mocks the event-bus subscription librus-achievements-card uses
+      // (no sensor holds achievement HISTORY - only the raw
+      // librus_synergia_achievement_unlocked bus event does) - fires two
+      // demo achievements shortly after mount so the gallery shows a
+      // populated trophy case rather than always the empty state.
+      connection: {
+        subscribeEvents: async (callback, eventType) => {
+          if (eventType === "librus_synergia_achievement_unlocked") {
+            setTimeout(() => callback({ data: { entry_id: "dev1_entry", id: "first_six", title: "Pierwsza szóstka!" } }), 300);
+            setTimeout(
+              () => callback({ data: { entry_id: "dev1_entry", id: "attendance_streak_7", title: "Tydzień bez nieobecności" } }),
+              600
+            );
+          }
+          return () => {};
+        },
+      },
     };
 
     const emptyHass = {
@@ -584,7 +603,7 @@
       "librus-subject-time-card", "librus-school-card",
       "librus-school-year-card",
       "librus-today-card", "librus-tomorrow-card", "librus-week-summary-card", "librus-lucky-number-card",
-      "librus-student-card", "librus-streak-card", "librus-rank-card",
+      "librus-student-card", "librus-streak-card", "librus-rank-card", "librus-achievements-card",
     ];
 
     function mountCard(container, tag, hassObj, config) {

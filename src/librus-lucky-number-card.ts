@@ -41,8 +41,15 @@ export class LibrusLuckyNumberCard extends LibrusBaseCard {
     const hass = this.hass;
 
     const entity = map.lucky_number ? hass.states[map.lucky_number] : undefined;
-    if (!entity || UNAVAILABLE.has(entity.state)) {
+    if (!entity) {
       return this._message("mdi:dice-5-outline", t(hass, "empty.generic_error"));
+    }
+    // Same empty-vs-error distinction as the Rank card fix: the backend
+    // sensor legitimately reads "unknown" whenever Librus hasn't
+    // published a lucky number at all (most commonly during a school
+    // break, which can last weeks) - not a sign anything is broken.
+    if (UNAVAILABLE.has(entity.state)) {
+      return this._message("mdi:dice-5-outline", t(hass, "card.lucky_number.empty"));
     }
 
     // CONFIRMED live (integration 0.4.15+): Librus can publish the NEXT

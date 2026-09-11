@@ -67,6 +67,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Student card | `custom:librus-student-card` | A playful trading-card style summary computed from attendance/behaviour/grades/activity |
 | Streaks | `custom:librus-streak-card` | Three "passy": days without an absence, days without a negative behaviour note, consecutive good grades in a row (requires `ha-librus-synergia` 0.6.0+ for the two new ones - falls back to the old attendance-only computation on an older backend) |
 | Rank | `custom:librus-rank-card` | Cosmetic Bronze/Silver/Gold/Diamond tier from your overall average, as a progress ring toward the next one up (requires `ha-librus-synergia` 0.6.0+) |
+| Achievements | `custom:librus-achievements-card` | A trophy case for the `librus_synergia_achievement_unlocked` event (requires `ha-librus-synergia` 0.6.0+) - there's no backend sensor listing achievement history, so this card subscribes to the event bus directly and keeps its own list in `localStorage`. Only grows going forward from whenever the card is first added; earlier achievements can't be recovered |
 
 Each card auto-detects your child's device - **zero YAML required** for the common case of one student.
 If you ever have more than one, the card's visual editor shows a device picker.
@@ -205,6 +206,14 @@ sensor state - `src/utils/calendar.ts` normalizes both response shapes HA has sh
 `start`/`end` (a bare ISO string, and a Google-Calendar-style `{date}`/`{dateTime}` object)
 defensively, since which one a given HA version sends wasn't verified against every version this
 repo might run on.
+
+The Achievements card is the one card that reads the WebSocket event bus directly
+(`hass.connection.subscribeEvents`) instead of entity state - `librus_synergia_achievement_unlocked`
+has no backing sensor to read history from, only the individual event firings, so the card
+maintains its own running list in `localStorage`. Because that event fires domain-wide (every
+configured student, not just the one this card's `device_id` points at), the card filters incoming
+events by matching `event.entry_id` against `hass.devices[deviceId].config_entries` - otherwise a
+multi-student household's cards would cross-pollinate each other's achievements.
 
 ## Disclaimer
 

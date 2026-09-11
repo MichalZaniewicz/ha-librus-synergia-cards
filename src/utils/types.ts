@@ -53,6 +53,12 @@ export interface DeviceRegistryEntry {
   id: string;
   name?: string;
   name_by_user?: string | null;
+  /** Config entry ids this device belongs to - for librus-achievements-card
+   * to tell which config entry (student) a `librus_synergia_achievement_
+   * unlocked` bus event's `entry_id` belongs to, since that event is
+   * fired domain-wide (all students), not scoped to one device the way
+   * entity state updates already are. */
+  config_entries?: string[];
 }
 
 /**

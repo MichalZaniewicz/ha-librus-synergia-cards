@@ -170,6 +170,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.lucky_number.title": "Szczęśliwy numerek",
   "card.lucky_number.subtitle": "Dziś w dzienniku",
   "card.lucky_number.subtitle_for_date": "Na {date}",
+  "card.lucky_number.empty": "Nie opublikowano jeszcze numerka (np. w trakcie przerwy szkolnej)",
 
   "card.student.title": "Karta ucznia",
   "stat.overall_rating": "ocena ogólna",
@@ -192,6 +193,10 @@ export const pl: Record<keyof typeof en, string> = {
   "rank.diamond": "Diament",
   "label.to_next_rank": "do kolejnej rangi",
   "label.top_rank": "Osiągnięto najwyższą rangę",
+
+  "card.achievements.title": "Osiągnięcia",
+  "card.achievements.count": "Odblokowano: {n}",
+  "card.achievements.empty": "Jeszcze żadnych odznak - pojawią się tu, gdy nowe osiągnięcie odblokuje się przy tej karcie na dashboardzie (wcześniejszych nie da się odzyskać)",
 
   "card.grade_goal.title": "Cel oceny",
   "card.grade_goal.subtitle_overall": "Średnia ogólna",

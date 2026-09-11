@@ -169,6 +169,7 @@ export const en = {
   "card.lucky_number.title": "Lucky number",
   "card.lucky_number.subtitle": "Today in the register",
   "card.lucky_number.subtitle_for_date": "For {date}",
+  "card.lucky_number.empty": "No lucky number published yet (e.g. during a school break)",
 
   "card.student.title": "Student card",
   "stat.overall_rating": "overall",
@@ -191,6 +192,10 @@ export const en = {
   "rank.diamond": "Diamond",
   "label.to_next_rank": "to next rank",
   "label.top_rank": "Top rank reached",
+
+  "card.achievements.title": "Achievements",
+  "card.achievements.count": "{n} unlocked",
+  "card.achievements.empty": "No badges yet - they'll appear here once a new achievement is unlocked while this card is on a dashboard (earlier ones can't be recovered)",
 
   "card.grade_goal.title": "Grade goal",
   "card.grade_goal.subtitle_overall": "Overall average",
