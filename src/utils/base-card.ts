@@ -1,6 +1,6 @@
-import { LitElement, html, nothing, type TemplateResult } from "lit";
+import { LitElement, html, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { property } from "lit/decorators.js";
-import type { LibrusHass } from "./types";
+import type { LibrusCardConfig, LibrusHass } from "./types";
 import { resolveLibrusDevice, mapByTranslationKey, LibrusConfigError } from "./entities";
 import { t } from "./localize";
 
@@ -32,9 +32,44 @@ export abstract class LibrusBaseCard extends LitElement {
     result: ResolvedEntities;
   };
 
-  /** Call at the top of render(): toggles the `.dark` host class used by style-tokens.ts. */
+  /**
+   * Reaches into the subclass's own `@state() private _config` field by
+   * NAME at runtime, rather than requiring every one of the ~46 cards to
+   * plumb their config through to the base class. TS `private` is a
+   * compile-time-only concept - every card names this field identically
+   * (a repo-wide grep confirms it), so this is safe in practice and lets
+   * the universal `icon`/`hide_header`/`compact` options below work on
+   * every existing AND future card for free, instead of a much larger
+   * refactor touching every card's render().
+   */
+  private get _cardConfig(): LibrusCardConfig | undefined {
+    return (this as unknown as { _config?: LibrusCardConfig })._config;
+  }
+
+  /** Call at the top of render(): toggles the `.dark`/`.compact`/`.hide-header` host classes used by style-tokens.ts. */
   protected _syncTheme(): void {
     this.classList.toggle("dark", Boolean(this.hass?.themes?.darkMode));
+    const config = this._cardConfig;
+    this.classList.toggle("compact", Boolean(config?.compact));
+    this.classList.toggle("hide-header", Boolean(config?.hide_header));
+  }
+
+  /**
+   * Post-render icon override - `<ha-icon icon=...>` bindings are owned by
+   * each card's own template, so a CSS class can't swap the glyph the way
+   * `.dark`/`.compact` work. Re-stamping the attribute here, after every
+   * render, covers every card's `.icon-badge ha-icon` uniformly without
+   * per-card template changes. Harmless no-op for the couple of cards
+   * (e.g. librus-student-card) with no `.icon-badge` at all.
+   */
+  protected updated(changed: PropertyValues): void {
+    super.updated(changed);
+    const icon = this._cardConfig?.icon;
+    if (!icon) return;
+    const target = this.renderRoot.querySelector(".icon-badge ha-icon");
+    if (target && target.getAttribute("icon") !== icon) {
+      target.setAttribute("icon", icon);
+    }
   }
 
   /** Resolves the device + translation_key map, or a ready-to-return error template. */

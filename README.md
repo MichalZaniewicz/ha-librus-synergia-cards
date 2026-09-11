@@ -69,6 +69,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Rank | `custom:librus-rank-card` | Cosmetic Bronze/Silver/Gold/Diamond tier from your overall average, as a progress ring toward the next one up (requires `ha-librus-synergia` 0.6.0+) |
 | Achievements | `custom:librus-achievements-card` | A trophy case for the `librus_synergia_achievement_unlocked` event (requires `ha-librus-synergia` 0.6.0+) - there's no backend sensor listing achievement history, so this card subscribes to the event bus directly and keeps its own list in `localStorage`. Only grows going forward from whenever the card is first added; earlier achievements can't be recovered. Also shows a "N more to: ..." hint for the nearest un-unlocked streak milestone, computed live from the current streak sensors |
 | Teachers | `custom:librus-teachers-card` | Homeroom teacher plus every subject teacher, one directory in one place (requires `ha-librus-synergia` 0.6.0+ for the `subject_teachers` attribute) |
+| Level | `custom:librus-level-card` | A pure-fun XP meter, separate from Rank - it only ever goes up (XP for every grade ever recorded, more for a good one, plus attendance), computed entirely client-side, no backend change needed |
 
 Each card auto-detects your child's device - **zero YAML required** for the common case of one student.
 If you ever have more than one, the card's visual editor shows a device picker.
@@ -118,15 +119,21 @@ card supports:
 | Option | Cards | |
 |---|---|---|
 | Student | all | Only shown when more than one child's e-dziennik is configured |
-| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, Homework checklist, Semester comparison, Next exam | Header title override |
-| `max_items` | Grade log, Recent activity, Announcements, Messages, Homework checklist | Row cap |
+| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, Homework checklist, Semester comparison, Next exam, Level | Header title override |
+| `max_items` | Grade log, Subject grades, Recent activity, Announcements, Messages, Homework checklist | Row cap |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days` | Grade trend | How much history to chart (default 60) |
+| `days` | Grade log, Subject grades | Only include grades from the last N days (unset = no limit) |
+| `category_filter` | Grade log, Subject grades | Comma-separated category keywords - keeps a grade if its category matches any, e.g. `sprawdzian, kartkówka` |
+| `sort` | Grade log, Subject grades | `newest` (default) or `oldest` first |
 | `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator | Pick one subject (Grade trend / Grade goal default to the overall average) |
 | `target` | Grade goal | Target average, e.g. `4.5` |
 | `mailbox` | Messages | `inbox` / `substitutions` / `alerts` / `justifications` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
 | `exam_keywords` | Next exam | Comma-separated Agenda-category keywords that count as an exam (default `sprawdzian`), e.g. `sprawdzian, praca klasowa, egzamin` |
+| `icon` | every card | Override the header icon, e.g. `mdi:star` |
+| `hide_header` | every card | Hide the header row entirely |
+| `compact` | every card | Tighter padding, smaller icon badge, subtitle hidden - for a denser dashboard |
 | `tap_action` | the glanceable cards: all six tiles, Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Streaks, Rank | Standard Lovelace action config (YAML) - `navigate`, `more-info`, `url`, `perform-action`, `none` |
 
 `tap_action` is set in YAML (no visual-editor field yet), e.g.:
@@ -171,13 +178,15 @@ and empty state, with a light/dark toggle and a language switcher.
    (`segmentedBar`, `progressRing`) before writing new CSS/SVG - most layouts in this family are
    built entirely from those two files.
 3. Register it in [`src/librus-synergia-cards.ts`](src/librus-synergia-cards.ts) (one `import` + one
-   `window.customCards.push(...)` entry). For `getConfigElement()`: return
-   `document.createElement("librus-device-editor")` if a student picker is all it needs, or
-   `librusCardEditor()` from [`src/utils/card-editor.ts`](src/utils/card-editor.ts) and add a
-   `EDITOR_FIELDS` entry (keyed by the card's `custom:` type) for extra controls - a `text` field
-   (`title`, `exam_keywords`), a `number` (`max_items`, `days_ahead`, `days`, `target`), a `boolean`
-   (`show_saturday`), a `subject` picker, or a `select` (`mailbox`). The editor renders the student
-   picker automatically whenever more than one Librus device exists.
+   `window.customCards.push(...)` entry). For `getConfigElement()`: return `librusCardEditor()` from
+   [`src/utils/card-editor.ts`](src/utils/card-editor.ts) - every card uses this one shared editor.
+   If a student picker is all the card needs, that's it (no `EDITOR_FIELDS` entry required); for
+   extra controls add one, keyed by the card's `custom:` type - a `text` field (`title`,
+   `exam_keywords`, `category_filter`), a `number` (`max_items`, `days_ahead`, `days`, `target`), a
+   `boolean` (`show_saturday`), a `subject` picker, or a `select` (`mailbox`, `sort`). The editor
+   renders the student picker automatically whenever more than one Librus device exists, and always
+   appends the universal `icon` / `hide_header` / `compact` fields - those are honored generically by
+   `LibrusBaseCard` (see `utils/base-card.ts`), so a new card gets them for free.
 4. Every user-facing string goes through `t(hass, key)` from
    [`src/utils/localize.ts`](src/utils/localize.ts) - add the key to
    [`src/translations/en.ts`](src/translations/en.ts) first (the canonical key list) and

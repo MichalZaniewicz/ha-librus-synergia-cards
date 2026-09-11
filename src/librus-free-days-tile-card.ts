@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
+import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
 import { daysBetween } from "./utils/format";
@@ -22,7 +23,7 @@ export class LibrusFreeDaysTileCard extends LibrusBaseCard {
   private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
   public static getStubConfig(): LibrusCardConfig {

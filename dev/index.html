@@ -614,7 +614,9 @@
       "librus-school-year-card",
       "librus-today-card", "librus-tomorrow-card", "librus-week-summary-card", "librus-lucky-number-card",
       "librus-student-card", "librus-streak-card", "librus-rank-card", "librus-achievements-card",
-      "librus-teachers-card",
+      "librus-teachers-card", "librus-level-card",
+      { tag: "librus-grade-log-card", config: { type: "custom:librus-grade-log-card", title: "Tylko sprawdziany (filtr)", category_filter: "sprawdzian", sort: "oldest" } },
+      { tag: "librus-rank-card", config: { type: "custom:librus-rank-card", compact: true } },
     ];
 
     function mountCard(container, tag, hassObj, config) {

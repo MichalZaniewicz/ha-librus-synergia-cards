@@ -18,6 +18,13 @@ export const pl: Record<keyof typeof en, string> = {
   "editor.mailbox": "Skrzynka",
   "editor.show_saturday": "Pokaż sobotę",
   "editor.exam_keywords": "Słowa-klucze kategorii sprawdzianów (po przecinku)",
+  "editor.icon": "Własna ikona (np. mdi:star)",
+  "editor.hide_header": "Ukryj nagłówek",
+  "editor.compact": "Tryb kompaktowy",
+  "editor.category_filter": "Filtr kategorii (po przecinku, opcjonalnie)",
+  "editor.sort": "Kolejność",
+  "sort.newest": "Najpierw najnowsze",
+  "sort.oldest": "Najpierw najstarsze",
 
   "card.grades.title": "Średnia ocen",
   "card.grades.subtitle": "Wszystkie przedmioty",
@@ -62,6 +69,7 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.grade_log.title": "Dziennik ocen",
   "card.grade_log.subtitle": "Wszystkie przedmioty",
+  "card.grade_log.empty_filtered": "Brak ocen pasujących do filtra",
 
   "card.latest_grade.title": "Ostatnia ocena",
   "card.latest_grade.empty": "Brak ocen",
@@ -209,6 +217,14 @@ export const pl: Record<keyof typeof en, string> = {
   "achievement.behaviour_streak_7": "Tydzień bez uwagi",
   "achievement.behaviour_streak_30": "Miesiąc bez uwagi",
   "achievement.behaviour_streak_90": "3 miesiące bez uwagi",
+
+  "card.level.title": "Poziom",
+  "card.level.subtitle": "XP za oceny i frekwencję",
+  "label.level": "Poziom {n}",
+  "label.xp_to_next": "{n} XP do kolejnego poziomu",
+  "label.xp_from_grades": "Z ocen",
+  "label.xp_from_attendance": "Z frekwencji",
+  "label.xp_total": "Suma XP",
 
   "card.teachers.title": "Nauczyciele",
   "card.teachers.homeroom": "Wychowawca",

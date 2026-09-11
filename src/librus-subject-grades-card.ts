@@ -8,13 +8,7 @@ import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import type { LibrusCardConfig } from "./utils/types";
 import { librusCardEditor } from "./utils/card-editor";
-
-interface GradeLogEntry {
-  value: string;
-  category: string | null;
-  date: string | null;
-  comments: string[];
-}
+import { filterAndSortGrades, type GradeLogEntry } from "./utils/grade-filters";
 
 /**
  * Shows the full grade log for ONE subject, chosen in the card's own
@@ -64,6 +58,13 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
 
     if (grades.length === 0) return this._message("mdi:notebook-outline", t(hass, "card.grades.empty"));
 
+    const filtered = filterAndSortGrades(grades, this._config);
+    if (filtered.length === 0) {
+      return this._message("mdi:notebook-outline", t(hass, "card.grade_log.empty_filtered"));
+    }
+    const max = this._config.max_items;
+    const shown = max ? filtered.slice(0, max) : filtered;
+
     return html`
       <ha-card>
         <div class="header">
@@ -74,7 +75,7 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="scroll-list">
-          ${grades.map(
+          ${shown.map(
             (g) => html`
               <div class="list-item">
                 <div class="grade-chip">${g.value}</div>

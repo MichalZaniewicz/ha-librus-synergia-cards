@@ -34,9 +34,19 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   show_saturday?: boolean;
   /** Comma-separated category keywords the exam-countdown card treats as an exam. */
   exam_keywords?: string;
+  /** Comma-separated category keywords - grade-log/subject-grades keep a grade if its category matches any. */
+  category_filter?: string;
+  /** Sort order for the list cards that support it ("newest" default). */
+  sort?: "newest" | "oldest";
   /** Tap behaviour for the glanceable cards (navigate / more-info / url / call-service).
    * Configured via YAML - see the README. */
   tap_action?: ActionConfig;
+  /** Overrides the header icon (any `mdi:...` name). Universal - see `LibrusBaseCard`. */
+  icon?: string;
+  /** Hides the card's header row entirely. Universal - see `LibrusBaseCard`. */
+  hide_header?: boolean;
+  /** Shrinks padding and drops subtitles for a denser dashboard. Universal - see `LibrusBaseCard`. */
+  compact?: boolean;
 }
 
 /** Entity registry entry shape available on `hass.entities` (HA 2024.8+). */

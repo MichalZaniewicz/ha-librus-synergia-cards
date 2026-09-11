@@ -109,6 +109,33 @@ export const librusSharedStyles = css`
     cursor: default;
   }
 
+  /* Universal density options (LibrusBaseCard._syncTheme) - .compact/.hide-header
+     are host classes, same "toggle a class, react in CSS" pattern as .dark. */
+  :host(.hide-header) .header {
+    display: none;
+  }
+  :host(.compact) ha-card {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  :host(.compact) .header {
+    gap: 8px;
+  }
+  :host(.compact) .icon-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+  }
+  :host(.compact) .icon-badge ha-icon {
+    --mdc-icon-size: 16px;
+  }
+  :host(.compact) .title {
+    font-size: 0.84rem;
+  }
+  :host(.compact) .subtitle {
+    display: none;
+  }
+
   .header {
     display: flex;
     align-items: center;

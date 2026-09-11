@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
+import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { minutesUntil, formatTime } from "./utils/format";
 import { t, formatCountdown } from "./utils/localize";
@@ -21,7 +22,7 @@ export class LibrusNextLessonTileCard extends LibrusBaseCard {
   private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
   public static getStubConfig(): LibrusCardConfig {

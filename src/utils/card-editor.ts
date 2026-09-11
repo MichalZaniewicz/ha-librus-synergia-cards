@@ -16,8 +16,8 @@ import { t, type TranslationKey } from "./localize";
 
 type EditorField =
   | { kind: "subject" }
-  | { kind: "text"; key: "title" | "exam_keywords"; label: TranslationKey }
-  | { kind: "boolean"; key: "show_saturday"; label: TranslationKey }
+  | { kind: "text"; key: "title" | "exam_keywords" | "category_filter" | "icon"; label: TranslationKey }
+  | { kind: "boolean"; key: "show_saturday" | "hide_header" | "compact"; label: TranslationKey }
   | {
       kind: "number";
       key: "max_items" | "days_ahead" | "days" | "target";
@@ -26,7 +26,19 @@ type EditorField =
       max: number;
       float?: boolean;
     }
-  | { kind: "select"; key: "mailbox"; label: TranslationKey; options: { value: string; label: TranslationKey }[] };
+  | { kind: "select"; key: "mailbox" | "sort"; label: TranslationKey; options: { value: string; label: TranslationKey }[] };
+
+/**
+ * Rendered for EVERY card, appended after its own type-specific fields -
+ * these three options are honored generically by `LibrusBaseCard`
+ * (icon override, `.hide-header`/`.compact` host classes), so every card
+ * gets them for free without an `EDITOR_FIELDS` entry.
+ */
+const COMMON_FIELDS: EditorField[] = [
+  { kind: "text", key: "icon", label: "editor.icon" },
+  { kind: "boolean", key: "hide_header", label: "editor.hide_header" },
+  { kind: "boolean", key: "compact", label: "editor.compact" },
+];
 
 const MAILBOX_OPTIONS: { value: string; label: TranslationKey }[] = [
   { value: "inbox", label: "mailbox.inbox" },
@@ -34,6 +46,15 @@ const MAILBOX_OPTIONS: { value: string; label: TranslationKey }[] = [
   { value: "alerts", label: "mailbox.alerts" },
   { value: "justifications", label: "mailbox.justifications" },
 ];
+
+const SORT_OPTIONS: { value: string; label: TranslationKey }[] = [
+  { value: "newest", label: "sort.newest" },
+  { value: "oldest", label: "sort.oldest" },
+];
+
+const CATEGORY_FILTER_FIELD: EditorField = { kind: "text", key: "category_filter", label: "editor.category_filter" };
+const SORT_FIELD: EditorField = { kind: "select", key: "sort", label: "editor.sort", options: SORT_OPTIONS };
+const DAYS_BACK_FIELD: EditorField = { kind: "number", key: "days", label: "editor.days_back", min: 7, max: 365 };
 
 const TITLE_FIELD: EditorField = { kind: "text", key: "title", label: "editor.title" };
 const MAX_ITEMS_FIELD = (max: number): EditorField => ({
@@ -46,7 +67,7 @@ const MAX_ITEMS_FIELD = (max: number): EditorField => ({
 
 /** type (with the `custom:` prefix, as it appears in a card config) -> fields. */
 export const EDITOR_FIELDS: Record<string, EditorField[]> = {
-  "custom:librus-grade-log-card": [TITLE_FIELD, MAX_ITEMS_FIELD(100)],
+  "custom:librus-grade-log-card": [TITLE_FIELD, MAX_ITEMS_FIELD(100), CATEGORY_FILTER_FIELD, DAYS_BACK_FIELD, SORT_FIELD],
   "custom:librus-recent-activity-card": [TITLE_FIELD, MAX_ITEMS_FIELD(50)],
   "custom:librus-homework-checklist-card": [TITLE_FIELD, MAX_ITEMS_FIELD(30)],
   "custom:librus-announcements-card": [TITLE_FIELD, MAX_ITEMS_FIELD(20)],
@@ -63,7 +84,13 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     { kind: "subject" },
     { kind: "number", key: "days", label: "editor.days_back", min: 7, max: 180 },
   ],
-  "custom:librus-subject-grades-card": [{ kind: "subject" }],
+  "custom:librus-subject-grades-card": [
+    { kind: "subject" },
+    MAX_ITEMS_FIELD(100),
+    CATEGORY_FILTER_FIELD,
+    DAYS_BACK_FIELD,
+    SORT_FIELD,
+  ],
   "custom:librus-grade-goal-card": [
     { kind: "subject" },
     { kind: "number", key: "target", label: "editor.target", min: 1, max: 6, float: true },
@@ -180,6 +207,8 @@ export class LibrusCardEditor extends LitElement {
             `
           : nothing}
         ${fields.map((field) => this._renderField(field))}
+        <hr class="sep" />
+        ${COMMON_FIELDS.map((field) => this._renderField(field))}
       </div>
     `;
   }
@@ -266,7 +295,7 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ subject_id: Number.isNaN(next as number) ? undefined : next });
   }
 
-  private _pickSelect(field: { key: "mailbox"; options: { value: string }[] }, ev: Event): void {
+  private _pickSelect(field: { key: "mailbox" | "sort"; options: { value: string }[] }, ev: Event): void {
     const value = LibrusCardEditor._selectValue(ev);
     if (!value) return;
     const current = (this._config?.[field.key] as string | undefined) ?? field.options[0].value;
@@ -276,7 +305,7 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ [field.key]: value === field.options[0].value ? undefined : value });
   }
 
-  private _onText(key: "title" | "exam_keywords", value: string): void {
+  private _onText(key: "title" | "exam_keywords" | "category_filter" | "icon", value: string): void {
     this._patch({ [key]: value.trim() || undefined });
   }
 
@@ -310,6 +339,11 @@ export class LibrusCardEditor extends LitElement {
     ha-select,
     ha-textfield {
       width: 100%;
+    }
+    hr.sep {
+      border: none;
+      border-top: 1px solid var(--divider-color);
+      margin: 2px 0;
     }
   `;
 }

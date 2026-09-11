@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig, LibrusHass } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
+import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t, type TranslationKey } from "./utils/localize";
 
@@ -72,7 +73,7 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
   private _unsubscribe?: () => void;
 
   public static getConfigElement(): LovelaceCardEditor {
-    return document.createElement("librus-device-editor") as LovelaceCardEditor;
+    return librusCardEditor();
   }
 
   public static getStubConfig(): LibrusCardConfig {

@@ -9,12 +9,16 @@ Card ideas raised but not built yet. Not a roadmap.
   the overall one).
 - **Month mini-calendar** — a month grid highlighting exam days and free
   days. More work than the linear `librus-exam-countdown-card`.
-- **Teacher directory** — homeroom + subject teachers. No longer blocked:
-  `ha-librus-synergia` 0.6.0 added a `subject_teachers` attribute
-  (subject name -> sorted teacher list) on the School sensor.
+- ~~**Teacher directory**~~ — done: `librus-teachers-card`, homeroom +
+  subject teachers from the School/Class sensors' existing attributes.
+- **Month mini-calendar** — a month grid highlighting exam days and free
+  days. More work than the linear `librus-exam-countdown-card`.
 - **Multi-student switcher** — flip a dashboard view between students. A
   card can't drive other cards' `device_id`, so this needs a different
   mechanism (a helper + conditional cards, or a dashboard-level trick).
+- ~~**Level/XP card**~~ — done: `librus-level-card`, a pure-fun meter that
+  only ever goes up (distinct from Rank, which tracks the current average
+  and can go back down).
 
 ## Editor / config
 - **`tap_action` in the visual editor** — it's YAML-only right now; the
@@ -22,15 +26,23 @@ Card ideas raised but not built yet. Not a roadmap.
   migration to HA's native `ha-form` (with its `ui-action` selector)
   would fix this and generally look more native — but can't be visually
   verified without a live HA instance.
-- **Per-card options not yet exposed**: `icon` / `compact` on every card,
-  category-keyword list for `librus-exam-countdown-card`, Mon-Fri vs
-  Mon-Sat range for the timetable cards, term scope for the attendance
-  cards. (The old "streak-type" idea is moot now - `librus-streak-card`
-  shows all three streaks together rather than one configurable type.)
-- **List-card filters** — category filter / sort / date range for
-  `librus-grade-log-card` and `librus-grades-card` (only `max_items` so
-  far).
-- **`toggle header` common option** — hide the card header entirely.
+- ~~**Per-card options**: `icon` / `compact` / hide-header~~ — done: every
+  card gets these for free via `LibrusBaseCard` (a runtime reach-through
+  into each card's own `_config` field, documented in `base-card.ts` -
+  avoided a much larger refactor touching every card's `render()`).
+  Category-keyword list for `librus-exam-countdown-card` was already
+  done (`exam_keywords`). Still open: Mon-Fri vs Mon-Sat range for the
+  timetable cards (partially covered by `show_saturday`), term scope for
+  the attendance cards.
+- ~~**List-card filters**~~ — done: `category_filter` / `days` / `sort` on
+  `librus-grade-log-card` and `librus-subject-grades-card`. (Renamed from
+  the original "Grade average" idea - that card has no per-grade list to
+  filter, only per-subject averages; `librus-subject-grades-card` was the
+  actual second list-shaped card.)
+- Every card previously using the bare `librus-device-editor` (student
+  picker only) was switched onto the shared `librusCardEditor()` this
+  round, so the old separate editor element could be deleted - now there
+  is exactly one editor implementation for the whole repo.
 
 ## Card behaviour
 - **`librus-messages-card` mark-as-read button** — an explicit action

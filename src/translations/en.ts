@@ -17,6 +17,13 @@ export const en = {
   "editor.mailbox": "Mailbox",
   "editor.show_saturday": "Show Saturday",
   "editor.exam_keywords": "Exam category keywords (comma-separated)",
+  "editor.icon": "Icon override (e.g. mdi:star)",
+  "editor.hide_header": "Hide header",
+  "editor.compact": "Compact mode",
+  "editor.category_filter": "Category filter (comma-separated, optional)",
+  "editor.sort": "Sort order",
+  "sort.newest": "Newest first",
+  "sort.oldest": "Oldest first",
 
   "card.grades.title": "Grade average",
   "card.grades.subtitle": "All subjects",
@@ -61,6 +68,7 @@ export const en = {
 
   "card.grade_log.title": "Grade log",
   "card.grade_log.subtitle": "All subjects",
+  "card.grade_log.empty_filtered": "No grades match this filter",
 
   "card.latest_grade.title": "Latest grade",
   "card.latest_grade.empty": "No grades yet",
@@ -208,6 +216,14 @@ export const en = {
   "achievement.behaviour_streak_7": "A week without a note",
   "achievement.behaviour_streak_30": "A month without a note",
   "achievement.behaviour_streak_90": "3 months without a note",
+
+  "card.level.title": "Level",
+  "card.level.subtitle": "XP from grades & attendance",
+  "label.level": "Level {n}",
+  "label.xp_to_next": "{n} XP to next level",
+  "label.xp_from_grades": "From grades",
+  "label.xp_from_attendance": "From attendance",
+  "label.xp_total": "Total XP",
 
   "card.teachers.title": "Teachers",
   "card.teachers.homeroom": "Homeroom teacher",

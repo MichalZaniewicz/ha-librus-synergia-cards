@@ -8,13 +8,7 @@ import { mapAllByTranslationKey } from "./utils/entities";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
-
-interface GradeLogEntry {
-  value: string;
-  category: string | null;
-  date: string | null;
-  comments: string[];
-}
+import { filterAndSortGrades, type GradeLogEntry } from "./utils/grade-filters";
 
 interface FlatGrade extends GradeLogEntry {
   subject: string;
@@ -58,9 +52,13 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
       const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
       for (const g of grades) flat.push({ ...g, subject: s.subject });
     }
-    flat.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
 
     if (flat.length === 0) return this._message("mdi:notebook-multiple", t(hass, "card.grades.empty"));
+
+    const filtered = filterAndSortGrades(flat, this._config);
+    if (filtered.length === 0) {
+      return this._message("mdi:notebook-multiple", t(hass, "card.grade_log.empty_filtered"));
+    }
 
     const max = this._config.max_items ?? DEFAULT_MAX;
 
@@ -74,7 +72,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="scroll-list">
-          ${flat.slice(0, max).map(
+          ${filtered.slice(0, max).map(
             (g) => html`
               <div class="list-item">
                 <div class="grade-chip">${g.value}</div>

@@ -1,4 +1,3 @@
-import "./librus-device-editor";
 import "./utils/card-editor";
 import "./librus-grades-card";
 import "./librus-grade-log-card";
@@ -48,6 +47,7 @@ import "./librus-streak-card";
 import "./librus-rank-card";
 import "./librus-achievements-card";
 import "./librus-teachers-card";
+import "./librus-level-card";
 
 interface CustomCardEntry {
   type: string;
@@ -351,12 +351,18 @@ window.customCards.push(
     name: "Librus - Nauczyciele",
     description: "Wychowawca i nauczyciele przedmiotów, wyliczeni z planu lekcji.",
     preview: true,
+  },
+  {
+    type: "librus-level-card",
+    name: "Librus - Poziom",
+    description: "Licznik XP za oceny i frekwencję z pierścieniem postępu - w przeciwieństwie do Rangi rośnie tylko w górę.",
+    preview: true,
   }
 );
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 48 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 49 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );
