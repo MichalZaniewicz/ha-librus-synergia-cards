@@ -197,6 +197,23 @@ export const pl: Record<keyof typeof en, string> = {
   "card.achievements.title": "Osiągnięcia",
   "card.achievements.count": "Odblokowano: {n}",
   "card.achievements.empty": "Jeszcze żadnych odznak - pojawią się tu, gdy nowe osiągnięcie odblokuje się przy tej karcie na dashboardzie (wcześniejszych nie da się odzyskać)",
+  "card.achievements.next_hint": "Jeszcze {n} do: {title}",
+
+  "achievement.first_six": "Pierwsza szóstka!",
+  "achievement.good_grade_streak_5": "5 dobrych ocen z rzędu",
+  "achievement.good_grade_streak_10": "10 dobrych ocen z rzędu",
+  "achievement.good_grade_streak_20": "20 dobrych ocen z rzędu",
+  "achievement.attendance_streak_7": "Tydzień bez nieobecności",
+  "achievement.attendance_streak_30": "Miesiąc bez nieobecności",
+  "achievement.attendance_streak_90": "3 miesiące bez nieobecności",
+  "achievement.behaviour_streak_7": "Tydzień bez uwagi",
+  "achievement.behaviour_streak_30": "Miesiąc bez uwagi",
+  "achievement.behaviour_streak_90": "3 miesiące bez uwagi",
+
+  "card.teachers.title": "Nauczyciele",
+  "card.teachers.homeroom": "Wychowawca",
+  "card.teachers.count": "{n} przedmiotów",
+  "card.teachers.empty": "Brak jeszcze katalogu nauczycieli",
 
   "card.grade_goal.title": "Cel oceny",
   "card.grade_goal.subtitle_overall": "Średnia ogólna",

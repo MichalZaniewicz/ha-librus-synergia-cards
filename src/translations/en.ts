@@ -196,6 +196,23 @@ export const en = {
   "card.achievements.title": "Achievements",
   "card.achievements.count": "{n} unlocked",
   "card.achievements.empty": "No badges yet - they'll appear here once a new achievement is unlocked while this card is on a dashboard (earlier ones can't be recovered)",
+  "card.achievements.next_hint": "{n} more to: {title}",
+
+  "achievement.first_six": "First six!",
+  "achievement.good_grade_streak_5": "5 good grades in a row",
+  "achievement.good_grade_streak_10": "10 good grades in a row",
+  "achievement.good_grade_streak_20": "20 good grades in a row",
+  "achievement.attendance_streak_7": "A week without an absence",
+  "achievement.attendance_streak_30": "A month without an absence",
+  "achievement.attendance_streak_90": "3 months without an absence",
+  "achievement.behaviour_streak_7": "A week without a note",
+  "achievement.behaviour_streak_30": "A month without a note",
+  "achievement.behaviour_streak_90": "3 months without a note",
+
+  "card.teachers.title": "Teachers",
+  "card.teachers.homeroom": "Homeroom teacher",
+  "card.teachers.count": "{n} subjects",
+  "card.teachers.empty": "No teacher directory yet",
 
   "card.grade_goal.title": "Grade goal",
   "card.grade_goal.subtitle_overall": "Overall average",

@@ -315,6 +315,16 @@
     addEntity("sensor.school", "school", {
       town: "Wrocław", street: "ul. Kłodzka", head_teacher: "Edyta Krajewska", email: "sekretariat@zsp21.wroc.pl",
       bell_schedule: bellSchedule,
+      // subject_teachers requires ha-librus-synergia 0.6.0+ - one subject
+      // (Język niemiecki) has two teachers to demo the split-group case.
+      subject_teachers: {
+        "Matematyka": ["Weronika Michałowska"],
+        "Język polski": ["Eliza Orman"],
+        "Biologia": ["K. Nowak"],
+        "Historia": ["Justyna Bartczak"],
+        "Wychowanie fizyczne": ["Marek Włodarczyk"],
+        "Język niemiecki": ["Aneta Kędzierska", "Michalina Dyduch"],
+      },
     }, "Zespół Szkolno-Przedszkolny nr 21");
     addEntity("sensor.current_lesson", "current_lesson", {
       lesson_no: 3, start: bellSchedule[2].start, end: bellSchedule[2].end, minutes_left: 20,
@@ -604,6 +614,7 @@
       "librus-school-year-card",
       "librus-today-card", "librus-tomorrow-card", "librus-week-summary-card", "librus-lucky-number-card",
       "librus-student-card", "librus-streak-card", "librus-rank-card", "librus-achievements-card",
+      "librus-teachers-card",
     ];
 
     function mountCard(container, tag, hassObj, config) {

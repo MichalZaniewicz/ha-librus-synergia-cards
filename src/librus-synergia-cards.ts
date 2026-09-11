@@ -47,6 +47,7 @@ import "./librus-student-card";
 import "./librus-streak-card";
 import "./librus-rank-card";
 import "./librus-achievements-card";
+import "./librus-teachers-card";
 
 interface CustomCardEntry {
   type: string;
@@ -344,12 +345,18 @@ window.customCards.push(
     name: "Librus - Osiągnięcia",
     description: "Gablota trofeów - odblokowane odznaki grywalizacji (pierwsza szóstka, serie ocen/frekwencji/zachowania). Śledzi je na żywo od dodania karty.",
     preview: true,
+  },
+  {
+    type: "librus-teachers-card",
+    name: "Librus - Nauczyciele",
+    description: "Wychowawca i nauczyciele przedmiotów, wyliczeni z planu lekcji.",
+    preview: true,
   }
 );
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 47 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 48 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );
