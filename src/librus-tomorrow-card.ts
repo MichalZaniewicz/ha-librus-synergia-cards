@@ -109,6 +109,17 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
 
     const target = nextSchoolDay(new Date());
     const targetIso = isoDate(target);
+    // FOUND LIVE (2026-09-11): the header hard-coded "Jutro"/"Tomorrow"
+    // even when `target` had skipped the weekend (e.g. Friday -> Monday),
+    // so the card visibly contradicted its own date - "Jutro: poniedziałek"
+    // on a Friday reads as a plain error, not a deliberate "next school
+    // day" choice. Only call it "Tomorrow" when target IS literally
+    // calendar-tomorrow; otherwise use the same "next school day" wording
+    // the empty state already used.
+    const literalTomorrow = new Date();
+    literalTomorrow.setHours(0, 0, 0, 0);
+    literalTomorrow.setDate(literalTomorrow.getDate() + 1);
+    const isLiterallyTomorrow = targetIso === isoDate(literalTomorrow);
 
     const homeworkEntity = map.homework_assignments ? hass.states[map.homework_assignments] : undefined;
     const homeworkDue = ((homeworkEntity?.attributes.recent as HomeworkItem[] | undefined) ?? []).filter(
@@ -132,7 +143,9 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:calendar-arrow-right"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${this._config.title ?? t(hass, "card.tomorrow.title")}</div>
+            <div class="title">
+              ${this._config.title ?? t(hass, isLiterallyTomorrow ? "card.tomorrow.title" : "card.tomorrow.title_next_school_day")}
+            </div>
             <div class="subtitle">
               ${target.toLocaleDateString(hass.language, { weekday: "long", day: "numeric", month: "long" })}
             </div>

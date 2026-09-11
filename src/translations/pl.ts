@@ -208,6 +208,7 @@ export const pl: Record<keyof typeof en, string> = {
   "label.after_school": "Lekcje na dziś zakończone",
 
   "card.tomorrow.title": "Jutro",
+  "card.tomorrow.title_next_school_day": "Następny dzień nauki",
   "card.tomorrow.empty": "Nic zaplanowanego na następny dzień nauki",
   "card.tomorrow.lessons": "lekcji",
   "card.tomorrow.starts": "Początek",

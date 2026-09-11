@@ -207,6 +207,7 @@ export const en = {
   "label.after_school": "School's out for today",
 
   "card.tomorrow.title": "Tomorrow",
+  "card.tomorrow.title_next_school_day": "Next school day",
   "card.tomorrow.empty": "Nothing scheduled for the next school day",
   "card.tomorrow.lessons": "lessons",
   "card.tomorrow.starts": "Starts",
