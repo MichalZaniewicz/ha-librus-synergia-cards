@@ -1,5 +1,7 @@
 # Librus Synergia Cards
 
+![Librus Synergia Cards](docs/hero-banner.svg)
+
 Custom Lovelace cards for [`ha-librus-synergia`](https://github.com/MichalZaniewicz/ha-librus-synergia) (the
 `librus_synergia` integration) - purpose-built widgets instead of wiring its sensors and calendars into
 generic entity/gauge cards by hand.
