@@ -1,12 +1,16 @@
 # Librus Synergia Cards
 
-![Librus Synergia Cards](docs/hero-banner.svg)
+<p align="center">
+  <img src="docs/hero-banner.svg" alt="Librus Synergia Cards">
+</p>
 
 Custom Lovelace cards for [`ha-librus-synergia`](https://github.com/MichalZaniewicz/ha-librus-synergia) (the
 `librus_synergia` integration) - purpose-built widgets instead of wiring its sensors and calendars into
 generic entity/gauge cards by hand.
 
-[![Open your Home Assistant instance and open this repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MichalZaniewicz&repository=ha-librus-synergia-cards&category=plugin)
+<p align="center">
+  <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=MichalZaniewicz&repository=ha-librus-synergia-cards&category=plugin"><img alt="Open your Home Assistant instance and open this repository inside the Home Assistant Community Store." src="https://my.home-assistant.io/badges/hacs_repository.svg"></a>
+</p>
 
 ![Preview of the Librus Synergia cards](docs/screenshots/cards-overview-dark.png)
 
