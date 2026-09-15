@@ -177,6 +177,8 @@ export const en = {
   "card.lucky_number.title": "Lucky number",
   "card.lucky_number.subtitle": "Today in the register",
   "card.lucky_number.subtitle_for_date": "For {date}",
+  "card.lucky_number.yours_today": "It's your number today!",
+  "card.lucky_number.yours_for_date": "It's your number on {date}!",
   "card.lucky_number.empty": "No lucky number published yet (e.g. during a school break)",
 
   "card.student.title": "Student card",

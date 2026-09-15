@@ -178,6 +178,8 @@ export const pl: Record<keyof typeof en, string> = {
   "card.lucky_number.title": "Szczęśliwy numerek",
   "card.lucky_number.subtitle": "Dziś w dzienniku",
   "card.lucky_number.subtitle_for_date": "Na {date}",
+  "card.lucky_number.yours_today": "To Twój numerek dzisiaj!",
+  "card.lucky_number.yours_for_date": "To Twój numerek na {date}!",
   "card.lucky_number.empty": "Nie opublikowano jeszcze numerka (np. w trakcie przerwy szkolnej)",
 
   "card.student.title": "Karta ucznia",

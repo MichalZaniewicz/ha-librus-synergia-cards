@@ -62,18 +62,32 @@ export class LibrusLuckyNumberCard extends LibrusBaseCard {
     // anything broken.
     const isToday = entity.attributes.is_today as boolean | null | undefined;
     const day = entity.attributes.day as string | null | undefined;
-    const subtitle =
-      isToday === false && day
-        ? t(hass, "card.lucky_number.subtitle_for_date", { date: formatShortDate(day, hass.language) })
+    // `is_yours` needs CONF_STUDENT_NUMBER configured (integration 0.7+) -
+    // Librus's API doesn't expose the student's own class-register number
+    // anywhere at all, so this is a fact the user types in once, compared
+    // client-side by the sensor. `undefined` (older integration, or never
+    // configured) falls back to the plain, non-celebratory copy below.
+    const isYours = entity.attributes.is_yours as boolean | null | undefined;
+    const forDate = isToday === false && day;
+    const subtitle = isYours
+      ? forDate
+        ? t(hass, "card.lucky_number.yours_for_date", { date: formatShortDate(day!, hass.language) })
+        : t(hass, "card.lucky_number.yours_today")
+      : forDate
+        ? t(hass, "card.lucky_number.subtitle_for_date", { date: formatShortDate(day!, hass.language) })
         : t(hass, "card.lucky_number.subtitle");
 
     return html`
       <ha-card
-        class=${isActionable(this._config.tap_action) ? "" : "static"}
+        class=${[isActionable(this._config.tap_action) ? "" : "static", isYours ? "yours" : ""]
+          .filter(Boolean)
+          .join(" ")}
         @click=${tapActionHandler(this, this._config.tap_action, map.lucky_number)}
       >
         <div class="header">
-          <div class="icon-badge amber"><ha-icon icon="mdi:dice-5-outline"></ha-icon></div>
+          <div class="icon-badge ${isYours ? "good" : "amber"}">
+            <ha-icon icon=${isYours ? "mdi:party-popper" : "mdi:dice-5-outline"}></ha-icon>
+          </div>
           <div class="title-block">
             <div class="title">${t(hass, "card.lucky_number.title")}</div>
             <div class="subtitle">${subtitle}</div>
@@ -101,6 +115,15 @@ export class LibrusLuckyNumberCard extends LibrusBaseCard {
         color: var(--lc-brand);
         line-height: 1;
         font-variant-numeric: tabular-nums;
+      }
+      ha-card.yours {
+        box-shadow:
+          0 0 0 2px var(--lc-good) inset,
+          var(--ha-card-box-shadow, none);
+        background: var(--lc-good-bg);
+      }
+      ha-card.yours .number {
+        color: var(--lc-good);
       }
     `,
   ];
