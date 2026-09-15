@@ -52,6 +52,12 @@ export class LibrusSemesterComparisonCard extends LibrusBaseCard {
     const hass = this.hass;
 
     const num = (v: unknown): number | null => {
+      // `average_semester_*` is `null` when that semester has no counted
+      // grades yet (e.g. semester 2 before it has even started) - JS's
+      // `Number(null) === 0` would otherwise turn "no data" into a real
+      // 0.00 average and produce a false, alarming-looking "drop" against
+      // a subject's real semester-1 grade.
+      if (v === null || v === undefined) return null;
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
     };
