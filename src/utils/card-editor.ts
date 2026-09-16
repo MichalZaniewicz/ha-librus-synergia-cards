@@ -125,21 +125,6 @@ export class LibrusCardEditor extends LitElement {
     this._config = config;
   }
 
-  protected async firstUpdated(): Promise<void> {
-    // On first paint an <ha-select>'s value can be applied before its
-    // <ha-list-item>s upgrade, so it shows the raw value instead of the
-    // option label. Re-assigning the value once the items exist fixes it.
-    await this.updateComplete;
-    this.renderRoot
-      .querySelectorAll<Element & { value: string }>("ha-select")
-      .forEach((sel) => {
-        const v = sel.value;
-        if (!v) return;
-        sel.value = "";
-        sel.value = v;
-      });
-  }
-
   private get _fields(): EditorField[] {
     return (this._config && EDITOR_FIELDS[this._config.type]) || [];
   }
