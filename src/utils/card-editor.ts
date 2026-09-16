@@ -12,6 +12,31 @@ import { t, type TranslationKey } from "./localize";
  * no per-card editor element. A student (device) picker is always added
  * when more than one Librus device exists; a subject picker is added
  * whenever a card declares a `subject` field.
+ *
+ * BUG FIX (reported live): `ha-select` was rewritten upstream to a new
+ * MD3 implementation built on `<ha-dropdown>`/`<ha-dropdown-item>`, driven
+ * by an `.options` PROPERTY - it only falls back to rendering a plain
+ * `<slot>` when `.options` is unset. Its click handling is wired
+ * specifically to `<ha-dropdown-item>`'s own selection event; a slotted
+ * `<ha-list-item>` (what every select here used exclusively before) is
+ * simply invisible to it - confirmed via HA frontend's own source
+ * (`src/components/ha-select.ts`), matching exactly what was reported:
+ * the dropdown opened, items showed with real labels and a hover
+ * highlight, but clicking one did nothing at all. Every `<ha-select>`
+ * below now ALSO passes `.options` (an array of `{value, label}`), which
+ * this new implementation reads directly - fixing both the click and the
+ * closed-select's label display (previously always the raw value, since
+ * the new component's own label lookup requires `.options` too). The
+ * `<ha-list-item>` children are kept alongside as a fallback for an
+ * older, pre-rewrite HA frontend (still MWC-based, understands only the
+ * slot, ignores the unknown `.options` property) - the new component
+ * ignores that slot once `.options` is set, so passing both is safe on
+ * either version. Selection is read from the new `selected` event's
+ * `ev.detail.value` when present (reliable - HA's own `fireEvent`
+ * defaults to `bubbles: true, composed: true`); `@closed` +
+ * `ev.currentTarget.value` stays as the fallback for the old component,
+ * which never fires a meaningful `detail` on `selected` and dispatches no
+ * `closed` event of its own to react to on the new one either way.
  */
 
 type EditorField =
@@ -154,9 +179,13 @@ export class LibrusCardEditor extends LitElement {
               <ha-select
                 label=${t(hass, "editor.student")}
                 .value=${config.device_id ?? ""}
+                .options=${devices.map((id) => {
+                  const device = hass.devices?.[id];
+                  return { value: id, label: device?.name_by_user || device?.name || id };
+                })}
                 naturalMenuWidth
                 fixedMenuPosition
-                @selected=${(e: Event) => this._pickDevice(e)}
+                @selected=${(e: CustomEvent<{ value?: string }>) => this._pickDevice(e)}
                 @closed=${(e: Event) => {
                   e.stopPropagation();
                   this._pickDevice(e);
@@ -174,9 +203,15 @@ export class LibrusCardEditor extends LitElement {
               <ha-select
                 label=${t(hass, "editor.subject")}
                 .value=${config.subject_id !== undefined ? String(config.subject_id) : ""}
+                .options=${[
+                  { value: "", label: t(hass, "editor.subject_auto") },
+                  ...subjects
+                    .filter((s) => s.subjectId !== undefined)
+                    .map((s) => ({ value: String(s.subjectId), label: s.subject })),
+                ]}
                 naturalMenuWidth
                 fixedMenuPosition
-                @selected=${(e: Event) => this._pickSubject(e)}
+                @selected=${(e: CustomEvent<{ value?: string }>) => this._pickSubject(e)}
                 @closed=${(e: Event) => {
                   e.stopPropagation();
                   this._pickSubject(e);
@@ -242,9 +277,10 @@ export class LibrusCardEditor extends LitElement {
       <ha-select
         label=${t(hass, field.label)}
         .value=${(config[field.key] as string | undefined) ?? field.options[0].value}
+        .options=${field.options.map((o) => ({ value: o.value, label: t(hass, o.label) }))}
         naturalMenuWidth
         fixedMenuPosition
-        @selected=${(e: Event) => this._pickSelect(field, e)}
+        @selected=${(e: CustomEvent<{ value?: string }>) => this._pickSelect(field, e)}
         @closed=${(e: Event) => {
           e.stopPropagation();
           this._pickSelect(field, e);
@@ -258,12 +294,20 @@ export class LibrusCardEditor extends LitElement {
   }
 
   /**
-   * Read the current value straight off an `<ha-select>`. Its `selected`
-   * event does not reliably cross the element's shadow boundary in current
-   * HA frontends (so `ev.detail.index` is unusable here), but `closed`
-   * does, and by then `ha-select.value` already reflects the pick.
+   * Read the picked value from either shape `<ha-select>` can hand us:
+   * the current (MD3, `.options`-driven) implementation's `selected` event
+   * carries it directly as `ev.detail.value` - reliable, since it's
+   * dispatched via HA's own `fireEvent` (bubbles + composed by default).
+   * The older, pre-rewrite MWC-based implementation's `selected` event
+   * detail is a bare `{index}` (not `value`) and doesn't reliably cross
+   * the shadow boundary either way, so for that one - and for `@closed`,
+   * which the old component fires but the new one never does at all -
+   * fall back to reading `ha-select.value` straight off the element,
+   * which is already correct by the time either fires.
    */
   private static _selectValue(ev: Event): string {
+    const detail = (ev as CustomEvent<{ value?: string | number }>).detail;
+    if (detail && detail.value !== undefined) return String(detail.value);
     const el = ev.currentTarget as (Element & { value?: string }) | null;
     return el?.value ?? "";
   }

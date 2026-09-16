@@ -42,6 +42,7 @@ const he=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
               <ha-select
                 label=${$e(e,"editor.student")}
                 .value=${t.device_id??""}
+                .options=${i.map(t=>{const i=e.devices?.[t];return{value:t,label:i?.name_by_user||i?.name||t}})}
                 naturalMenuWidth
                 fixedMenuPosition
                 @selected=${e=>this._pickDevice(e)}
@@ -54,6 +55,7 @@ const he=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
               <ha-select
                 label=${$e(e,"editor.subject")}
                 .value=${void 0!==t.subject_id?String(t.subject_id):""}
+                .options=${[{value:"",label:$e(e,"editor.subject_auto")},...n.filter(e=>void 0!==e.subjectId).map(e=>({value:String(e.subjectId),label:e.subject}))]}
                 naturalMenuWidth
                 fixedMenuPosition
                 @selected=${e=>this._pickSubject(e)}
@@ -95,6 +97,7 @@ const he=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
       <ha-select
         label=${$e(t,e.label)}
         .value=${i[e.key]??e.options[0].value}
+        .options=${e.options.map(e=>({value:e.value,label:$e(t,e.label)}))}
         naturalMenuWidth
         fixedMenuPosition
         @selected=${t=>this._pickSelect(e,t)}
@@ -102,7 +105,7 @@ const he=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
       >
         ${e.options.map(e=>R`<ha-list-item .value=${e.value}>${$e(t,e.label)}</ha-list-item>`)}
       </ha-select>
-    `}static _selectValue(e){const t=e.currentTarget;return t?.value??""}_pickDevice(e){const t=je._selectValue(e);t&&t!==this._config?.device_id&&this._patch({device_id:t})}_pickSubject(e){const t=je._selectValue(e),i=""===t?void 0:Number(t);i!==this._config?.subject_id&&this._patch({subject_id:Number.isNaN(i)?void 0:i})}_pickSelect(e,t){const i=je._selectValue(t);if(!i)return;i!==(this._config?.[e.key]??e.options[0].value)&&this._patch({[e.key]:i===e.options[0].value?void 0:i})}_onText(e,t){this._patch({[e]:t.trim()||void 0})}_onNumber(e,t){const i=e.float?Number.parseFloat(t):Number.parseInt(t,10);if(Number.isNaN(i))return void this._patch({[e.key]:void 0});const s=Math.min(e.max,Math.max(e.min,i));this._patch({[e.key]:e.float?Math.round(100*s)/100:s})}_patch(e){if(!this._config)return;const t={...this._config,...e};for(const[i,s]of Object.entries(e))void 0===s&&delete t[i];this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}};Me.styles=n`
+    `}static _selectValue(e){const t=e.detail;if(t&&void 0!==t.value)return String(t.value);const i=e.currentTarget;return i?.value??""}_pickDevice(e){const t=je._selectValue(e);t&&t!==this._config?.device_id&&this._patch({device_id:t})}_pickSubject(e){const t=je._selectValue(e),i=""===t?void 0:Number(t);i!==this._config?.subject_id&&this._patch({subject_id:Number.isNaN(i)?void 0:i})}_pickSelect(e,t){const i=je._selectValue(t);if(!i)return;i!==(this._config?.[e.key]??e.options[0].value)&&this._patch({[e.key]:i===e.options[0].value?void 0:i})}_onText(e,t){this._patch({[e]:t.trim()||void 0})}_onNumber(e,t){const i=e.float?Number.parseFloat(t):Number.parseInt(t,10);if(Number.isNaN(i))return void this._patch({[e.key]:void 0});const s=Math.min(e.max,Math.max(e.min,i));this._patch({[e.key]:e.float?Math.round(100*s)/100:s})}_patch(e){if(!this._config)return;const t={...this._config,...e};for(const[i,s]of Object.entries(e))void 0===s&&delete t[i];this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}};Me.styles=n`
     .form {
       display: flex;
       flex-direction: column;
