@@ -1,18 +1,19 @@
-import { html, css, nothing, type TemplateResult } from "lit";
+import { html, svg, css, nothing, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
-import type { LibrusCardConfig } from "./utils/types";
+import type { LibrusCardConfig, LibrusHass } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { mapAllByTranslationKey } from "./utils/entities";
-import { radarChart, type RadarAxis } from "./utils/render-helpers";
-import { computeHeroStats } from "./utils/hero-stats";
+import { computeHeroStats, type HeroStat } from "./utils/hero-stats";
 import type { SubjectStat } from "./utils/hero-archetypes";
 import { t } from "./utils/localize";
 
 const SCALE_MAX = 10;
 const PALETTE = ["1", "2", "3", "4", "5", "7"]; // --lc-chart-N, skipping 6 (a low-contrast neutral)
+const CHART_WIDTH = 260;
+const CHART_HEIGHT = 240;
 
 function num(v: unknown): number | null {
   if (v === null || v === undefined) return null;
@@ -55,6 +56,68 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
     return 3;
   }
 
+  /**
+   * A bespoke radar, not the shared `radarChart()` helper - that one is
+   * also used by librus-grades-radar-card (subjects, no consistent icon
+   * per axis) and shouldn't grow a one-off icon-vertex feature only this
+   * card needs. Mirrors radarChart()'s own math (angle/point/rings) - see
+   * that function's comments for the derivation.
+   *
+   * IMPORTANT: every per-shape template produced inside a `.map()` here
+   * uses Lit's `svg` tag, never `html` - using `html` for an element
+   * interpolated as a child of an outer `<svg>` creates that element in
+   * the HTML namespace instead of SVG, which resolves a color via
+   * getComputedStyle and shows NO console error, so it fails silently
+   * (invisible) rather than throwing. Found live before, in this exact
+   * card family (librus-subject-time-card's donut) - see
+   * render-helpers.ts's own module comment for the full story. The one
+   * exception is intentional: `<ha-icon>` inside `<foreignObject>` SHOULD
+   * be HTML-namespaced, so that one nested template correctly uses `html`.
+   */
+  private _renderStatRadar(stats: HeroStat[], hass: LibrusHass): TemplateResult {
+    const cx = CHART_WIDTH / 2;
+    const cy = CHART_HEIGHT / 2 - 4;
+    const maxR = Math.min(CHART_WIDTH, CHART_HEIGHT) / 2 - 34;
+    const n = stats.length;
+    const angle = (i: number) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
+    const point = (i: number, val: number): [number, number] => {
+      const r = (Math.max(0, Math.min(SCALE_MAX, val)) / SCALE_MAX) * maxR;
+      return [cx + r * Math.cos(angle(i)), cy + r * Math.sin(angle(i))];
+    };
+
+    const rings = [1 / 3, 2 / 3, 1].map((f) => stats.map((_, i) => point(i, SCALE_MAX * f).join(",")).join(" "));
+    const axisEnds = stats.map((_, i) => point(i, SCALE_MAX));
+    const dataPolygon = stats.map((s, i) => point(i, s.value).join(",")).join(" ");
+    // Badge markers get a minimum radius floor (15% of max) purely so a
+    // 0-value stat's icon doesn't pile up exactly on top of its
+    // neighbours at dead center - the data polygon above stays
+    // mathematically honest, only the icon *marker position* is floored.
+    const badgePoints = stats.map((s, i) => point(i, Math.max(s.value, SCALE_MAX * 0.15)));
+
+    return html`
+      <svg width=${CHART_WIDTH} height=${CHART_HEIGHT} viewBox="0 0 ${CHART_WIDTH} ${CHART_HEIGHT}" class="radar-chart">
+        ${rings.map((r) => svg`<polygon points=${r} class="radar-grid"></polygon>`)}
+        ${axisEnds.map(([x, y]) => svg`<line x1=${cx} y1=${cy} x2=${x} y2=${y} class="radar-axis"></line>`)}
+        <polygon points=${dataPolygon} class="radar-fill-polygon"></polygon>
+        ${badgePoints.map(([x, y], i) => {
+          const colorVar = `var(--lc-chart-${PALETTE[i % PALETTE.length]})`;
+          return svg`
+            <circle cx=${x} cy=${y} r="11" class="vertex-badge" style="stroke:${colorVar}"></circle>
+            <foreignObject x=${x - 9} y=${y - 9} width="18" height="18">
+              ${html`<div class="vertex-icon" style="color:${colorVar}"><ha-icon icon=${stats[i].icon}></ha-icon></div>`}
+            </foreignObject>
+          `;
+        })}
+        ${stats.map((s, i) => {
+          const [lx, ly] = point(i, SCALE_MAX * 1.14);
+          const cosA = Math.cos(angle(i));
+          const anchor = Math.abs(cosA) < 0.3 ? "middle" : cosA > 0 ? "start" : "end";
+          return svg`<text x=${lx} y=${ly + 3} text-anchor=${anchor} class="radar-label">${t(hass, s.labelKey)}</text>`;
+        })}
+      </svg>
+    `;
+  }
+
   protected render(): TemplateResult | typeof nothing {
     if (!this._config || !this.hass) return nothing;
     this._syncTheme();
@@ -86,7 +149,6 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
       return this._message("mdi:arm-flex-outline", t(hass, "card.hero_stats.empty"));
     }
 
-    const axes: RadarAxis[] = stats.map((s) => ({ label: t(hass, s.labelKey), value: s.value }));
     const power = Math.round(stats.reduce((sum, s) => sum + s.value, 0));
 
     return html`
@@ -102,7 +164,7 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
             <div class="power-l">${t(hass, "card.hero_stats.power")}</div>
           </div>
         </div>
-        <div class="chart-wrap glow">${radarChart(axes, { max: SCALE_MAX, width: 260, height: 240 })}</div>
+        <div class="chart-wrap glow">${this._renderStatRadar(stats, hass)}</div>
         <div class="stat-bars">
           ${stats.map((s, i) => {
             const colorVar = `var(--lc-chart-${PALETTE[i % PALETTE.length]})`;
@@ -164,6 +226,27 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
       .chart-wrap {
         display: flex;
         justify-content: center;
+      }
+      .radar-fill-polygon {
+        fill: var(--lc-brand);
+        fill-opacity: 0.24;
+        stroke: var(--lc-brand);
+        stroke-width: 2.5;
+        stroke-linejoin: round;
+      }
+      .vertex-badge {
+        fill: var(--ha-card-background, var(--card-background-color, #fff));
+        stroke-width: 1.5;
+      }
+      .vertex-icon {
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .vertex-icon ha-icon {
+        --mdc-icon-size: 12px;
       }
       .chart-wrap.glow svg {
         filter: drop-shadow(0 0 7px color-mix(in srgb, var(--lc-brand) 45%, transparent));
