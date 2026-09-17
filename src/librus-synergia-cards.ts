@@ -49,6 +49,9 @@ import "./librus-achievements-card";
 import "./librus-teachers-card";
 import "./librus-level-card";
 import "./librus-hero-card";
+import "./librus-hero-stats-card";
+import "./librus-hero-history-card";
+import "./librus-last-update-tile-card";
 
 interface CustomCardEntry {
   type: string;
@@ -364,12 +367,30 @@ window.customCards.push(
     name: "Librus - Bohater",
     description: "Jeden wynik liczony z ocen, frekwencji, zachowania i serii - jako archetyp ucznia albo postać RPG (tryb w ustawieniach karty).",
     preview: true,
+  },
+  {
+    type: "librus-hero-stats-card",
+    name: "Librus - Statystyki bohatera",
+    description: "Karta postaci RPG - sześć statystyk (Siła/Intelekt/Wiedza/Charyzma/Wytrwałość/Szczęście) na wykresie radarowym, liczonych z ocen, frekwencji, zachowania i rangi.",
+    preview: true,
+  },
+  {
+    type: "librus-hero-history-card",
+    name: "Librus - Historia bohatera",
+    description: "Oś czasu poprzednich wyników karty Bohater - kiedy się zmieniały i jak długo trwały (śledzone od dodania karty, lokalnie w przeglądarce).",
+    preview: true,
+  },
+  {
+    type: "librus-last-update-tile-card",
+    name: "Librus - Ostatnia aktualizacja",
+    description: "Ile czasu temu integracja ostatnio pobrała dane z Librusa.",
+    preview: true,
   }
 );
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 50 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 53 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

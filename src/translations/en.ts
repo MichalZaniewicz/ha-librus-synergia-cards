@@ -356,4 +356,26 @@ export const en = {
   "hero.wszechstronny.hero_name": "Avatar of Balance",
   "hero.wszechstronny.archetype_desc": "No subject dominates - your grades are level across the board.",
   "hero.wszechstronny.hero_desc": "You wield a bit of every element - nothing surprises you.",
+
+  "card.hero_stats.title": "Hero stats",
+  "card.hero_stats.subtitle": "Your character sheet",
+  "card.hero_stats.empty": "Not enough data for stats yet",
+  "hero_stat.sila": "Strength",
+  "hero_stat.intelekt": "Intellect",
+  "hero_stat.wiedza": "Wisdom",
+  "hero_stat.charyzma": "Charisma",
+  "hero_stat.wytrwalosc": "Endurance",
+  "hero_stat.szczescie": "Luck",
+
+  "card.hero_history.title": "Hero history",
+  "card.hero_history.subtitle": "how your result changed over time",
+  "card.hero_history.empty": "No history yet - it appears once your result changes",
+  "card.hero_history.current": "current ({n}d)",
+
+  "card.last_update.subtitle": "Last data refresh",
+
+  "label.just_now": "Just now",
+  "label.minutes_ago": "{minutes} min ago",
+  "label.hours_ago": "{hours}h ago",
+  "label.days_ago": "{days}d ago",
 } as const;

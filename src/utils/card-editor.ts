@@ -149,6 +149,10 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     TITLE_FIELD,
     { kind: "select", key: "mode", label: "editor.mode", options: MODE_OPTIONS },
   ],
+  "custom:librus-hero-history-card": [
+    TITLE_FIELD,
+    { kind: "select", key: "mode", label: "editor.mode", options: MODE_OPTIONS },
+  ],
 };
 
 export function librusCardEditor(): LovelaceCardEditor {

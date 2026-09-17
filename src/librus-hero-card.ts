@@ -1,4 +1,4 @@
-import { html, css, nothing, type TemplateResult } from "lit";
+import { html, css, nothing, type TemplateResult, type PropertyValues } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
@@ -7,7 +7,13 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { mapAllByTranslationKey } from "./utils/entities";
 import { t } from "./utils/localize";
-import { computeHeroResult, readAchievementCount, type HeroMode, type SubjectStat } from "./utils/hero-archetypes";
+import {
+  computeHeroResult,
+  readAchievementCount,
+  recordHeroHistory,
+  type HeroMode,
+  type SubjectStat,
+} from "./utils/hero-archetypes";
 
 interface GradeLogEntry {
   value: string;
@@ -34,6 +40,10 @@ function num(v: unknown): number | null {
 @customElement("librus-hero-card")
 export class LibrusHeroCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  // Set at the end of render(), read back in updated() - keeps the
+  // localStorage write a lifecycle-hook side effect, not something render()
+  // itself does, without recomputing the whole result a second time.
+  private _pendingHistory?: { deviceId: string; resultId: string };
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -50,6 +60,13 @@ export class LibrusHeroCard extends LibrusBaseCard {
 
   public getCardSize(): number {
     return 2;
+  }
+
+  protected updated(changed: PropertyValues): void {
+    super.updated(changed);
+    if (this._pendingHistory) {
+      recordHeroHistory(this._pendingHistory.deviceId, this._pendingHistory.resultId);
+    }
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -98,8 +115,10 @@ export class LibrusHeroCard extends LibrusBaseCard {
     });
 
     if (!result) {
+      this._pendingHistory = undefined;
       return this._message("mdi:creation-outline", t(hass, "card.hero.empty"));
     }
+    this._pendingHistory = { deviceId, resultId: result.id };
 
     return html`
       <ha-card>

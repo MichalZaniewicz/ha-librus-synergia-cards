@@ -357,4 +357,26 @@ export const pl: Record<keyof typeof en, string> = {
   "hero.wszechstronny.hero_name": "Awatar Równowagi",
   "hero.wszechstronny.archetype_desc": "Żaden przedmiot nie dominuje - oceny wyrównane na całej linii.",
   "hero.wszechstronny.hero_desc": "Władasz każdym żywiołem po trosze - nic Cię dziś nie zaskoczy.",
+
+  "card.hero_stats.title": "Statystyki bohatera",
+  "card.hero_stats.subtitle": "Twoja karta postaci",
+  "card.hero_stats.empty": "Za mało danych na statystyki",
+  "hero_stat.sila": "Siła",
+  "hero_stat.intelekt": "Intelekt",
+  "hero_stat.wiedza": "Wiedza",
+  "hero_stat.charyzma": "Charyzma",
+  "hero_stat.wytrwalosc": "Wytrwałość",
+  "hero_stat.szczescie": "Szczęście",
+
+  "card.hero_history.title": "Historia bohatera",
+  "card.hero_history.subtitle": "jak zmieniał się Twój wynik",
+  "card.hero_history.empty": "Brak historii jeszcze - pojawi się, gdy wynik się zmieni",
+  "card.hero_history.current": "obecnie ({n} dni)",
+
+  "card.last_update.subtitle": "Ostatnia aktualizacja danych",
+
+  "label.just_now": "Przed chwilą",
+  "label.minutes_ago": "{minutes} min temu",
+  "label.hours_ago": "{hours} godz. temu",
+  "label.days_ago": "{days} dni temu",
 };

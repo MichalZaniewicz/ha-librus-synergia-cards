@@ -54,6 +54,26 @@ export function formatCountdown(hass: LibrusHass | undefined, totalMinutes: numb
     : t(hass, "label.in_days_hours", { days, hours });
 }
 
+/**
+ * "4 min temu" / "4 min ago" - the past-time counterpart to
+ * `formatCountdown` above, same minutes/hours/days granularity switch by
+ * magnitude. Falls back to an empty string for a missing/unparseable
+ * timestamp rather than throwing - callers render this straight into a
+ * tile, where a blank is far less confusing than "NaN min ago".
+ */
+export function formatTimeAgo(hass: LibrusHass | undefined, iso: string | undefined): string {
+  if (!iso) return "";
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const minutes = Math.max(0, Math.floor((Date.now() - then) / 60_000));
+  if (minutes < 1) return t(hass, "label.just_now");
+  if (minutes < 60) return t(hass, "label.minutes_ago", { minutes });
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return t(hass, "label.hours_ago", { hours });
+  const days = Math.floor(hours / 24);
+  return t(hass, "label.days_ago", { days });
+}
+
 /** Picks a `*_one` / `*_other` key pair by count - a two-way plural split. */
 export function tPlural(
   hass: LibrusHass | undefined,

@@ -77,6 +77,9 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Teachers | `custom:librus-teachers-card` | Homeroom teacher plus every subject teacher, one directory in one place (requires `ha-librus-synergia` 0.6.0+ for the `subject_teachers` attribute) |
 | Level | `custom:librus-level-card` | A pure-fun XP meter, separate from Rank - it only ever goes up (XP for every grade ever recorded, more for a good one, plus attendance), computed entirely client-side, no backend change needed |
 | Hero | `custom:librus-hero-card` | One deterministic result computed from subject averages, attendance, behaviour and streaks - never random, same data always gives the same answer. "Mode" in the card's editor picks the tone: a school-counsellor-style **Archetype** (e.g. "Naukowiec") or an RPG-flavoured **Hero** (e.g. "Archimag") for the exact same underlying result. Every name/description is written to a fixed length so the card's height never changes across any of the 12 possible results |
+| Hero Stats | `custom:librus-hero-stats-card` | An RPG character sheet - six stats (Siła/Intelekt/Wiedza/Charyzma/Wytrwałość/Szczęście), each 0-10 and each from exactly one real signal (a subject cluster average, the behaviour grade, the attendance streak, the rank tier), on a radar chart |
+| Hero History | `custom:librus-hero-history-card` | A timeline of the Hero card's own past results and how long each one lasted, tracked locally in the browser from whenever this card was first added (same limitation as Achievements - nothing before that can be recovered) |
+| Last Update | `custom:librus-last-update-tile-card` | How long ago the integration last refreshed its data - a quick "is this still fresh" signal without opening Settings |
 
 Each card auto-detects your child's device - **zero YAML required** for the common case of one student.
 If you ever have more than one, the card's visual editor shows a device picker.

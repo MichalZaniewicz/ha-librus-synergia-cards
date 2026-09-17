@@ -49,8 +49,10 @@ export interface HeroResult {
   evidence: [EvidenceChip, EvidenceChip];
 }
 
-interface ClusterDef {
-  id: "naukowiec" | "humanista" | "poliglota" | "artysta" | "sportowiec";
+export type ClusterId = "naukowiec" | "humanista" | "poliglota" | "artysta" | "sportowiec";
+
+export interface ClusterDef {
+  id: ClusterId;
   icon: string;
   subjects: string[];
   avgChipKey: TranslationKey;
@@ -59,8 +61,9 @@ interface ClusterDef {
 // Real Librus subject names (always Polish - server data, not translated)
 // this school system uses. A subject not listed here (e.g. "Religia",
 // "Doradztwo zawodowe") simply never counts toward any cluster - neutral,
-// not a bug.
-const CLUSTERS: ClusterDef[] = [
+// not a bug. Exported so librus-hero-stats-card can reuse the exact same
+// subject grouping instead of re-deriving a second, possibly-drifting copy.
+export const CLUSTERS: ClusterDef[] = [
   {
     id: "naukowiec",
     icon: "mdi:flask-outline",
@@ -126,7 +129,9 @@ function catalogEntry(id: string, icon: string): Pick<HeroResult, "icon" | "name
   };
 }
 
-const CATALOG: Record<string, Pick<HeroResult, "icon" | "nameKey" | "descKey">> = {};
+// Exported read-only for librus-hero-history-card, which only needs the
+// icon/name lookup by id (not the evidence-computing logic above).
+export const CATALOG: Record<string, Pick<HeroResult, "icon" | "nameKey" | "descKey">> = {};
 for (const c of CLUSTERS) CATALOG[c.id] = catalogEntry(c.id, c.icon);
 for (const [id, icon] of Object.entries(OTHER_ICONS)) CATALOG[id] = catalogEntry(id, icon);
 
@@ -134,7 +139,10 @@ function round1(n: number): string {
   return n.toFixed(1);
 }
 
-function weightedClusterAverage(subjects: SubjectStat[], names: string[]): { avg: number; count: number } | null {
+export function weightedClusterAverage(
+  subjects: SubjectStat[],
+  names: string[]
+): { avg: number; count: number } | null {
   let weighted = 0;
   let count = 0;
   for (const s of subjects) {
@@ -285,6 +293,53 @@ export function computeHeroResult(inputs: HeroInputs): HeroResult | null {
       { key: "hero.chip.subjects_count", vars: { n: gradedSubjects.length } },
     ],
   };
+}
+
+const HISTORY_STORAGE_PREFIX = "librus-hero-history:";
+// Generous but bounded, same order of magnitude as achievements-card's own
+// MAX_STORED - this is a "recent trend" log, not a full career record.
+const HISTORY_MAX_STORED = 30;
+
+export interface HeroHistoryEntry {
+  id: string;
+  when: string; // ISO timestamp
+}
+
+/**
+ * Appends to the result-history log in `localStorage`, read by
+ * `librus-hero-history-card` - ONLY when the result id actually changed
+ * since the last recorded entry, so staying the same archetype for weeks
+ * doesn't spam the log with a duplicate entry on every render. Call from
+ * a lifecycle hook like `updated()`, never from `render()` itself (a Lit
+ * render should stay a pure function of state - this is a side effect).
+ * Never throws; a full/blocked localStorage just means history silently
+ * stops growing, same degrade-quietly behaviour as `readAchievementCount`.
+ */
+export function recordHeroHistory(deviceId: string, resultId: string): void {
+  try {
+    const key = `${HISTORY_STORAGE_PREFIX}${deviceId}`;
+    const raw = window.localStorage.getItem(key);
+    const history: HeroHistoryEntry[] = raw ? JSON.parse(raw) : [];
+    const last = history[history.length - 1];
+    if (last && last.id === resultId) return;
+    history.push({ id: resultId, when: new Date().toISOString() });
+    window.localStorage.setItem(key, JSON.stringify(history.slice(-HISTORY_MAX_STORED)));
+  } catch {
+    /* private mode / storage disabled - history just doesn't grow this time */
+  }
+}
+
+/** Read-only for `librus-hero-history-card` - oldest first, same order
+ * they were recorded in. */
+export function readHeroHistory(deviceId: string): HeroHistoryEntry[] {
+  try {
+    const raw = window.localStorage.getItem(`${HISTORY_STORAGE_PREFIX}${deviceId}`);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 /**

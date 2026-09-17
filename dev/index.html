@@ -208,9 +208,23 @@
     const entities = {};
     const states = {};
 
+    // Real HA state objects always carry last_updated/last_reported -
+    // found live (librus-last-update-tile-card): this mock never set them,
+    // so formatTimeAgo() correctly got `undefined` and rendered blank. A
+    // fixed "4 minutes ago" for every entity, matching how one coordinator
+    // poll updates every one of a device's sensors at once.
+    const lastPolled = new Date(now.getTime() - 4 * 60_000).toISOString();
+
     function addEntity(entityId, translationKey, attrs, state) {
       entities[entityId] = { entity_id: entityId, device_id: DEVICE_ID, platform: "librus_synergia", translation_key: translationKey };
-      states[entityId] = { entity_id: entityId, state: String(state), attributes: attrs };
+      states[entityId] = {
+        entity_id: entityId,
+        state: String(state),
+        attributes: attrs,
+        last_updated: lastPolled,
+        last_reported: lastPolled,
+        last_changed: lastPolled,
+      };
     }
 
     // average_semester_2 kept a small (< 0.5) step above semester_1 so the
@@ -634,6 +648,9 @@
       "librus-teachers-card", "librus-level-card",
       { tag: "librus-hero-card", config: { type: "custom:librus-hero-card" } },
       { tag: "librus-hero-card", config: { type: "custom:librus-hero-card", mode: "hero" } },
+      { tag: "librus-hero-stats-card", config: { type: "custom:librus-hero-stats-card" } },
+      { tag: "librus-hero-history-card", config: { type: "custom:librus-hero-history-card" } },
+      { tag: "librus-last-update-tile-card", config: { type: "custom:librus-last-update-tile-card" } },
       { tag: "librus-grade-log-card", config: { type: "custom:librus-grade-log-card", title: "Tylko sprawdziany (filtr)", category_filter: "sprawdzian", sort: "oldest" } },
       { tag: "librus-rank-card", config: { type: "custom:librus-rank-card", compact: true } },
     ];
@@ -645,6 +662,22 @@
       container.appendChild(el);
       return el;
     }
+
+    // Seed a few past results for librus-hero-history-card - the real card
+    // only ever grows this list going forward from whenever it's first
+    // added (same limitation as achievements-card), so an empty demo
+    // browser would otherwise only ever show the empty state or, at best,
+    // the one entry the live librus-hero-card mounts below would write on
+    // their own first render.
+    try {
+      window.localStorage.setItem(
+        `librus-hero-history:${DEVICE_ID}`,
+        JSON.stringify([
+          { id: "wszechstronny", when: iso(new Date(today.getTime() - 21 * 86400000)) },
+          { id: "wojownik", when: iso(new Date(today.getTime() - 9 * 86400000)) },
+        ])
+      );
+    } catch {}
 
     import("../dist/librus-synergia-cards.js").then(() => {
       const fullGrid = document.getElementById("full");
