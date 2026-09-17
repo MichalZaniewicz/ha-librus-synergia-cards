@@ -1,4 +1,4 @@
-import { html, nothing, type TemplateResult } from "lit";
+import { html, css, nothing, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
@@ -26,7 +26,13 @@ function num(v: unknown): number | null {
  * from exactly one real signal, always 0-10 regardless of the underlying
  * Librus grading scale. A separate card from the Hero/Archetype result on
  * purpose: that card's height is deliberately fixed to a 2-line name/desc
- * budget, and a 6-axis radar plus legend doesn't fit that contract.
+ * budget, and a 6-axis radar plus a stat sheet doesn't fit that contract.
+ *
+ * Redesigned 2026-09-17 after live feedback that the first version ("just
+ * a radar chart + a plain number list") didn't read as a game stat sheet -
+ * approved mockup: a "MOC" (power) badge in the header (sum of all six
+ * stats), a bigger radar with a brand-colored glow, and each stat as an
+ * icon + a filled progress bar instead of a bare legend row.
  */
 @customElement("librus-hero-stats-card")
 export class LibrusHeroStatsCard extends LibrusBaseCard {
@@ -81,6 +87,7 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
     }
 
     const axes: RadarAxis[] = stats.map((s) => ({ label: t(hass, s.labelKey), value: s.value }));
+    const power = Math.round(stats.reduce((sum, s) => sum + s.value, 0));
 
     return html`
       <ha-card>
@@ -90,24 +97,128 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
             <div class="title">${this._config.title ?? t(hass, "card.hero_stats.title")}</div>
             <div class="subtitle">${t(hass, "card.hero_stats.subtitle")}</div>
           </div>
+          <div class="power-badge">
+            <div class="power-n">${power}</div>
+            <div class="power-l">${t(hass, "card.hero_stats.power")}</div>
+          </div>
         </div>
-        <div class="chart-wrap">${radarChart(axes, { max: SCALE_MAX })}</div>
-        <div class="legend-grid">
-          ${stats.map(
-            (s, i) => html`
-              <div class="legend-cell">
-                <span class="dot" style="background:var(--lc-chart-${PALETTE[i % PALETTE.length]})"></span>
-                <span class="name">${t(hass, s.labelKey)}</span>
-                <b>${s.value.toFixed(1)}</b>
+        <div class="chart-wrap glow">${radarChart(axes, { max: SCALE_MAX, width: 260, height: 240 })}</div>
+        <div class="stat-bars">
+          ${stats.map((s, i) => {
+            const colorVar = `var(--lc-chart-${PALETTE[i % PALETTE.length]})`;
+            return html`
+              <div class="stat-row">
+                <div class="stat-icon" style="background:color-mix(in srgb, ${colorVar} 16%, transparent); color:${colorVar}">
+                  <ha-icon icon=${s.icon}></ha-icon>
+                </div>
+                <div class="stat-mid">
+                  <span class="stat-name">${t(hass, s.labelKey)}</span>
+                  <div class="stat-track">
+                    <div class="stat-fill" style="width:${(s.value / SCALE_MAX) * 100}%; background:${colorVar}"></div>
+                  </div>
+                </div>
+                <span class="stat-value" style="color:${colorVar}">${s.value.toFixed(1)}</span>
               </div>
-            `
-          )}
+            `;
+          })}
         </div>
       </ha-card>
     `;
   }
 
-  static styles = [librusTokens, librusSharedStyles];
+  static styles = [
+    librusTokens,
+    librusSharedStyles,
+    css`
+      .header {
+        align-items: center;
+      }
+      .power-badge {
+        margin-left: auto;
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: linear-gradient(155deg, var(--lc-brand-bg), transparent);
+        border: 1px solid var(--lc-brand);
+      }
+      .power-n {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--lc-brand);
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+      .power-l {
+        font-size: 0.5rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--lc-brand-strong);
+        margin-top: 2px;
+      }
+      .chart-wrap {
+        display: flex;
+        justify-content: center;
+      }
+      .chart-wrap.glow svg {
+        filter: drop-shadow(0 0 7px color-mix(in srgb, var(--lc-brand) 45%, transparent));
+      }
+      .stat-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+        margin-top: 4px;
+      }
+      .stat-row {
+        display: grid;
+        grid-template-columns: 28px 1fr auto;
+        align-items: center;
+        gap: 10px;
+      }
+      .stat-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+      .stat-icon ha-icon {
+        --mdc-icon-size: 15px;
+      }
+      .stat-mid {
+        min-width: 0;
+      }
+      .stat-name {
+        display: block;
+        font-size: 0.74rem;
+        font-weight: 700;
+        color: var(--primary-text-color);
+        margin-bottom: 3px;
+      }
+      .stat-track {
+        height: 6px;
+        border-radius: 4px;
+        background: var(--lc-ring-track);
+        overflow: hidden;
+      }
+      .stat-fill {
+        height: 100%;
+        border-radius: 4px;
+      }
+      .stat-value {
+        font-size: 0.78rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+    `,
+  ];
 }
 
 declare global {

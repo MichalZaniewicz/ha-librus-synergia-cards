@@ -361,6 +361,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.hero_stats.title": "Statystyki bohatera",
   "card.hero_stats.subtitle": "Twoja karta postaci",
   "card.hero_stats.empty": "Za mało danych na statystyki",
+  "card.hero_stats.power": "Moc",
   "hero_stat.sila": "Siła",
   "hero_stat.intelekt": "Intelekt",
   "hero_stat.wiedza": "Wiedza",

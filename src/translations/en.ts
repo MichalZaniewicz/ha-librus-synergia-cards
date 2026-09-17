@@ -360,6 +360,7 @@ export const en = {
   "card.hero_stats.title": "Hero stats",
   "card.hero_stats.subtitle": "Your character sheet",
   "card.hero_stats.empty": "Not enough data for stats yet",
+  "card.hero_stats.power": "Power",
   "hero_stat.sila": "Strength",
   "hero_stat.intelekt": "Intellect",
   "hero_stat.wiedza": "Wisdom",
