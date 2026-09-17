@@ -286,6 +286,7 @@
       mailbox_breakdown: { inbox: 1, notes: 0, alerts: 1, substitutions: 1, absences: 0, justifications: 1, trash: 0 },
       recent: [
         { id: "186536", mailbox: "inbox", sender: "Marciszak Amelia", topic: "Zebranie z rodzicami", content: "Dzień dobry, serdecznie zapraszam na zebranie, które odbędzie się 9 września (środa)…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
+        { id: "428360", mailbox: "inbox", sender: "Siwik Anna", topic: "Materiały informacyjne dotyczące najistotniejszych założeń Kompasu Jutra", content: "Szanowni Państwo, na prośbę Pani Minister Barbary Nowackiej przesyłam w załączeniu prezentację…", date: iso(new Date(today.getTime() - 3 * 86400000)), unread: false, has_attachment: true },
       ],
       substitutions_recent: [
         { id: "9001", mailbox: "substitutions", sender: "System zastępstw", topic: "Zmiana w planie lekcji", content: "Jutro (7 wrz) lekcja fizyki o 11:40 zostanie odwołana z powodu nieobecności nauczyciela…", date: iso(new Date(today.getTime() - 1 * 86400000)), unread: true, has_attachment: false },
@@ -528,6 +529,15 @@
               topic: "Zebranie z rodzicami",
               content: "Dzień dobry,\nserdecznie zapraszam na zebranie, które odbędzie się 9 września (środa) o godz. 17:00 w sali 213.\n\nPodczas spotkania:\n zostanie przedstawiony plan wychowawczy na rok szkolny 2026/2027,\n zostaną rozdane dokumenty do aktualizacji,\n omówimy najważniejsze kwestie organizacyjne i wychowawcze dotyczące nowego roku szkolnego.\n\nBędzie to również okazja do przekazania najważniejszych informacji dotyczących naszej klasy i wspólnego ustalenia zasad dobrej współpracy.\n\nLiczę na Państwa obecność.\nZ wyrazami szacunku,\nAmelia Marciszak",
             },
+            // Real attachments field shape (integration 0.7.2+) - filename
+            // and content both from a live account (2026-09-17 probe).
+            "inbox:428360": {
+              sender: "Siwik Anna",
+              topic: "Materiały informacyjne dotyczące najistotniejszych założeń Kompasu Jutra",
+              content: "Szanowni Państwo,\nna prośbę Pani Minister Barbary Nowackiej przesyłam w załączeniu prezentację dotyczącą najistotniejszych założeń reformy Kompas Jutra.\nZachęcam do zapoznania się z materiałami.\n\nZ poważaniem,\n\n\n--------------------\nAnna Siwik\nwicedyrektorka Zespołu Szkolno-Przedszkolnego nr 21 we Wrocławiu",
+              has_attachment: true,
+              attachments: [{ id: "7982536", filename: "PREZENTACJA-RODZICE-WRZESIEN-2026-6a8edfa4a02cd.pdf" }],
+            },
             "substitutions:9001": {
               sender: "System zastępstw",
               topic: "Zmiana w planie lekcji",
@@ -550,10 +560,10 @@
             response: {
               id: msg.service_data.message_id,
               mailbox: msg.service_data.mailbox ?? "inbox",
-              ...picked,
               send_date: iso(new Date(today.getTime() - 2 * 86400000)),
               read_date: iso(today),
               has_attachment: false,
+              ...picked,
             },
           };
         }

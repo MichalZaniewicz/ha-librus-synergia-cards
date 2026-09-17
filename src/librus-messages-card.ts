@@ -117,6 +117,18 @@ export class LibrusMessagesCard extends LibrusBaseCard {
       return html`
         <div class="item-text"><b>${full.topic}</b></div>
         <div class="full-text">${full.content}</div>
+        ${full.attachments?.length
+          ? html`
+              <div class="attachments">
+                ${full.attachments.map(
+                  (a) => html`<div class="attachment">
+                    <ha-icon icon="mdi:paperclip"></ha-icon>${a.filename ?? a.id}
+                  </div>`
+                )}
+                <div class="read-notice">${t(hass, "card.messages.attachment_notice")}</div>
+              </div>
+            `
+          : nothing}
         <div class="read-notice">${t(hass, "card.messages.read_notice")}</div>
       `;
     }
@@ -175,7 +187,11 @@ export class LibrusMessagesCard extends LibrusBaseCard {
                       <span class="dot ${m.unread ? "good" : "neutral"}"></span>
                       <div class="body">
                         <div class="row1">
-                          <span>${m.sender}</span>
+                          <span class="sender"
+                            >${m.sender}${m.has_attachment
+                              ? html`<ha-icon class="clip" icon="mdi:paperclip"></ha-icon>`
+                              : nothing}</span
+                          >
                           ${m.date ? html`<time>${formatShortDate(m.date, hass.language)}</time>` : nothing}
                         </div>
                         ${this._renderMessageBody(m)}
@@ -209,6 +225,27 @@ export class LibrusMessagesCard extends LibrusBaseCard {
         color: var(--secondary-text-color);
         font-style: italic;
         margin-top: 6px;
+      }
+      .clip {
+        --mdc-icon-size: 13px;
+        color: var(--secondary-text-color);
+        display: inline-flex;
+        vertical-align: -2px;
+        margin-left: 4px;
+      }
+      .attachments {
+        margin-top: 6px;
+      }
+      .attachment {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.75rem;
+        color: var(--primary-text-color);
+      }
+      .attachment ha-icon {
+        --mdc-icon-size: 14px;
+        flex: none;
       }
     `,
   ];

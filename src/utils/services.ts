@@ -1,7 +1,9 @@
 import type { LibrusHass } from "./types";
 
 /** Shape returned by the `librus_synergia.get_message` service - see that
- * integration's `services.py`. */
+ * integration's `services.py`. `attachments` requires integration 0.7.2+ -
+ * absent (not an empty array) on an older backend, so callers must use
+ * optional chaining rather than assuming it's always present. */
 export interface FullMessage {
   id: string;
   mailbox: string;
@@ -11,6 +13,7 @@ export interface FullMessage {
   send_date: string | null;
   read_date: string | null;
   has_attachment: boolean;
+  attachments?: { id: string; filename: string | null }[];
 }
 
 /**
