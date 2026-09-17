@@ -51,7 +51,12 @@ type EditorField =
       max: number;
       float?: boolean;
     }
-  | { kind: "select"; key: "mailbox" | "sort"; label: TranslationKey; options: { value: string; label: TranslationKey }[] };
+  | {
+      kind: "select";
+      key: "mailbox" | "sort" | "mode";
+      label: TranslationKey;
+      options: { value: string; label: TranslationKey }[];
+    };
 
 /**
  * Rendered for EVERY card, appended after its own type-specific fields -
@@ -75,6 +80,11 @@ const MAILBOX_OPTIONS: { value: string; label: TranslationKey }[] = [
 const SORT_OPTIONS: { value: string; label: TranslationKey }[] = [
   { value: "newest", label: "sort.newest" },
   { value: "oldest", label: "sort.oldest" },
+];
+
+const MODE_OPTIONS: { value: string; label: TranslationKey }[] = [
+  { value: "archetype", label: "mode.archetype" },
+  { value: "hero", label: "mode.hero" },
 ];
 
 const CATEGORY_FILTER_FIELD: EditorField = { kind: "text", key: "category_filter", label: "editor.category_filter" };
@@ -134,6 +144,10 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-exam-countdown-card": [
     TITLE_FIELD,
     { kind: "text", key: "exam_keywords", label: "editor.exam_keywords" },
+  ],
+  "custom:librus-hero-card": [
+    TITLE_FIELD,
+    { kind: "select", key: "mode", label: "editor.mode", options: MODE_OPTIONS },
   ],
 };
 
@@ -324,7 +338,7 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ subject_id: Number.isNaN(next as number) ? undefined : next });
   }
 
-  private _pickSelect(field: { key: "mailbox" | "sort"; options: { value: string }[] }, ev: Event): void {
+  private _pickSelect(field: { key: "mailbox" | "sort" | "mode"; options: { value: string }[] }, ev: Event): void {
     const value = LibrusCardEditor._selectValue(ev);
     if (!value) return;
     const current = (this._config?.[field.key] as string | undefined) ?? field.options[0].value;

@@ -38,6 +38,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   category_filter?: string;
   /** Sort order for the list cards that support it ("newest" default). */
   sort?: "newest" | "oldest";
+  /** Which tone the Hero/Archetype card shows ("archetype" default). */
+  mode?: "archetype" | "hero";
   /** Tap behaviour for the glanceable cards (navigate / more-info / url / call-service).
    * Configured via YAML - see the README. */
   tap_action?: ActionConfig;

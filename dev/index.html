@@ -213,7 +213,14 @@
       states[entityId] = { entity_id: entityId, state: String(state), attributes: attrs };
     }
 
-    addEntity("sensor.overall_average", "overall_average", {}, "4.68");
+    // average_semester_2 kept a small (< 0.5) step above semester_1 so the
+    // "Feniks" hero result stays inert in the default demo, matching the
+    // real backend shape (both can be a genuine number, or null before a
+    // semester has any counted grades yet) - see librus-hero-card.
+    addEntity("sensor.overall_average", "overall_average", {
+      average_semester_1: 4.5,
+      average_semester_2: 4.8,
+    }, "4.68");
     // New (2026-09-07): one status per calendar date, for the heatmap
     // card - mostly "good" school days over the last several weeks, with
     // one "bad" (matching last_absence_date below) and one "warn" thrown
@@ -625,6 +632,8 @@
       "librus-today-card", "librus-tomorrow-card", "librus-week-summary-card", "librus-lucky-number-card",
       "librus-student-card", "librus-streak-card", "librus-rank-card", "librus-achievements-card",
       "librus-teachers-card", "librus-level-card",
+      { tag: "librus-hero-card", config: { type: "custom:librus-hero-card" } },
+      { tag: "librus-hero-card", config: { type: "custom:librus-hero-card", mode: "hero" } },
       { tag: "librus-grade-log-card", config: { type: "custom:librus-grade-log-card", title: "Tylko sprawdziany (filtr)", category_filter: "sprawdzian", sort: "oldest" } },
       { tag: "librus-rank-card", config: { type: "custom:librus-rank-card", compact: true } },
     ];
