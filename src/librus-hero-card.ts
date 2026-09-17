@@ -98,13 +98,13 @@ export class LibrusHeroCard extends LibrusBaseCard {
     });
 
     if (!result) {
-      return this._message("mdi:sparkles-outline", t(hass, "card.hero.empty"));
+      return this._message("mdi:creation-outline", t(hass, "card.hero.empty"));
     }
 
     return html`
       <ha-card>
         <div class="header">
-          <div class="icon-badge"><ha-icon icon="mdi:sparkles-outline"></ha-icon></div>
+          <div class="icon-badge"><ha-icon icon="mdi:creation-outline"></ha-icon></div>
           <div class="title-block">
             <div class="title">
               ${this._config.title ?? t(hass, mode === "hero" ? "card.hero.title_hero" : "card.hero.title_archetype")}
