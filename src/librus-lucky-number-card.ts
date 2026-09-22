@@ -5,11 +5,10 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
+import { UNAVAILABLE } from "./utils/entities";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { tapActionHandler, isActionable } from "./utils/actions";
-
-const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
 
 @customElement("librus-lucky-number-card")
 export class LibrusLuckyNumberCard extends LibrusBaseCard {

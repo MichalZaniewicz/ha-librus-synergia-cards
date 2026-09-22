@@ -6,10 +6,9 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { progressRing } from "./utils/render-helpers";
+import { UNAVAILABLE } from "./utils/entities";
 import { t } from "./utils/localize";
 import { tapActionHandler } from "./utils/actions";
-
-const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
 
 // Mirrors ha-librus-synergia's own `sensor.py::_RANK_TIERS` (0.6.0+) -
 // the sensor exposes the resolved tier key + `average`/`points_to_next_tier`

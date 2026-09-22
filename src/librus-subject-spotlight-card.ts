@@ -5,9 +5,8 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
+import { UNAVAILABLE } from "./utils/entities";
 import { t } from "./utils/localize";
-
-const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
 
 /**
  * The strongest and weakest subject, side by side, computed client-side

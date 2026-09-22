@@ -5,6 +5,7 @@ import type { LibrusCardConfig, LibrusHass } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
+import { UNAVAILABLE } from "./utils/entities";
 import { t, type TranslationKey } from "./utils/localize";
 
 const EVENT_TYPE = "librus_synergia_achievement_unlocked";
@@ -24,8 +25,6 @@ interface UnlockedAchievement {
   title: string;
   when: string;
 }
-
-const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
 
 // Mirrors the backend's own milestone thresholds (coordinator.py's
 // `_GOOD_GRADE_STREAK_MILESTONES`/`_STREAK_DAY_MILESTONES`) - these are

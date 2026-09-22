@@ -6,11 +6,10 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { isoDate } from "./utils/calendar";
+import { UNAVAILABLE } from "./utils/entities";
 import { formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
 import { tapActionHandler } from "./utils/actions";
-
-const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
 
 @customElement("librus-week-summary-card")
 export class LibrusWeekSummaryCard extends LibrusBaseCard {

@@ -2,6 +2,15 @@ import type { LibrusHass } from "./types";
 
 export const LIBRUS_PLATFORM = "librus_synergia";
 
+/**
+ * HA states meaning "no real value to show" - a genuinely unknown/
+ * unavailable entity, or an empty string state. Shared by every card that
+ * needs to treat these as an empty/loading state rather than a real
+ * falsy value (was independently declared, byte-for-byte identical, in 9
+ * separate card files before being extracted here).
+ */
+export const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
+
 export type LibrusConfigErrorCode = "no_device" | "multiple_devices" | "device_missing";
 
 /**
