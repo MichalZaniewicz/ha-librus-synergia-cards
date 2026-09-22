@@ -107,10 +107,12 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
+    const generation = this._beginFetch();
     try {
-      this._events = await fetchCalendarEvents(this.hass, entityId, monday, rangeEnd);
+      const events = await fetchCalendarEvents(this.hass, entityId, monday, rangeEnd);
+      if (this._isCurrentFetch(generation)) this._events = events;
     } catch {
-      this._events = [];
+      if (this._isCurrentFetch(generation)) this._events = [];
     }
   }
 

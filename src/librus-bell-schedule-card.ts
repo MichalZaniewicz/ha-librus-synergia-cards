@@ -105,12 +105,14 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
+    const generation = this._beginFetch();
     try {
-      this._events = (await fetchCalendarEvents(this.hass, entityId, day, dayAfter)).filter(
+      const events = (await fetchCalendarEvents(this.hass, entityId, day, dayAfter)).filter(
         (e) => !e.allDay
       );
+      if (this._isCurrentFetch(generation)) this._events = events;
     } catch {
-      this._events = [];
+      if (this._isCurrentFetch(generation)) this._events = [];
     }
   }
 

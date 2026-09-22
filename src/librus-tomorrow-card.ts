@@ -88,11 +88,13 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
+    const generation = this._beginFetch();
     try {
       const events = await fetchCalendarEvents(this.hass, entityId, target, dayAfter);
-      this._lessons = events.filter((e) => !e.allDay).sort((a, b) => a.start.localeCompare(b.start));
+      const lessons = events.filter((e) => !e.allDay).sort((a, b) => a.start.localeCompare(b.start));
+      if (this._isCurrentFetch(generation)) this._lessons = lessons;
     } catch {
-      this._lessons = [];
+      if (this._isCurrentFetch(generation)) this._lessons = [];
     }
   }
 

@@ -32,6 +32,37 @@ export abstract class LibrusBaseCard extends LitElement {
     result: ResolvedEntities;
   };
 
+  // Monotonic counter behind _beginFetch()/_isCurrentFetch() - see their
+  // docs below. Shared by the ~10 cards with an on-demand calendar/history
+  // fetch (a `_fetch(force)` method keyed on a `_fetchedFor` cache string).
+  private _fetchGeneration = 0;
+
+  /**
+   * Call at the START of an on-demand async fetch (after `_fetchedFor` has
+   * already been updated to the new cache key), and keep the returned
+   * value in a local const. Pass that same value to `_isCurrentFetch()`
+   * once the fetch's own `await` resolves, before applying its result.
+   *
+   * Fixes a real race: a config change mid-flight (e.g. `days`/
+   * `device_id`/`exam_keywords`) starts a NEW fetch for a new cache key
+   * while an OLDER fetch for the previous key is still in flight. If the
+   * older one resolves LAST, it would otherwise silently overwrite the
+   * newer, correct result - and since `_fetchedFor` already points at the
+   * newer cache key by then, a later render would see that key as
+   * "current" and never refetch, leaving the card stuck showing stale data
+   * until the next periodic forced refresh. Discarding a superseded
+   * fetch's result (rather than letting whichever resolves last win) closes
+   * that gap.
+   */
+  protected _beginFetch(): number {
+    return ++this._fetchGeneration;
+  }
+
+  /** True if `generation` (from `_beginFetch()`) is still the most recent one. */
+  protected _isCurrentFetch(generation: number): boolean {
+    return generation === this._fetchGeneration;
+  }
+
   /**
    * Reaches into the subclass's own `@state() private _config` field by
    * NAME at runtime, rather than requiring every one of the ~46 cards to

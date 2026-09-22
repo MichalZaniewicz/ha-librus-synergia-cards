@@ -81,10 +81,12 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
+    const generation = this._beginFetch();
     try {
-      this._points = await fetchNumericHistory(this.hass, entityId, start, end);
+      const points = await fetchNumericHistory(this.hass, entityId, start, end);
+      if (this._isCurrentFetch(generation)) this._points = points;
     } catch {
-      this._points = [];
+      if (this._isCurrentFetch(generation)) this._points = [];
     }
   }
 

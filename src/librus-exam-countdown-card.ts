@@ -130,16 +130,18 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
     this._fetchedFor = cacheKey;
 
     const re = examRegex(this._config.exam_keywords);
+    const generation = this._beginFetch();
     try {
       const events = await fetchCalendarEvents(this.hass, entityId, today, end);
-      this._events = events
+      const filtered = events
         .filter((ev) => {
           const { category } = parseCategory(ev.summary);
           return category !== null && re.test(category);
         })
         .sort((a, b) => a.start.localeCompare(b.start));
+      if (this._isCurrentFetch(generation)) this._events = filtered;
     } catch {
-      this._events = [];
+      if (this._isCurrentFetch(generation)) this._events = [];
     }
   }
 
