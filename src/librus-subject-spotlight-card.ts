@@ -5,7 +5,6 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { t } from "./utils/localize";
 
 const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
@@ -46,7 +45,7 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
     const { deviceId } = resolved;
     const hass = this.hass;
 
-    const subjects = mapAllByTranslationKey(hass, deviceId, "subject_average")
+    const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average")
       .map((s) => ({ subject: s.subject, state: hass.states[s.entityId] }))
       .filter((s) => s.state && !UNAVAILABLE.has(s.state.state))
       .map((s) => ({ subject: s.subject, value: Number(s.state!.state) }))

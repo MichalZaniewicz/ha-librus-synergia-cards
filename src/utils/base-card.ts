@@ -1,7 +1,7 @@
 import { LitElement, html, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { property } from "lit/decorators.js";
 import type { LibrusCardConfig, LibrusHass } from "./types";
-import { resolveLibrusDevice, mapByTranslationKey, LibrusConfigError } from "./entities";
+import { resolveLibrusDevice, mapByTranslationKey, mapAllByTranslationKey, LibrusConfigError, type SubjectEntity } from "./entities";
 import { t } from "./localize";
 
 /**
@@ -61,6 +61,34 @@ export abstract class LibrusBaseCard extends LitElement {
   /** True if `generation` (from `_beginFetch()`) is still the most recent one. */
   protected _isCurrentFetch(generation: number): boolean {
     return generation === this._fetchGeneration;
+  }
+
+  // Memoizes _resolveAllByTranslationKey()'s results, same reasoning and
+  // same `hass.entities` reference-identity keying as `_resolvedCache`
+  // above (see its comment) - `mapAllByTranslationKey` is its own full
+  // linear registry scan, called directly and uncached by 17+ cards. A
+  // second Map layer keys by translationKey, in case a future card ever
+  // looks up more than one on the same instance.
+  private _subjectsCache?: {
+    entities: LibrusHass["entities"];
+    deviceId: string;
+    byKey: Map<string, SubjectEntity[]>;
+  };
+
+  /** Memoized `mapAllByTranslationKey()` - see `_subjectsCache`'s own comment. */
+  protected _resolveAllByTranslationKey(deviceId: string, translationKey: string): SubjectEntity[] {
+    if (!this.hass) return [];
+    let cache = this._subjectsCache;
+    if (!cache || cache.entities !== this.hass.entities || cache.deviceId !== deviceId) {
+      cache = { entities: this.hass.entities, deviceId, byKey: new Map() };
+      this._subjectsCache = cache;
+    }
+    let result = cache.byKey.get(translationKey);
+    if (!result) {
+      result = mapAllByTranslationKey(this.hass, deviceId, translationKey);
+      cache.byKey.set(translationKey, result);
+    }
+    return result;
   }
 
   /**

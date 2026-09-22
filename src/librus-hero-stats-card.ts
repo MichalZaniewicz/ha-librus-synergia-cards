@@ -5,7 +5,6 @@ import type { LibrusCardConfig, LibrusHass } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { computeHeroStats, type HeroStat } from "./utils/hero-stats";
 import type { SubjectStat } from "./utils/hero-archetypes";
 import { t } from "./utils/localize";
@@ -127,7 +126,7 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
     const { deviceId, map } = resolved;
     const hass = this.hass;
 
-    const subjects: SubjectStat[] = mapAllByTranslationKey(hass, deviceId, "subject_average").map((s) => {
+    const subjects: SubjectStat[] = this._resolveAllByTranslationKey(deviceId, "subject_average").map((s) => {
       const state = hass.states[s.entityId];
       const gradeCount = ((state?.attributes.grades as { value: string }[] | undefined) ?? []).length;
       return { subject: s.subject, average: state ? num(state.state) : null, gradeCount };

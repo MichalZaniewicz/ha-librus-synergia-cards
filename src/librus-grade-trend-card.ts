@@ -3,7 +3,6 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { fetchNumericHistory, type HistoryPoint } from "./utils/history";
 import { lineChart } from "./utils/render-helpers";
 import { t } from "./utils/localize";
@@ -65,7 +64,7 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
     if ("error" in resolved) return undefined;
     const { deviceId, map } = resolved;
     if (this._config.subject_id !== undefined) {
-      const subjects = mapAllByTranslationKey(this.hass, deviceId, "subject_average");
+      const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average");
       return subjects.find((s) => s.subjectId === this._config!.subject_id)?.entityId;
     }
     return map.overall_average;
@@ -103,7 +102,7 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
     const entityId = this._resolveEntityId();
     const subjectName =
       this._config.subject_id !== undefined
-        ? mapAllByTranslationKey(hass, resolved.deviceId, "subject_average").find(
+        ? this._resolveAllByTranslationKey(resolved.deviceId, "subject_average").find(
             (s) => s.subjectId === this._config!.subject_id
           )?.subject
         : undefined;

@@ -4,7 +4,6 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
@@ -48,7 +47,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
     const hass = this.hass;
 
     const flat: FlatGrade[] = [];
-    for (const s of mapAllByTranslationKey(hass, deviceId, "subject_average")) {
+    for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
       const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
       for (const g of grades) flat.push({ ...g, subject: s.subject });
     }

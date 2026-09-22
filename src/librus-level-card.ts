@@ -5,7 +5,6 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { progressRing } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 
@@ -75,7 +74,7 @@ export class LibrusLevelCard extends LibrusBaseCard {
 
     let gradeCount = 0;
     let goodGradeCount = 0;
-    for (const s of mapAllByTranslationKey(hass, deviceId, "subject_average")) {
+    for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
       const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
       for (const g of grades) {
         gradeCount += 1;

@@ -5,7 +5,6 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { hBarChart, type HBarRow } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 
@@ -57,7 +56,7 @@ export class LibrusGradeCategoryDistributionCard extends LibrusBaseCard {
     const hass = this.hass;
 
     const counts = new Map<string, number>();
-    for (const s of mapAllByTranslationKey(hass, deviceId, "subject_average")) {
+    for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
       const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
       for (const g of grades) {
         const key = g.category ?? "__uncategorized";

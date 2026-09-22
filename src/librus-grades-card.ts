@@ -6,7 +6,6 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { progressRing } from "./utils/render-helpers";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { t } from "./utils/localize";
 
 const UNAVAILABLE = new Set(["unknown", "unavailable", ""]);
@@ -42,7 +41,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
     const hass = this.hass;
 
     const overall = map.overall_average ? hass.states[map.overall_average] : undefined;
-    const subjects = mapAllByTranslationKey(hass, deviceId, "subject_average")
+    const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average")
       .map((s) => ({ ...s, state: hass.states[s.entityId] }))
       .filter((s) => s.state && !UNAVAILABLE.has(s.state.state));
 

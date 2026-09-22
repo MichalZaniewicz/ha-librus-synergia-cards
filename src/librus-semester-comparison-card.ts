@@ -4,7 +4,6 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 
@@ -62,7 +61,7 @@ export class LibrusSemesterComparisonCard extends LibrusBaseCard {
       return Number.isFinite(n) ? n : null;
     };
 
-    const rows: SubjectRow[] = mapAllByTranslationKey(hass, deviceId, "subject_average")
+    const rows: SubjectRow[] = this._resolveAllByTranslationKey(deviceId, "subject_average")
       .map((s) => {
         const attrs = hass.states[s.entityId]?.attributes ?? {};
         return {

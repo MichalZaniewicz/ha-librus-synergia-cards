@@ -5,7 +5,7 @@ import type { LibrusCardConfig, LibrusHass } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
+import type { SubjectEntity } from "./utils/entities";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 
@@ -19,10 +19,10 @@ interface LatestGradeAttrs {
 /** Scans every subject_average sensor's attributes for the most recent grade. */
 function findLatestGrade(
   hass: LibrusHass,
-  deviceId: string
+  subjects: readonly SubjectEntity[]
 ): { subject: string; grade: string; date: string; comments: string[] } | null {
   let best: { subject: string; grade: string; date: string; comments: string[] } | null = null;
-  for (const s of mapAllByTranslationKey(hass, deviceId, "subject_average")) {
+  for (const s of subjects) {
     const attrs = hass.states[s.entityId]?.attributes as LatestGradeAttrs | undefined;
     if (!attrs?.latest_grade || !attrs.latest_grade_date) continue;
     if (!best || attrs.latest_grade_date > best.date) {
@@ -67,7 +67,7 @@ export class LibrusLatestGradeCard extends LibrusBaseCard {
     const { deviceId } = resolved;
     const hass = this.hass;
 
-    const latest = findLatestGrade(hass, deviceId);
+    const latest = findLatestGrade(hass, this._resolveAllByTranslationKey(deviceId, "subject_average"));
     if (!latest) return this._message("mdi:star-outline", t(hass, "card.latest_grade.empty"));
 
     return html`

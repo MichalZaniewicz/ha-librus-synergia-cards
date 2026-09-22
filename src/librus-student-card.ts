@@ -5,7 +5,6 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { t } from "./utils/localize";
 import { tapActionHandler } from "./utils/actions";
 
@@ -92,7 +91,7 @@ export class LibrusStudentCard extends LibrusBaseCard {
       });
     }
 
-    const subjects = mapAllByTranslationKey(hass, deviceId, "subject_average");
+    const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average");
     if (subjects.length) {
       const graded = subjects.filter((s) => {
         const count = hass.states[s.entityId]?.attributes.grade_count as number | undefined;

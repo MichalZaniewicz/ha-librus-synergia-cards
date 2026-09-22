@@ -5,7 +5,6 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { t } from "./utils/localize";
 
 interface GradeLogEntry {
@@ -64,7 +63,7 @@ export class LibrusGradeDistributionCard extends LibrusBaseCard {
 
     const counts: Record<string, number> = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, other: 0 };
     let total = 0;
-    for (const s of mapAllByTranslationKey(hass, deviceId, "subject_average")) {
+    for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
       const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
       for (const g of grades) {
         const digit = /^([1-6])/.exec(g.value.trim())?.[1];

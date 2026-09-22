@@ -4,7 +4,6 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { mapAllByTranslationKey } from "./utils/entities";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 
@@ -52,7 +51,7 @@ export class LibrusGradeSimulatorCard extends LibrusBaseCard {
     const { deviceId } = resolved;
     const hass = this.hass;
 
-    const subjects = mapAllByTranslationKey(hass, deviceId, "subject_average");
+    const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average");
     const match =
       this._config.subject_id !== undefined
         ? subjects.find((s) => s.subjectId === this._config!.subject_id)
