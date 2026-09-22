@@ -71,6 +71,10 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
   private _storageKey = "";
   private _subscribedDeviceId?: string;
   private _unsubscribe?: () => void;
+  // Guards the async gap in `_subscribe()` between starting
+  // `subscribeEvents()` and it resolving - see that method's own comment.
+  private _subscribeGeneration = 0;
+  private _torndown = false;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -89,8 +93,19 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
     return 2;
   }
 
+  public connectedCallback(): void {
+    super.connectedCallback();
+    this._torndown = false;
+  }
+
   public disconnectedCallback(): void {
     super.disconnectedCallback();
+    // Invalidates any `_subscribe()` currently awaiting `subscribeEvents()`
+    // - once its await resolves it will see `_torndown` and immediately
+    // unsubscribe itself instead of assigning `_unsubscribe` to a
+    // subscription nothing will ever clean up otherwise (see `_subscribe`).
+    this._torndown = true;
+    this._subscribeGeneration++;
     this._unsubscribe?.();
     this._unsubscribe = undefined;
     this._subscribedDeviceId = undefined;
@@ -116,20 +131,43 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
     }
   }
 
+  /**
+   * `subscribeEvents()` is itself async - it doesn't resolve until the
+   * websocket round-trip completes, so there's a real gap between calling
+   * it and having an `_unsubscribe` callback to hold onto. Two races live
+   * in that gap: (a) the card can be torn down (disconnectedCallback)
+   * while still awaiting it, in which case the OLD disconnect's
+   * `_unsubscribe?.()` call is a no-op (nothing to call yet) and the
+   * subscription would otherwise leak for the rest of the tab's session
+   * once it finally resolves; (b) this method can be called again for a
+   * genuinely different `deviceId` before the first call resolves, and
+   * whichever resolves last would otherwise win regardless of call order,
+   * possibly leaving the card listening on the wrong device's stream. The
+   * `generation` guard below and the `_torndown` flag close both: a
+   * resolution that's no longer current unsubscribes itself immediately
+   * instead of overwriting `_unsubscribe`.
+   */
   private async _subscribe(deviceId: string): Promise<void> {
     if (this._subscribedDeviceId === deviceId || !this.hass) return;
     this._subscribedDeviceId = deviceId;
     this._unsubscribe?.();
     this._unsubscribe = undefined;
+    const generation = ++this._subscribeGeneration;
 
     const entryIds = this.hass.devices[deviceId]?.config_entries ?? [];
-    this._unsubscribe = await this.hass.connection.subscribeEvents<{ data: AchievementEventData }>((ev) => {
+    const unsubscribe = await this.hass.connection.subscribeEvents<{ data: AchievementEventData }>((ev) => {
       const data = ev.data;
       if (entryIds.length && data.entry_id && !entryIds.includes(data.entry_id)) return;
       if (this._unlocked.some((u) => u.id === data.id)) return;
       this._unlocked = [...this._unlocked, { id: data.id, title: data.title, when: new Date().toISOString() }];
       this._persist();
     }, EVENT_TYPE);
+
+    if (this._torndown || generation !== this._subscribeGeneration) {
+      unsubscribe();
+      return;
+    }
+    this._unsubscribe = unsubscribe;
   }
 
   private _nextMilestoneHint(hass: LibrusHass, map: Record<string, string>): { remaining: number; title: string } | undefined {
