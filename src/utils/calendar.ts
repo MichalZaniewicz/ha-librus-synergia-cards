@@ -80,3 +80,14 @@ export function hasEnded(event: LibrusCalendarEvent, now: Date): boolean {
   const end = event.allDay ? new Date(`${event.end}T23:59:59`) : new Date(event.end);
   return end.getTime() < now.getTime();
 }
+
+/**
+ * Local-timezone "YYYY-MM-DD" - NOT via `toISOString()`, which converts
+ * through UTC first and can land on the wrong calendar date depending on
+ * the viewer's timezone and time of day. Any date-only comparison (a
+ * cutoff, a "which day is this" check) should go through this, not
+ * `date.toISOString().slice(0, 10)`.
+ */
+export function isoDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}

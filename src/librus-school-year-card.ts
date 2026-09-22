@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { progressRing } from "./utils/render-helpers";
+import { isoDate } from "./utils/calendar";
 import { daysBetween, formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { tapActionHandler } from "./utils/actions";
@@ -77,7 +78,11 @@ export class LibrusSchoolYearCard extends LibrusBaseCard {
     const pct = Math.round((elapsedDays / totalDays) * 100);
     const daysLeft = Math.max(0, daysBetween(today, yearEnd));
 
-    const isFirstSemester = semesterEndIso ? today < new Date(`${semesterEndIso}T00:00:00`) : true;
+    // Date-only comparison - comparing the full `today` instant (with
+    // time-of-day) against local midnight of the semester-end date made
+    // this flip to "Semester 2" a day early, from local midnight onward
+    // on the actual last day of semester 1.
+    const isFirstSemester = semesterEndIso ? isoDate(today) <= semesterEndIso : true;
     const currentSemesterEndIso = isFirstSemester && semesterEndIso ? semesterEndIso : yearEndIso;
     const semesterDaysLeft = Math.max(0, daysBetween(today, new Date(`${currentSemesterEndIso}T00:00:00`)));
 
