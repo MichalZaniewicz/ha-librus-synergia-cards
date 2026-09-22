@@ -28,6 +28,22 @@ const FALLBACK_LOOKBACK_WEEKS = 16;
 @customElement("librus-attendance-heatmap-card")
 export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  // Rebuilding the whole grid re-runs ~200 cells' worth of date-string
+  // construction + a translation lookup each - `by_date`/
+  // `school_year_start` only actually change once per coordinator poll
+  // cycle, but ANY unrelated hass state change elsewhere in the instance
+  // re-triggers render() and, without this, a full rebuild. Cached on the
+  // inputs that actually affect the result - object identity for
+  // `by_date` (a fresh object only appears when the Attendance entity's
+  // own state actually changes), plus the school-year-start date and
+  // today's own date (so a real day-boundary crossing still rebuilds).
+  private _gridCache?: {
+    byDate: Record<string, DayStatus>;
+    yearStartIso: string | undefined;
+    todayIso: string;
+    weeks: Date[];
+    grid: TemplateResult;
+  };
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -65,14 +81,40 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
     const schoolClass = map.school_class ? hass.states[map.school_class] : undefined;
     const yearStartIso = schoolClass?.attributes.school_year_start as string | undefined;
     const today = new Date();
-    const todayMonday = mondayOfWeek(today);
-    const startMonday = yearStartIso
-      ? mondayOfWeek(new Date(`${yearStartIso}T00:00:00`))
-      : new Date(todayMonday.getTime() - FALLBACK_LOOKBACK_WEEKS * 7 * 86400000);
+    const todayIso = isoDate(today);
 
-    const weeks: Date[] = [];
-    for (let w = new Date(startMonday); w <= todayMonday; w.setDate(w.getDate() + 7)) {
-      weeks.push(new Date(w));
+    const cached = this._gridCache;
+    let weeks: Date[];
+    let grid: TemplateResult;
+    if (cached && cached.byDate === byDate && cached.yearStartIso === yearStartIso && cached.todayIso === todayIso) {
+      ({ weeks, grid } = cached);
+    } else {
+      const todayMonday = mondayOfWeek(today);
+      const startMonday = yearStartIso
+        ? mondayOfWeek(new Date(`${yearStartIso}T00:00:00`))
+        : new Date(todayMonday.getTime() - FALLBACK_LOOKBACK_WEEKS * 7 * 86400000);
+
+      weeks = [];
+      for (let w = new Date(startMonday); w <= todayMonday; w.setDate(w.getDate() + 7)) {
+        weeks.push(new Date(w));
+      }
+
+      grid = html`${weeks.map(
+        (weekStart) => html`
+          <div class="heatmap-col">
+            ${WEEKDAY_ROWS.map((offset) => {
+              const day = new Date(weekStart);
+              day.setDate(day.getDate() + offset);
+              if (day > today) return html`<span class="cell future"></span>`;
+              const dateStr = isoDate(day);
+              const status = byDate[dateStr];
+              return html`<span class="cell ${status ?? "none"}" title=${`${dateStr}${status ? ` - ${t(hass, `card.attendance_heatmap.status.${status}`)}` : ""}`}></span>`;
+            })}
+          </div>
+        `
+      )}`;
+
+      this._gridCache = { byDate, yearStartIso, todayIso, weeks, grid };
     }
 
     return html`
@@ -86,20 +128,7 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
         </div>
         <div class="heatmap-scroll">
           <div class="heatmap" style="grid-template-columns: repeat(${weeks.length}, 11px);">
-            ${weeks.map(
-              (weekStart) => html`
-                <div class="heatmap-col">
-                  ${WEEKDAY_ROWS.map((offset) => {
-                    const day = new Date(weekStart);
-                    day.setDate(day.getDate() + offset);
-                    if (day > today) return html`<span class="cell future"></span>`;
-                    const dateStr = isoDate(day);
-                    const status = byDate[dateStr];
-                    return html`<span class="cell ${status ?? "none"}" title=${`${dateStr}${status ? ` - ${t(hass, `card.attendance_heatmap.status.${status}`)}` : ""}`}></span>`;
-                  })}
-                </div>
-              `
-            )}
+            ${grid}
           </div>
         </div>
         <div class="heatmap-legend">
