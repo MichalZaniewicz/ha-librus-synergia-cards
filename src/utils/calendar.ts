@@ -91,3 +91,46 @@ export function hasEnded(event: LibrusCalendarEvent, now: Date): boolean {
 export function isoDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
+
+/** ISO weekday of `d` in LOCAL time (1=Monday..7=Sunday). */
+function isoWeekdayOf(d: Date): number {
+  const day = d.getDay(); // 0 = Sunday
+  return day === 0 ? 7 : day;
+}
+
+/**
+ * Monday of the calendar week containing `d`, at local midnight - a plain
+ * "this week's Monday", with no weekend roll-forward. Use this when the
+ * caller genuinely wants the week `d` falls in (e.g. an attendance
+ * heatmap's last column must be THIS week, not a future one that hasn't
+ * happened yet). See `mondayOfSchoolWeek` below for the other, DIFFERENT
+ * semantics some cards need instead - don't conflate the two.
+ */
+export function mondayOfWeek(d: Date): Date {
+  const monday = new Date(d);
+  monday.setDate(monday.getDate() - (isoWeekdayOf(d) - 1));
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+/**
+ * Monday of the week most useful to look at right now. On a school day
+ * (Mon-Fri) that's the ISO week containing today, same as `mondayOfWeek`.
+ * On a weekend (Sat/Sun) the ISO week containing today has ALREADY
+ * happened in full (Mon-Fri are all in the past) - rolling forward to next
+ * Monday instead shows the week the viewer is actually about to live
+ * through, matching how the next-lesson/today cards already favor "what's
+ * coming" over "what just happened". Confirmed live (2026-09-06): without
+ * this, opening a week-timetable card on a Sunday showed a stale,
+ * mostly-elapsed week and looked broken. Shared by
+ * librus-week-timetable-card and librus-subject-time-card - previously
+ * duplicated byte-for-byte between the two.
+ */
+export function mondayOfSchoolWeek(d: Date): Date {
+  const monday = new Date(d);
+  const weekday = isoWeekdayOf(d);
+  const daysToMonday = weekday >= 6 ? 8 - weekday : 1 - weekday;
+  monday.setDate(monday.getDate() + daysToMonday);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}

@@ -5,28 +5,10 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
+import { mondayOfWeek, isoDate } from "./utils/calendar";
 import { t } from "./utils/localize";
 
 type DayStatus = "good" | "warn" | "bad";
-
-function isoWeekday(d: Date): number {
-  const day = d.getDay(); // 0 = Sunday
-  return day === 0 ? 7 : day;
-}
-
-function mondayOf(d: Date): Date {
-  const monday = new Date(d);
-  monday.setDate(monday.getDate() - (isoWeekday(d) - 1));
-  monday.setHours(0, 0, 0, 0);
-  return monday;
-}
-
-function isoDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 
 const WEEKDAY_ROWS = [0, 1, 2, 3, 4]; // Mon-Fri offsets from each week's Monday
 // Attendance is only tracked on school days - a fixed 16-week lookback is a
@@ -83,9 +65,9 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
     const schoolClass = map.school_class ? hass.states[map.school_class] : undefined;
     const yearStartIso = schoolClass?.attributes.school_year_start as string | undefined;
     const today = new Date();
-    const todayMonday = mondayOf(today);
+    const todayMonday = mondayOfWeek(today);
     const startMonday = yearStartIso
-      ? mondayOf(new Date(`${yearStartIso}T00:00:00`))
+      ? mondayOfWeek(new Date(`${yearStartIso}T00:00:00`))
       : new Date(todayMonday.getTime() - FALLBACK_LOOKBACK_WEEKS * 7 * 86400000);
 
     const weeks: Date[] = [];

@@ -5,27 +5,9 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, mondayOfSchoolWeek, type LibrusCalendarEvent } from "./utils/calendar";
 import { hBarChart, type HBarRow } from "./utils/render-helpers";
 import { t } from "./utils/localize";
-
-function isoWeekday(iso: string): number {
-  const d = new Date(iso);
-  const day = d.getDay(); // 0 = Sunday
-  return day === 0 ? 7 : day;
-}
-
-// Same "roll forward on a weekend" Monday as librus-week-timetable-card -
-// the ISO week containing a Sat/Sun has already fully happened, so the
-// upcoming week is the more useful one to show a lesson-time split for.
-function mondayOf(d: Date): Date {
-  const monday = new Date(d);
-  const weekday = isoWeekday(d.toISOString());
-  const daysToMonday = weekday >= 6 ? 8 - weekday : 1 - weekday;
-  monday.setDate(monday.getDate() + daysToMonday);
-  monday.setHours(0, 0, 0, 0);
-  return monday;
-}
 
 // 16 distinct hues (style-tokens.ts) - a real timetable easily has more
 // subjects than the 5-6 core semantic colors can tell apart at a glance.
@@ -84,7 +66,7 @@ export class LibrusSubjectTimeCard extends LibrusBaseCard {
     const entityId = resolved.map.timetable;
     if (!entityId) return;
 
-    const monday = mondayOf(new Date());
+    const monday = mondayOfSchoolWeek(new Date());
     const rangeEnd = new Date(monday);
     rangeEnd.setDate(rangeEnd.getDate() + this._dayCount);
     const cacheKey = `${entityId}:${monday.toDateString()}:${this._dayCount}`;
