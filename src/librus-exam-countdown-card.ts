@@ -169,7 +169,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:clipboard-text-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.exam_countdown.title")}</div>
+            <div class="title">${this._config.title ?? t(hass, "card.exam_countdown.title")}</div>
             <div class="subtitle">${formatShortDate(next.date, hass.language)}</div>
           </div>
         </div>

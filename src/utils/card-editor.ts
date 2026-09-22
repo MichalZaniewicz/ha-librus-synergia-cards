@@ -118,6 +118,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-grade-trend-card": [
     { kind: "subject" },
     { kind: "number", key: "days", label: "editor.days_back", min: 7, max: 180 },
+    TITLE_FIELD,
   ],
   "custom:librus-subject-grades-card": [
     { kind: "subject" },
@@ -153,6 +154,11 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     TITLE_FIELD,
     { kind: "select", key: "mode", label: "editor.mode", options: MODE_OPTIONS },
   ],
+  "custom:librus-achievements-card": [TITLE_FIELD],
+  "custom:librus-hero-stats-card": [TITLE_FIELD],
+  "custom:librus-level-card": [TITLE_FIELD],
+  "custom:librus-rank-card": [TITLE_FIELD],
+  "custom:librus-teachers-card": [TITLE_FIELD],
 };
 
 export function librusCardEditor(): LovelaceCardEditor {
