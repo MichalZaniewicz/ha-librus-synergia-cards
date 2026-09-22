@@ -5,6 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
+import { numOrNull as num } from "./utils/format";
 import { t } from "./utils/localize";
 import {
   computeHeroResult,
@@ -16,12 +17,6 @@ import {
 
 interface GradeLogEntry {
   value: string;
-}
-
-function num(v: unknown): number | null {
-  if (v === null || v === undefined) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
 }
 
 /**

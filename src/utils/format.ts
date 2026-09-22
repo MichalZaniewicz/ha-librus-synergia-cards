@@ -24,6 +24,22 @@ export function minutesUntil(target: Date, now: Date): number {
   return Math.max(0, Math.floor((target.getTime() - now.getTime()) / 60_000));
 }
 
+/**
+ * A state/attribute value as a finite number, or `null` if it genuinely
+ * isn't one - NOT `Number(v)`, which turns a legitimately-absent
+ * `null`/`undefined` value (e.g. `average_semester_2` before that
+ * semester has any counted grades) into a real `0`, producing a false,
+ * alarming-looking drop against a genuine earlier average. Written to fix
+ * exactly that shipped bug in librus-semester-comparison-card, then
+ * found duplicated byte-for-byte in librus-hero-card and
+ * librus-hero-stats-card.
+ */
+export function numOrNull(v: unknown): number | null {
+  if (v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 const CATEGORY_RE = /^\[([^\]]+)\]\s*/;
 
 /**

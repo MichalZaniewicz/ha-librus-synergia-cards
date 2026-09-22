@@ -7,18 +7,13 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { computeHeroStats, type HeroStat } from "./utils/hero-stats";
 import type { SubjectStat } from "./utils/hero-archetypes";
+import { numOrNull as num } from "./utils/format";
 import { t } from "./utils/localize";
 
 const SCALE_MAX = 10;
 const PALETTE = ["1", "2", "3", "4", "5", "7"]; // --lc-chart-N, skipping 6 (a low-contrast neutral)
 const CHART_WIDTH = 260;
 const CHART_HEIGHT = 240;
-
-function num(v: unknown): number | null {
-  if (v === null || v === undefined) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
 /**
  * An RPG-style character sheet, computed from the same data

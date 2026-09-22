@@ -4,6 +4,7 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
+import { numOrNull } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 
@@ -50,24 +51,13 @@ export class LibrusSemesterComparisonCard extends LibrusBaseCard {
     const { deviceId } = resolved;
     const hass = this.hass;
 
-    const num = (v: unknown): number | null => {
-      // `average_semester_*` is `null` when that semester has no counted
-      // grades yet (e.g. semester 2 before it has even started) - JS's
-      // `Number(null) === 0` would otherwise turn "no data" into a real
-      // 0.00 average and produce a false, alarming-looking "drop" against
-      // a subject's real semester-1 grade.
-      if (v === null || v === undefined) return null;
-      const n = Number(v);
-      return Number.isFinite(n) ? n : null;
-    };
-
     const rows: SubjectRow[] = this._resolveAllByTranslationKey(deviceId, "subject_average")
       .map((s) => {
         const attrs = hass.states[s.entityId]?.attributes ?? {};
         return {
           subject: s.subject,
-          s1: num(attrs.average_semester_1),
-          s2: num(attrs.average_semester_2),
+          s1: numOrNull(attrs.average_semester_1),
+          s2: numOrNull(attrs.average_semester_2),
         };
       })
       .filter((r) => r.s1 !== null || r.s2 !== null)
