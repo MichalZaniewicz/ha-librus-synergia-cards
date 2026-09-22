@@ -1,3 +1,5 @@
+import { isoDate } from "./calendar";
+
 /** One entry from a `subject_average` sensor's `grades` attribute. */
 export interface GradeLogEntry {
   value: string;
@@ -41,7 +43,10 @@ export function filterAndSortGrades<T extends GradeLogEntry>(grades: readonly T[
     const cutoff = new Date();
     cutoff.setHours(0, 0, 0, 0);
     cutoff.setDate(cutoff.getDate() - config.days);
-    const cutoffIso = cutoff.toISOString().slice(0, 10);
+    // isoDate(), not toISOString().slice(0, 10) - the latter converts
+    // through UTC first and can land on the wrong calendar date depending
+    // on the viewer's timezone.
+    const cutoffIso = isoDate(cutoff);
     result = result.filter((g) => !g.date || g.date >= cutoffIso);
   }
 

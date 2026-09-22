@@ -5,6 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
+import { isoDate } from "./utils/calendar";
 import { formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
 import { tapActionHandler } from "./utils/actions";
@@ -47,7 +48,10 @@ export class LibrusWeekSummaryCard extends LibrusBaseCard {
 
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    const weekAgoIso = weekAgo.toISOString().slice(0, 10);
+    // isoDate(), not toISOString().slice(0, 10) - the latter converts
+    // through UTC first and can land on the wrong calendar date depending
+    // on the viewer's timezone.
+    const weekAgoIso = isoDate(weekAgo);
     const newGrades = this._resolveAllByTranslationKey(deviceId, "subject_average").filter((s) => {
       const date = hass.states[s.entityId]?.attributes.latest_grade_date as string | undefined;
       return date && date >= weekAgoIso;
