@@ -63,6 +63,10 @@ export class LibrusSubjectTimeCard extends LibrusBaseCard {
     return 3;
   }
 
+  private get _dayCount(): number {
+    return this._config?.show_saturday ? 6 : 5;
+  }
+
   public connectedCallback(): void {
     super.connectedCallback();
     this._refreshTimer = setInterval(() => void this._fetch(true), 30 * 60_000);
@@ -81,14 +85,14 @@ export class LibrusSubjectTimeCard extends LibrusBaseCard {
     if (!entityId) return;
 
     const monday = mondayOf(new Date());
-    const saturday = new Date(monday);
-    saturday.setDate(saturday.getDate() + 5);
-    const cacheKey = `${entityId}:${monday.toDateString()}`;
+    const rangeEnd = new Date(monday);
+    rangeEnd.setDate(rangeEnd.getDate() + this._dayCount);
+    const cacheKey = `${entityId}:${monday.toDateString()}:${this._dayCount}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
     try {
-      this._events = await fetchCalendarEvents(this.hass, entityId, monday, saturday);
+      this._events = await fetchCalendarEvents(this.hass, entityId, monday, rangeEnd);
     } catch {
       this._events = [];
     }
