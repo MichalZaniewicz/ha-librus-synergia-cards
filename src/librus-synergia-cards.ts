@@ -17,6 +17,7 @@ import "./librus-attendance-card";
 import "./librus-attendance-tile-card";
 import "./librus-attendance-heatmap-card";
 import "./librus-attendance-weekday-card";
+import "./librus-attendance-subject-card";
 import "./librus-behaviour-notices-card";
 import "./librus-behaviour-notices-tile-card";
 import "./librus-messages-card";
@@ -174,6 +175,12 @@ window.customCards.push(
     type: "librus-attendance-weekday-card",
     name: "Librus - Nieobecności wg dnia tygodnia",
     description: "Słupek na każdy dzień tygodnia podzielony na usprawiedliwione/nieusprawiedliwione/spóźnienia.",
+    preview: true,
+  },
+  {
+    type: "librus-attendance-subject-card",
+    name: "Librus - Nieobecności wg przedmiotu",
+    description: "Ranking przedmiotów wg liczby nieobecności, podzielony na usprawiedliwione/nieusprawiedliwione.",
     preview: true,
   },
   {

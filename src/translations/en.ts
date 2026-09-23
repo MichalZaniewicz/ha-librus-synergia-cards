@@ -62,6 +62,10 @@ export const en = {
   "card.attendance_weekday.subtitle": "This school year",
   "card.attendance_weekday.empty": "No absences or lates recorded",
 
+  "card.attendance_subject.title": "Absences by subject",
+  "card.attendance_subject.subtitle": "Which subjects are missed most often",
+  "card.attendance_subject.empty": "No absences recorded",
+
   "card.recent_activity.title": "What's new",
   "card.recent_activity.subtitle": "Grades, notices, announcements & messages",
   "card.recent_activity.empty": "Nothing new yet",

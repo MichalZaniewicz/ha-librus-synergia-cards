@@ -269,6 +269,17 @@
         "4": { excused: 0, unexcused: 0, late: 0 },
         "5": { excused: 0, unexcused: 1, late: 1 },
       },
+      // New (ha-librus-synergia 0.8.0): same excused/unexcused/late split,
+      // grouped by subject name instead - matches the approved mockup's
+      // illustrative numbers exactly (librus-attendance-subject-card).
+      by_subject: {
+        "Chemia": { excused: 1, unexcused: 4, late: 0 },
+        "Wychowanie fizyczne": { excused: 3, unexcused: 1, late: 0 },
+        "Matematyka": { excused: 0, unexcused: 3, late: 1 },
+        "Język angielski": { excused: 1, unexcused: 1, late: 0 },
+        "Historia": { excused: 2, unexcused: 0, late: 0 },
+        "Geografia": { excused: 0, unexcused: 1, late: 0 },
+      },
       last_absence_date: iso(new Date(today.getTime() - 18 * 86400000)),
       percentage: 99.3,
       by_semester: {
@@ -631,7 +642,7 @@
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",
       "librus-subject-spotlight-card",
       "librus-attendance-card", "librus-attendance-tile-card", "librus-attendance-heatmap-card",
-      "librus-attendance-weekday-card",
+      "librus-attendance-weekday-card", "librus-attendance-subject-card",
       "librus-behaviour-notices-card", "librus-behaviour-notices-tile-card",
       "librus-messages-card", "librus-messages-tile-card",
       "librus-substitutions-card",

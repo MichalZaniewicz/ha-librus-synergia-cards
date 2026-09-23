@@ -63,6 +63,10 @@ export const pl: Record<keyof typeof en, string> = {
   "card.attendance_weekday.subtitle": "Ten rok szkolny",
   "card.attendance_weekday.empty": "Brak nieobecności ani spóźnień",
 
+  "card.attendance_subject.title": "Nieobecności wg przedmiotu",
+  "card.attendance_subject.subtitle": "Które przedmioty są najczęściej opuszczane",
+  "card.attendance_subject.empty": "Brak zarejestrowanych nieobecności",
+
   "card.recent_activity.title": "Co nowego",
   "card.recent_activity.subtitle": "Oceny, uwagi, ogłoszenia i wiadomości",
   "card.recent_activity.empty": "Nic nowego",
