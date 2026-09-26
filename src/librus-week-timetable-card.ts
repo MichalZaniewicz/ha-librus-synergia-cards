@@ -28,6 +28,26 @@ function isWeekend(d: Date): boolean {
   return weekday >= 6;
 }
 
+interface BellPeriod {
+  lesson_no: number;
+  start: string;
+  end: string;
+}
+
+function hm(d: Date): string {
+  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+/** Lesson number for an event, from the School sensor's `bell_schedule`:
+ * an exact start-time match first, else the period the start falls inside
+ * (a lesson that starts a few minutes late). `undefined` if neither. */
+function lessonNoFor(ev: LibrusCalendarEvent, periods: BellPeriod[]): number | undefined {
+  const start = hm(new Date(ev.start));
+  const exact = periods.find((p) => p.start === start);
+  if (exact) return exact.lesson_no;
+  return periods.find((p) => p.start <= start && start < p.end)?.lesson_no;
+}
+
 /** A short, deterministic abbreviation for a subject name (first syllable-ish chunk). */
 function abbreviate(name: string): string {
   const clean = name.replace(/\(.*\)/, "").trim();
@@ -122,7 +142,30 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
       if (weekday >= 1 && weekday <= dayCount) byDay[weekday - 1].push(ev);
     }
     byDay.forEach((day) => day.sort((a, b) => a.start.localeCompare(b.start)));
-    const maxRows = Math.max(...byDay.map((d) => d.length), 1);
+
+    // Rows are real lesson numbers when the School sensor's bell_schedule
+    // can place every lesson - so a day starting with lesson 2 leaves row 1
+    // empty instead of sliding up (issue #7). Otherwise fall back to "nth
+    // lesson of the day", the only layout possible without bell times.
+    const school = resolved.map.school ? hass.states[resolved.map.school] : undefined;
+    const periods = (school?.attributes.bell_schedule as BellPeriod[] | undefined) ?? [];
+    const numbered = byDay.map((day) => day.map((ev) => lessonNoFor(ev, periods)));
+    const allPlaced = periods.length > 0 && numbered.every((day) => day.every((n) => n !== undefined));
+    let rowLabels: number[];
+    let grid: LibrusCalendarEvent[][][]; // [row][day] -> events in that slot
+    if (allPlaced) {
+      const nums = numbered.flat() as number[];
+      const first = Math.min(...nums);
+      const last = Math.max(...nums);
+      rowLabels = Array.from({ length: last - first + 1 }, (_, i) => first + i);
+      grid = rowLabels.map((no) =>
+        byDay.map((day, d) => day.filter((_, i) => numbered[d][i] === no))
+      );
+    } else {
+      const maxRows = Math.max(...byDay.map((d) => d.length), 1);
+      rowLabels = Array.from({ length: maxRows }, (_, i) => i + 1);
+      grid = rowLabels.map((_, row) => byDay.map((day) => (day[row] ? [day[row]] : [])));
+    }
     const dayNames = Array.from({ length: dayCount }, (_, i) =>
       new Date(2026, 0, i + 5).toLocaleDateString(hass.language, { weekday: "short" })
     );
@@ -158,21 +201,23 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         </div>
         <div
           class="week-grid"
-          style="grid-template-columns: 24px repeat(${dayCount}, 1fr); grid-template-rows: auto repeat(${maxRows}, 1fr);"
+          style="grid-template-columns: 24px repeat(${dayCount}, 1fr); grid-template-rows: auto repeat(${rowLabels.length}, 1fr);"
         >
           <span class="h"></span>
           ${dayNames.map((n) => html`<span class="h">${n}</span>`)}
-          ${Array.from({ length: maxRows }, (_, row) => html`
-            <span class="n">${row + 1}</span>
-            ${byDay.map((day, dayIndex) => {
-              const ev = day[row];
+          ${rowLabels.map((label, row) => html`
+            <span class="n">${label}</span>
+            ${grid[row].map((slot, dayIndex) => {
+              const ev = slot[0];
               if (!ev) return html`<div class="cell empty"></div>`;
-              const current = dayIndex === todayColumn && isHappeningNow(ev, now);
-              const next = breakNow && dayIndex === todayColumn && ev === nextToday;
+              const isToday = dayIndex === todayColumn;
+              const current = isToday && slot.some((e) => isHappeningNow(e, now));
+              const next = breakNow && isToday && slot.includes(nextToday!);
+              // Parallel groups (e.g. split language classes) share one slot.
               return html`<div
                 class="cell on ${current ? "current" : ""} ${next ? "next" : ""}"
-                title=${ev.summary}
-              >${abbreviate(ev.summary)}</div>`;
+                title=${slot.map((e) => e.summary).join(" / ")}
+              >${abbreviate(ev.summary)}${slot.length > 1 ? "+" : ""}</div>`;
             })}
           `)}
         </div>

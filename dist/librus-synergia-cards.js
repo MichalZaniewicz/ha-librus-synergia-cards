@@ -2560,29 +2560,29 @@ const he=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-    `],e([me()],pi.prototype,"_config",void 0),e([me()],pi.prototype,"_events",void 0),pi=e([he("librus-free-days-tile-card")],pi);let vi=class extends Be{constructor(){super(...arguments),this._events=[]}static getConfigElement(){return Le()}static getStubConfig(){return{type:"custom:librus-week-timetable-card"}}get _dayCount(){return this._config?.show_saturday?6:5}setConfig(e){this._config=e,this._configuredDeviceId=e.device_id}getCardSize(){return 4}connectedCallback(){super.connectedCallback(),this._refreshTimer=setInterval(()=>{this._fetch(!0)},18e5),this._tickTimer=setInterval(()=>this.requestUpdate(),3e4)}disconnectedCallback(){super.disconnectedCallback(),clearInterval(this._refreshTimer),clearInterval(this._tickTimer)}async _fetch(e=!1){if(!this.hass||!this._config)return;const t=this._resolveEntities();if("error"in t)return;const i=t.map.timetable;if(!i)return;const a=st(new Date),s=new Date(a);s.setDate(s.getDate()+this._dayCount);const r=`${i}:${a.toDateString()}:${this._dayCount}`;if(!e&&this._fetchedFor===r)return;this._fetchedFor=r;const n=this._beginFetch();try{const e=await Xe(this.hass,i,a,s);this._isCurrentFetch(n)&&(this._events=e)}catch{this._isCurrentFetch(n)&&(this._events=[])}}render(){if(!this._config||!this.hass)return q;this._syncTheme();const e=this._resolveEntities();if("error"in e)return e.error;const t=this.hass;if(this._fetch(),0===this._events.length)return this._message("mdi:calendar-week-outline",ze(t,"card.week_timetable.empty"));const i=this._dayCount,a=Array.from({length:i},()=>[]);for(const e of this._events){const t=mi(e.start);t>=1&&t<=i&&a[t-1].push(e)}a.forEach(e=>e.sort((e,t)=>e.start.localeCompare(t.start)));const s=Math.max(...a.map(e=>e.length),1),r=Array.from({length:i},(e,i)=>new Date(2026,0,i+5).toLocaleDateString(t.language,{weekday:"short"})),n=new Date,o=mi(n.toISOString())-1,c=o>=0&&o<i?a[o]:[],d=c.find(e=>Qe(e,n)),l=c.find(e=>new Date(e.start)>n),h=!d&&!!l&&c.some(e=>et(e,n));return R`
+    `],e([me()],pi.prototype,"_config",void 0),e([me()],pi.prototype,"_events",void 0),pi=e([he("librus-free-days-tile-card")],pi);let vi=class extends Be{constructor(){super(...arguments),this._events=[]}static getConfigElement(){return Le()}static getStubConfig(){return{type:"custom:librus-week-timetable-card"}}get _dayCount(){return this._config?.show_saturday?6:5}setConfig(e){this._config=e,this._configuredDeviceId=e.device_id}getCardSize(){return 4}connectedCallback(){super.connectedCallback(),this._refreshTimer=setInterval(()=>{this._fetch(!0)},18e5),this._tickTimer=setInterval(()=>this.requestUpdate(),3e4)}disconnectedCallback(){super.disconnectedCallback(),clearInterval(this._refreshTimer),clearInterval(this._tickTimer)}async _fetch(e=!1){if(!this.hass||!this._config)return;const t=this._resolveEntities();if("error"in t)return;const i=t.map.timetable;if(!i)return;const a=st(new Date),s=new Date(a);s.setDate(s.getDate()+this._dayCount);const r=`${i}:${a.toDateString()}:${this._dayCount}`;if(!e&&this._fetchedFor===r)return;this._fetchedFor=r;const n=this._beginFetch();try{const e=await Xe(this.hass,i,a,s);this._isCurrentFetch(n)&&(this._events=e)}catch{this._isCurrentFetch(n)&&(this._events=[])}}render(){if(!this._config||!this.hass)return q;this._syncTheme();const e=this._resolveEntities();if("error"in e)return e.error;const t=this.hass;if(this._fetch(),0===this._events.length)return this._message("mdi:calendar-week-outline",ze(t,"card.week_timetable.empty"));const i=this._dayCount,a=Array.from({length:i},()=>[]);for(const e of this._events){const t=mi(e.start);t>=1&&t<=i&&a[t-1].push(e)}a.forEach(e=>e.sort((e,t)=>e.start.localeCompare(t.start)));const s=e.map.school?t.states[e.map.school]:void 0,r=s?.attributes.bell_schedule??[],n=a.map(e=>e.map(e=>function(e,t){const i=function(e){return e.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",hour12:!1})}(new Date(e.start)),a=t.find(e=>e.start===i);return a?a.lesson_no:t.find(e=>e.start<=i&&i<e.end)?.lesson_no}(e,r))),o=r.length>0&&n.every(e=>e.every(e=>void 0!==e));let c,d;if(o){const e=n.flat(),t=Math.min(...e),i=Math.max(...e);c=Array.from({length:i-t+1},(e,i)=>t+i),d=c.map(e=>a.map((t,i)=>t.filter((t,a)=>n[i][a]===e)))}else{const e=Math.max(...a.map(e=>e.length),1);c=Array.from({length:e},(e,t)=>t+1),d=c.map((e,t)=>a.map(e=>e[t]?[e[t]]:[]))}const l=Array.from({length:i},(e,i)=>new Date(2026,0,i+5).toLocaleDateString(t.language,{weekday:"short"})),h=new Date,u=mi(h.toISOString())-1,g=u>=0&&u<i?a[u]:[],p=g.find(e=>Qe(e,h)),m=g.find(e=>new Date(e.start)>h),v=!p&&!!m&&g.some(e=>et(e,h));return R`
       <ha-card>
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:calendar-week-outline"></ha-icon></div>
           <div class="title-block">
             <div class="title">${ze(t,"card.week_timetable.title")}</div>
             <div class="subtitle">
-              ${h?ze(t,"card.week_timetable.break_now",{minutes:qe(new Date(l.start),n)}):ze(t,function(e){return mi(e.toISOString())>=6}(new Date)?"card.week_timetable.subtitle_upcoming":"card.week_timetable.subtitle")}
+              ${v?ze(t,"card.week_timetable.break_now",{minutes:qe(new Date(m.start),h)}):ze(t,function(e){return mi(e.toISOString())>=6}(new Date)?"card.week_timetable.subtitle_upcoming":"card.week_timetable.subtitle")}
             </div>
           </div>
         </div>
         <div
           class="week-grid"
-          style="grid-template-columns: 24px repeat(${i}, 1fr); grid-template-rows: auto repeat(${s}, 1fr);"
+          style="grid-template-columns: 24px repeat(${i}, 1fr); grid-template-rows: auto repeat(${c.length}, 1fr);"
         >
           <span class="h"></span>
-          ${r.map(e=>R`<span class="h">${e}</span>`)}
-          ${Array.from({length:s},(e,t)=>R`
-            <span class="n">${t+1}</span>
-            ${a.map((e,i)=>{const a=e[t];if(!a)return R`<div class="cell empty"></div>`;const s=i===o&&Qe(a,n);return R`<div
-                class="cell on ${s?"current":""} ${h&&i===o&&a===l?"next":""}"
-                title=${a.summary}
-              >${function(e){const t=e.replace(/\(.*\)/,"").trim();return t.length<=4?t:t.slice(0,3)}(a.summary)}</div>`})}
+          ${l.map(e=>R`<span class="h">${e}</span>`)}
+          ${c.map((e,t)=>R`
+            <span class="n">${e}</span>
+            ${d[t].map((e,t)=>{const i=e[0];if(!i)return R`<div class="cell empty"></div>`;const a=t===u,s=a&&e.some(e=>Qe(e,h)),r=v&&a&&e.includes(m);return R`<div
+                class="cell on ${s?"current":""} ${r?"next":""}"
+                title=${e.map(e=>e.summary).join(" / ")}
+              >${function(e){const t=e.replace(/\(.*\)/,"").trim();return t.length<=4?t:t.slice(0,3)}(i.summary)}${e.length>1?"+":""}</div>`})}
           `)}
         </div>
       </ha-card>
