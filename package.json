@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Custom Lovelace cards for the librus_synergia Home Assistant integration",
+  "license": "MIT",
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w",

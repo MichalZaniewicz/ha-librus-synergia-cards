@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Integracja (dane, logowanie, sensory) / Integration (data, login, sensors)
+    url: https://github.com/MichalZaniewicz/ha-librus-synergia/issues
+    about: Brakujące lub błędne dane z Librusa zgłaszaj w repo integracji. / Missing or wrong Librus data belongs in the integration repo.

@@ -239,3 +239,7 @@ multi-student household's cards would cross-pollinate each other's achievements.
 ## Disclaimer
 
 An unofficial companion to an unofficial integration - not affiliated with or endorsed by Librus.
+
+## License
+
+[MIT](LICENSE)

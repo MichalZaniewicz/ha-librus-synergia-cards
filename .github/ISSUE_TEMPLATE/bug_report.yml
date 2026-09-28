@@ -1,0 +1,55 @@
+name: Błąd karty / Card bug
+description: Karta się nie wyświetla, pokazuje złe dane albo wygląda źle / A card doesn't render, shows wrong data or looks off
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Dzięki za zgłoszenie! Możesz pisać po polsku albo po angielsku. / Thanks for reporting! Polish or English are both fine.
+
+        **Zamaż dane osobowe na zrzutach ekranu** (imiona, oceny, treść wiadomości). / **Blur personal data in screenshots** (names, grades, message text).
+  - type: input
+    id: card
+    attributes:
+      label: Która karta? / Which card?
+      placeholder: custom:librus-week-timetable-card
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: Co jest nie tak? / What's wrong?
+      description: Zrzut ekranu bardzo pomaga. / A screenshot helps a lot.
+    validations:
+      required: true
+  - type: input
+    id: cards_version
+    attributes:
+      label: Wersja kart / Cards version
+      description: HACS → Librus Synergia Cards
+    validations:
+      required: true
+  - type: input
+    id: integration_version
+    attributes:
+      label: Wersja integracji / Integration version
+      description: HACS → Librus Synergia
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Przeglądarka lub aplikacja / Browser or app
+      placeholder: Chrome 140 / aplikacja HA na Androida / HA Android app
+  - type: textarea
+    id: config
+    attributes:
+      label: Konfiguracja karty / Card configuration
+      description: YAML karty z edytora kodu. / The card's YAML from the code editor.
+      render: yaml
+  - type: textarea
+    id: console
+    attributes:
+      label: Błędy z konsoli przeglądarki / Browser console errors
+      description: F12 → Console, jeśli są czerwone wpisy. / F12 → Console, if there are red entries.
+      render: text

@@ -1,0 +1,19 @@
+name: Pomysł na kartę / Card idea
+description: Nowa karta albo opcja do istniejącej / A new card or an option for an existing one
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Możesz pisać po polsku albo po angielsku. / Polish or English are both fine.
+  - type: textarea
+    id: idea
+    attributes:
+      label: Co karta ma pokazywać? / What should the card show?
+      description: Szkic, zrzut z innej aplikacji albo opis. / A sketch, a screenshot from another app, or a description.
+    validations:
+      required: true
+  - type: input
+    id: existing
+    attributes:
+      label: Rozszerzenie istniejącej karty? / Extending an existing card?
+      placeholder: custom:librus-grade-log-card
