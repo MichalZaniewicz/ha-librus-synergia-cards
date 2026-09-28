@@ -8,12 +8,6 @@ Custom Lovelace cards for [`ha-librus-synergia`](https://github.com/MichalZaniew
 `librus_synergia` integration) - purpose-built widgets instead of wiring its sensors and calendars into
 generic entity/gauge cards by hand.
 
-<p align="center">
-  <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=MichalZaniewicz&repository=ha-librus-synergia-cards&category=plugin"><img alt="Open your Home Assistant instance and open this repository inside the Home Assistant Community Store." src="https://my.home-assistant.io/badges/hacs_repository.svg"></a>
-</p>
-
-![Preview of the Librus Synergia cards](docs/screenshots/cards-overview-dark.png)
-
 > [!TIP]
 > ⭐ **Enjoying these cards?** Every star is real motivation to keep building new features :)
 >
@@ -24,6 +18,12 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 <img> placed inside it. -->
 
 [![Star this repo](https://img.shields.io/github/stars/MichalZaniewicz/ha-librus-synergia-cards?style=for-the-badge&logo=github&label=STAR%20THIS%20REPO&labelColor=555555&color=4f46e5)](https://github.com/MichalZaniewicz/ha-librus-synergia-cards) [![Buy me a coffee](https://img.shields.io/badge/BUY%20ME%20A%20COFFEE-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/zanula)
+
+<p align="center">
+  <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=MichalZaniewicz&repository=ha-librus-synergia-cards&category=plugin"><img alt="Open your Home Assistant instance and open this repository inside the Home Assistant Community Store." src="https://my.home-assistant.io/badges/hacs_repository.svg"></a>
+</p>
+
+![Preview of the Librus Synergia cards](docs/screenshots/cards-overview-dark.png)
 
 ## Cards
 
