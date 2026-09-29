@@ -41,6 +41,7 @@ import "./librus-school-card";
 import "./librus-school-year-card";
 import "./librus-today-card";
 import "./librus-tomorrow-card";
+import "./librus-first-lesson-card";
 import "./librus-week-summary-card";
 import "./librus-lucky-number-card";
 import "./librus-student-card";
@@ -319,6 +320,12 @@ window.customCards.push(
     type: "librus-tomorrow-card",
     name: "Librus - Jutro",
     description: "Następny dzień nauki: lekcje, zadania na termin i sprawdziany (ogarnia weekend).",
+    preview: true,
+  },
+  {
+    type: "librus-first-lesson-card",
+    name: "Librus - Pierwsza lekcja",
+    description: "O której i od czego zaczyna każde dziecko dziś i w następny dzień nauki - wszystkie dzieci na jednej karcie.",
     preview: true,
   },
   {

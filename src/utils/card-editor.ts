@@ -41,8 +41,13 @@ import { t, type TranslationKey } from "./localize";
 
 type EditorField =
   | { kind: "subject" }
+  | { kind: "names" }
   | { kind: "text"; key: "title" | "exam_keywords" | "category_filter" | "icon"; label: TranslationKey }
-  | { kind: "boolean"; key: "show_saturday" | "hide_header" | "compact"; label: TranslationKey }
+  | {
+      kind: "boolean";
+      key: "show_saturday" | "hide_header" | "compact" | "hide_room" | "only_tomorrow";
+      label: TranslationKey;
+    }
   | {
       kind: "number";
       key: "max_items" | "days_ahead" | "days" | "target";
@@ -134,6 +139,12 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   ],
   "custom:librus-bell-schedule-card": [TITLE_FIELD],
   "custom:librus-tomorrow-card": [TITLE_FIELD],
+  "custom:librus-first-lesson-card": [
+    TITLE_FIELD,
+    { kind: "boolean", key: "hide_room", label: "editor.hide_room" },
+    { kind: "boolean", key: "only_tomorrow", label: "editor.only_tomorrow" },
+    { kind: "names" },
+  ],
   "custom:librus-grade-simulator-card": [{ kind: "subject" }],
   "custom:librus-semester-comparison-card": [TITLE_FIELD],
   "custom:librus-week-timetable-card": [
@@ -198,7 +209,7 @@ export class LibrusCardEditor extends LitElement {
 
     return html`
       <div class="form">
-        ${devices.length > 1
+        ${devices.length > 1 && !fields.some((f) => f.kind === "names")
           ? html`
               <ha-select
                 label=${t(hass, "editor.student")}
@@ -261,6 +272,18 @@ export class LibrusCardEditor extends LitElement {
     if (field.kind === "subject") return nothing; // rendered above
     const hass = this.hass!;
     const config = this._config!;
+    if (field.kind === "names") {
+      return html`${findLibrusDeviceIds(hass).map((id) => {
+        const device = hass.devices?.[id];
+        return html`
+          <ha-textfield
+            label=${t(hass, "editor.student_name", { device: device?.name_by_user || device?.name || id })}
+            .value=${config.names?.[id] ?? ""}
+            @change=${(ev: Event) => this._onName(id, (ev.target as HTMLInputElement).value)}
+          ></ha-textfield>
+        `;
+      })}`;
+    }
     if (field.kind === "text") {
       return html`
         <ha-textfield
@@ -356,6 +379,13 @@ export class LibrusCardEditor extends LitElement {
     // Storing the first option (the default) as an explicit value is noise;
     // drop back to "unset" so the card falls through to its own default.
     this._patch({ [field.key]: value === field.options[0].value ? undefined : value });
+  }
+
+  private _onName(deviceId: string, value: string): void {
+    const names = { ...(this._config?.names ?? {}) };
+    if (value.trim()) names[deviceId] = value.trim();
+    else delete names[deviceId];
+    this._patch({ names: Object.keys(names).length ? names : undefined });
   }
 
   private _onText(key: "title" | "exam_keywords" | "category_filter" | "icon", value: string): void {

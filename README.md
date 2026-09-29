@@ -71,6 +71,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | End of school year | `custom:librus-school-year-card` | A countdown to the end of the school year, a progress ring for how far through it you are, and the current semester's own end date |
 | Today | `custom:librus-today-card` | Lucky number, unread messages/announcements and the next lesson in one card |
 | Tomorrow | `custom:librus-tomorrow-card` | The next school day (skips the weekend): its lessons, plus any homework due or exam that day |
+| First lesson | `custom:librus-first-lesson-card` | **Every child at once**: when and with what each one starts today and on the next school day, who has to leave first, a cancelled first lesson or a substitution. Made for families with several kids |
 | Week in review | `custom:librus-week-summary-card` | New grades, absences, notices and the next agenda item this week |
 | Lucky number | `custom:librus-lucky-number-card` | The latest "szczęśliwy numerek" in large type - labeled "For {date}" instead of "Today" when Librus has published the next school day's number ahead of time (requires `ha-librus-synergia` 0.4.15+) |
 | Student card | `custom:librus-student-card` | A playful trading-card style summary computed from attendance/behaviour/grades/activity |
@@ -131,8 +132,10 @@ card supports:
 
 | Option | Cards | |
 |---|---|---|
-| Student | all | Only shown when more than one child's e-dziennik is configured |
-| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, Homework checklist, Semester comparison, Next exam, Level | Header title override |
+| Student | all except First lesson | Only shown when more than one child's e-dziennik is configured |
+| Names | First lesson | The name shown for each child (default: the first name from the device name) |
+| `hide_room` / `only_tomorrow` | First lesson | Hide the classroom; show only the next school day (e.g. for an evening dashboard) |
+| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, First lesson, Homework checklist, Semester comparison, Next exam, Level | Header title override |
 | `max_items` | Grade log, Subject grades, Recent activity, Announcements, Messages, Homework checklist | Row cap |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days` | Grade trend | How much history to chart (default 60) |

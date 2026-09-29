@@ -49,6 +49,14 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   hide_header?: boolean;
   /** Shrinks padding and drops subtitles for a denser dashboard. Universal - see `LibrusBaseCard`. */
   compact?: boolean;
+  /** First-lesson card: device_id -> display name. */
+  names?: Record<string, string>;
+  /** First-lesson card: which students to show, in this order (YAML only). */
+  devices?: string[];
+  /** First-lesson card: hide the classroom. */
+  hide_room?: boolean;
+  /** First-lesson card: show only the next school day. */
+  only_tomorrow?: boolean;
 }
 
 /** Entity registry entry shape available on `hass.entities` (HA 2024.8+). */

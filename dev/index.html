@@ -673,7 +673,10 @@
       "librus-bell-schedule-card",
       "librus-subject-time-card", "librus-school-card",
       "librus-school-year-card",
-      "librus-today-card", "librus-tomorrow-card", "librus-week-summary-card", "librus-lucky-number-card",
+      "librus-today-card", "librus-tomorrow-card",
+      { tag: "librus-first-lesson-card", family: true },
+      { tag: "librus-first-lesson-card", family: true, config: { type: "custom:librus-first-lesson-card", only_tomorrow: true, hide_room: true, title: "Jutro rano" } },
+      "librus-week-summary-card", "librus-lucky-number-card",
       "librus-student-card", "librus-streak-card", "librus-rank-card", "librus-achievements-card",
       "librus-teachers-card", "librus-level-card",
       { tag: "librus-hero-card", config: { type: "custom:librus-hero-card" } },
@@ -684,6 +687,47 @@
       { tag: "librus-grade-log-card", config: { type: "custom:librus-grade-log-card", title: "Tylko sprawdziany (filtr)", category_filter: "sprawdzian", sort: "oldest" } },
       { tag: "librus-rank-card", config: { type: "custom:librus-rank-card", compact: true } },
     ];
+
+    // Two more students for librus-first-lesson-card (issue #6), in their own
+    // hass object: with several devices, every single-student card rightly
+    // asks which student to show, so the shared `hass` keeps just one.
+    const FAMILY = [
+      { id: "dev_ala", name: "E-dziennik Ala Zaniewicz",
+        today: [["07:10", "07:55", "Wychowanie fizyczne", "sala gim."], ["08:00", "08:45", "Język polski", "s. 21"]],
+        next: [["07:10", "07:55", "Matematyka", "s. 21"], ["08:00", "08:45", "Przyroda", "s. 3"]] },
+      { id: "dev_ola", name: "E-dziennik Ola Zaniewicz",
+        today: [],
+        next: [["08:00", "08:45", "Matematyka (odwołane)", "s. 7"], ["08:55", "09:40", "Język angielski (zastępstwo)", "s. 7"]] },
+    ];
+    const familyEntities = { ...entities };
+    const familyStates = { ...states };
+    const familyDevices = { ...hass.devices };
+    const familyCalendars = {};
+    for (const kid of FAMILY) {
+      const entityId = `calendar.timetable_${kid.id}`;
+      familyDevices[kid.id] = { id: kid.id, name: kid.name, config_entries: [`${kid.id}_entry`] };
+      familyEntities[entityId] = { entity_id: entityId, device_id: kid.id, platform: "librus_synergia", translation_key: "timetable" };
+      familyStates[entityId] = { entity_id: entityId, state: "off", attributes: {}, last_updated: lastPolled, last_reported: lastPolled, last_changed: lastPolled };
+      const toEvents = (day, rows) => rows.map(([from, to, summary, room]) => ({
+        start: `${iso(day)}T${from}:00`, end: `${iso(day)}T${to}:00`, allDay: false, summary, location: room,
+      }));
+      familyCalendars[entityId] = [...toEvents(today, kid.today), ...toEvents(tomorrowDay, kid.next)];
+    }
+    const familyHass = {
+      ...hass,
+      devices: familyDevices,
+      entities: familyEntities,
+      states: familyStates,
+      callApi: async (method, path) => {
+        const m = /^calendars\/([^?]+)\?start=([^&]+)&end=([^&]+)/.exec(path);
+        if (m && familyCalendars[m[1]]) {
+          const from = new Date(decodeURIComponent(m[2])).getTime();
+          const to = new Date(decodeURIComponent(m[3])).getTime();
+          return familyCalendars[m[1]].filter((ev) => { const t = new Date(ev.start).getTime(); return t >= from && t < to; });
+        }
+        return hass.callApi(method, path);
+      },
+    };
 
     function mountCard(container, tag, hassObj, config) {
       const el = document.createElement(tag);
@@ -715,7 +759,7 @@
       for (const entry of FULL_CARDS) {
         const tag = typeof entry === "string" ? entry : entry.tag;
         const config = typeof entry === "string" ? undefined : entry.config;
-        cardEls.push(mountCard(fullGrid, tag, hass, config));
+        cardEls.push(mountCard(fullGrid, tag, entry.family ? familyHass : hass, config));
       }
 
       const emptyGrid = document.getElementById("empty");
@@ -735,7 +779,7 @@
       document.getElementById("lang").addEventListener("change", (e) => {
         hass.language = e.target.value;
         emptyHass.language = e.target.value;
-        cardEls.forEach((el) => { el.hass = { ...hass }; });
+        cardEls.forEach((el) => { el.hass = { ...el.hass, language: e.target.value }; });
       });
     });
   </script>
