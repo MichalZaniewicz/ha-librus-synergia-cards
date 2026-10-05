@@ -54,6 +54,7 @@ import "./librus-hero-card";
 import "./librus-hero-stats-card";
 import "./librus-hero-history-card";
 import "./librus-last-update-tile-card";
+import "./librus-ai-summary-card";
 
 interface CustomCardEntry {
   type: string;
@@ -398,6 +399,12 @@ window.customCards.push(
     type: "librus-last-update-tile-card",
     name: "Librus - Ostatnia aktualizacja",
     description: "Ile czasu temu integracja ostatnio pobrała dane z Librusa.",
+    preview: true,
+  },
+  {
+    type: "librus-ai-summary-card",
+    name: "Librus - Podsumowanie tygodnia (AI)",
+    description: "Tygodniowe podsumowanie nauki napisane przez AI: oceny, frekwencja, zachowanie, następny tydzień i rady.",
     preview: true,
   }
 );

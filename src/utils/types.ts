@@ -57,6 +57,10 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   hide_room?: boolean;
   /** First-lesson card: show only the next school day. */
   only_tomorrow?: boolean;
+  /** AI summary card: headline, warning and to-dos only (no section tabs). */
+  summary_only?: boolean;
+  /** AI summary card: hide the "Generate now" button. */
+  hide_generate?: boolean;
 }
 
 /** Entity registry entry shape available on `hass.entities` (HA 2024.8+). */

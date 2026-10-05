@@ -303,6 +303,36 @@
       day: iso(new Date(today.getTime() + 1 * 86400000)),
       is_today: false,
     }, 4);
+    // Weekly AI summary (integration 0.10+) - illustrative text from the
+    // approved mockup, not a real student's data.
+    const nextSunday = new Date(today.getTime() + ((7 - today.getDay()) % 7 || 7) * 86400000);
+    nextSunday.setHours(18, 0, 0, 0);
+    addEntity("sensor.weekly_summary", "weekly_summary", {
+      status: "good",
+      sections: {
+        grades: { status: "good", text: "W tym tygodniu doszły 4 oceny: 6 z geografii (sprawdzian, waga 3), 5 z biologii, 4- z chemii (kartkówka) i plus z edukacji zdrowotnej. Średnia ogólna wzrosła z 4,52 do 4,61, głównie dzięki szóstce z geografii.\n\nChemia (4,88) to jedyny przedmiot, w którym ostatnia ocena wypadła poniżej średniej. Przy jednej kartkówce to jeszcze nie trend, ale warto ją obserwować." },
+        attendance: { status: "caution", text: "34 z 35 lekcji obecny. Jedna nieobecność we wtorek na religii, jeszcze nieusprawiedliwiona. Spóźnień brak." },
+        behaviour: { status: "good", text: "Brak nowych uwag w tym tygodniu. 26 dni bez negatywnej uwagi i seria 5 ocen co najmniej dobrych z rzędu." },
+        next_week: { status: "ok", text: "Wtorek 7.10: sprawdzian z matematyki (działy 1-2). Środa 8.10: zadanie z chemii (s. 34). Czwartek 9.10: kartkówka z angielskiego. W piątek zastępstwo na WF." },
+      },
+      advice: [
+        "Usprawiedliwić nieobecność z wtorku (religia).",
+        "W niedzielę przejrzeć działy 1-2 z matematyki przed wtorkiem.",
+        "Zapytać o kartkówkę z chemii: nauczycielka wskazała błędy w zapisie wzorów.",
+      ],
+      warning: "Nieobecność z wtorku (religia) jest wciąż nieusprawiedliwiona.",
+      summary: null,
+      week_from: iso(new Date(today.getTime() - 6 * 86400000)),
+      week_to: iso(today),
+      audience: "parent",
+      generated_at: lastPolled,
+      next_run: nextSunday.toISOString(),
+      generating: false,
+      paused: false,
+      error: null,
+    }, "Mocny tydzień z przyrody, chemia do podciągnięcia przed sprawdzianem z matematyki.");
+    entities["button.weekly_summary_generate"] = { entity_id: "button.weekly_summary_generate", device_id: DEVICE_ID, platform: "librus_synergia", translation_key: "weekly_summary_generate" };
+    states["button.weekly_summary_generate"] = { entity_id: "button.weekly_summary_generate", state: lastPolled, attributes: {} };
     addEntity("sensor.unread_announcements", "unread_announcements", {
       recent: [
         { id: "LID-NBOARD-NOTICE-1", subject: "Kandydaci do Rady Samorządu Uczniowskiego", content: "Zgłoszenia przyjmujemy do końca miesiąca. Kandydaci powinni złożyć krótki opis swojego programu wyborczego u wychowawcy klasy najpóźniej do piątku.", start_date: iso(today), end_date: iso(new Date(today.getTime() + 29 * 86400000)), creation_date: iso(today) },
@@ -571,6 +601,10 @@
       // Mocks librus_synergia.get_message (see utils/services.ts) - real
       // full-message content this integration actually fetched from a
       // live account, so the click-to-expand demo shows authentic text.
+      // Mocks the AI summary card's "Generate now" (button.press).
+      callService: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 900));
+      },
       callWS: async (msg) => {
         if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "get_message") {
           await new Promise((resolve) => setTimeout(resolve, 500));
@@ -684,6 +718,8 @@
       { tag: "librus-hero-stats-card", config: { type: "custom:librus-hero-stats-card" } },
       { tag: "librus-hero-history-card", config: { type: "custom:librus-hero-history-card" } },
       { tag: "librus-last-update-tile-card", config: { type: "custom:librus-last-update-tile-card" } },
+      { tag: "librus-ai-summary-card", config: { type: "custom:librus-ai-summary-card" } },
+      { tag: "librus-ai-summary-card", config: { type: "custom:librus-ai-summary-card", summary_only: true, title: "Tydzień (tylko rady)" } },
       { tag: "librus-grade-log-card", config: { type: "custom:librus-grade-log-card", title: "Tylko sprawdziany (filtr)", category_filter: "sprawdzian", sort: "oldest" } },
       { tag: "librus-rank-card", config: { type: "custom:librus-rank-card", compact: true } },
     ];

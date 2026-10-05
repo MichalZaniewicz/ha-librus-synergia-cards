@@ -45,7 +45,14 @@ type EditorField =
   | { kind: "text"; key: "title" | "exam_keywords" | "category_filter" | "icon"; label: TranslationKey }
   | {
       kind: "boolean";
-      key: "show_saturday" | "hide_header" | "compact" | "hide_room" | "only_tomorrow";
+      key:
+        | "show_saturday"
+        | "hide_header"
+        | "compact"
+        | "hide_room"
+        | "only_tomorrow"
+        | "summary_only"
+        | "hide_generate";
       label: TranslationKey;
     }
   | {
@@ -170,6 +177,11 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-level-card": [TITLE_FIELD],
   "custom:librus-rank-card": [TITLE_FIELD],
   "custom:librus-teachers-card": [TITLE_FIELD],
+  "custom:librus-ai-summary-card": [
+    TITLE_FIELD,
+    { kind: "boolean", key: "summary_only", label: "editor.summary_only" },
+    { kind: "boolean", key: "hide_generate", label: "editor.hide_generate" },
+  ],
 };
 
 export function librusCardEditor(): LovelaceCardEditor {

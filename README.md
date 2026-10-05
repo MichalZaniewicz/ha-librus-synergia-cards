@@ -84,6 +84,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Hero Stats | `custom:librus-hero-stats-card` | An RPG character sheet - six stats (Siła/Intelekt/Wiedza/Charyzma/Wytrwałość/Szczęście), each 0-10 and each from exactly one real signal (a subject cluster average, the behaviour grade, the attendance streak, the rank tier), on a radar chart |
 | Hero History | `custom:librus-hero-history-card` | A timeline of the Hero card's own past results and how long each one lasted, tracked locally in the browser from whenever this card was first added (same limitation as Achievements - nothing before that can be recovered) |
 | Last Update | `custom:librus-last-update-tile-card` | How long ago the integration last refreshed its data - a quick "is this still fresh" signal without opening Settings |
+| Weekly AI summary | `custom:librus-ai-summary-card` | The weekly AI summary written for the parent or the student: headline and status, one tab per section (grades, attendance, behaviour, next week, optionally news from the school) with its own status dot, the to-dos for the coming week, and a **Generate now** button. Requires `ha-librus-synergia` 0.10+ with the weekly AI summary turned on under the integration's Configure |
 
 Each card auto-detects your child's device - **zero YAML required** for the common case of one student.
 If you ever have more than one, the card's visual editor shows a device picker.
@@ -135,7 +136,7 @@ card supports:
 | Student | all except First lesson | Only shown when more than one child's e-dziennik is configured |
 | Names | First lesson | The name shown for each child (default: the first name from the device name) |
 | `hide_room` / `only_tomorrow` | First lesson | Hide the classroom; show only the next school day (e.g. for an evening dashboard) |
-| `title` | Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, First lesson, Homework checklist, Semester comparison, Next exam, Level | Header title override |
+| `title` | Weekly AI summary, Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, First lesson, Homework checklist, Semester comparison, Next exam, Level | Header title override |
 | `max_items` | Grade log, Subject grades, Recent activity, Announcements, Messages, Homework checklist | Row cap |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days` | Grade trend | How much history to chart (default 60) |
@@ -146,6 +147,7 @@ card supports:
 | `target` | Grade goal | Target average, e.g. `4.5` |
 | `mailbox` | Messages | `inbox` / `substitutions` / `alerts` / `justifications` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
+| `summary_only` / `hide_generate` | Weekly AI summary | Show only the headline, warning and to-dos (no section tabs); hide the Generate now button |
 | `exam_keywords` | Next exam | Comma-separated Agenda-category keywords that count as an exam (default `sprawdzian`), e.g. `sprawdzian, praca klasowa, egzamin` |
 | `icon` | every card | Override the header icon, e.g. `mdi:star` |
 | `hide_header` | every card | Hide the header row entirely |
