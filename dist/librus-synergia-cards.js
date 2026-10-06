@@ -1374,7 +1374,7 @@ const he=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
         color: var(--lc-brand);
         flex: none;
       }
-    `],e([ge()],St.prototype,"_config",void 0),St=e([he("librus-latest-grade-card")],St);let Dt=class extends Be{static getConfigElement(){return Le()}static getStubConfig(){return{type:"custom:librus-behaviour-grade-card"}}setConfig(e){this._config=e,this._configuredDeviceId=e.device_id}getCardSize(){return 2}render(){if(!this._config||!this.hass)return q;this._syncTheme();const e=this._resolveEntities();if("error"in e)return e.error;const{map:t}=e,i=this.hass,a=t.behaviour_grade?i.states[t.behaviour_grade]:void 0,s=(a?.attributes.recent??[])[0];return s?R`
+    `],e([ge()],St.prototype,"_config",void 0),St=e([he("librus-latest-grade-card")],St);let Dt=class extends Be{static getConfigElement(){return Le()}static getStubConfig(){return{type:"custom:librus-behaviour-grade-card"}}setConfig(e){this._config=e,this._configuredDeviceId=e.device_id}getCardSize(){return 2}render(){if(!this._config||!this.hass)return q;this._syncTheme();const e=this._resolveEntities();if("error"in e)return e.error;const{map:t}=e,i=this.hass,a=t.behaviour_grade?i.states[t.behaviour_grade]:void 0,s=(a?.attributes.recent??[])[0];if(!s)return this._message("mdi:medal-outline",ze(i,"card.behaviour_grade.empty"));const r=s.grade||s.short_name,n=!s.name&&s.value?s.value:null,o=(s.comments??[]).map(e=>e.trim()).filter(Boolean);return R`
       <ha-card>
         <div class="header">
           <div class="icon-badge good"><ha-icon icon="mdi:medal-outline"></ha-icon></div>
@@ -1382,17 +1382,32 @@ const he=e=>(t,i)=>{void 0!==i?i.addInitializer(()=>{customElements.define(e,t)}
             <div class="title">${ze(i,"card.behaviour_grade.title")}</div>
             <div class="subtitle">${s.category??ze(i,"card.behaviour_grade.subtitle")}</div>
           </div>
-          <div class="grade-badge">${s.short_name}</div>
+          ${r?R`<div class="grade-badge">${r}</div>`:q}
         </div>
-        ${null!==s.value?R`<div class="stats"><div class="stat good"><div class="stat-value">${s.value>0?"+":""}${s.value}</div><div class="stat-label">pkt</div></div></div>`:q}
+        ${s.name?R`<div class="grade-name">${s.name}</div>`:q}
+        ${null!==n?R`<div class="stats"><div class="stat good"><div class="stat-value">${n>0?"+":""}${n}</div><div class="stat-label">pkt</div></div></div>`:q}
         ${s.text?R`<div class="quote">${s.text}</div>`:q}
+        ${o.length?R`<div class="comment">${o.join(" · ")}</div>`:q}
       </ha-card>
-    `:this._message("mdi:medal-outline",ze(i,"card.behaviour_grade.empty"))}};Dt.styles=[Oe,Fe,n`
+    `}};Dt.styles=[Oe,Fe,n`
       .grade-badge {
         font-size: 1.5rem;
         font-weight: 800;
         color: var(--lc-good);
         flex: none;
+      }
+      .grade-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--lc-good);
+      }
+      .grade-name::first-letter {
+        text-transform: uppercase;
+      }
+      .comment {
+        font-size: 0.8rem;
+        color: var(--secondary-text-color);
+        line-height: 1.4;
       }
     `],e([ge()],Dt.prototype,"_config",void 0),Dt=e([he("librus-behaviour-grade-card")],Dt);let Tt=class extends Be{static getConfigElement(){return Le()}static getStubConfig(){return{type:"custom:librus-descriptive-grades-card"}}setConfig(e){this._config=e,this._configuredDeviceId=e.device_id}getCardSize(){return 2}render(){if(!this._config||!this.hass)return q;this._syncTheme();const e=this._resolveEntities();if("error"in e)return e.error;const{map:t}=e,i=this.hass,a=t.descriptive_grades?i.states[t.descriptive_grades]:void 0,s=a?.attributes.recent??[];return a&&0!==s.length?R`
       <ha-card>

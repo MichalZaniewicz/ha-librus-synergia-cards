@@ -419,8 +419,12 @@
       ],
     }, 3);
     addEntity("sensor.behaviour_grade", "behaviour_grade", {
-      recent: [{ short_name: "wz", value: 5, category: "zachowanie", date: iso(today), text: "Aktywny udział w akcji charytatywnej szkoły.", comments: [] }],
-    }, "wz");
+      // Classic-scale shape seen live (integration 0.10.0-beta.2+): the grade
+      // only in grade/name, short_name empty, value 0, the period in a comment.
+      name: "bardzo dobre",
+      comment: "Ocena zachowania miesiąc za IX/26.",
+      recent: [{ grade: "bdb", name: "bardzo dobre", short_name: "", value: 0, category: "zachowanie", date: iso(today), text: "", comments: ["     Ocena zachowania miesiąc za IX/26.      "] }],
+    }, "bdb");
     addEntity("sensor.descriptive_grades", "descriptive_grades", {
       recent: [{ subject: "Edukacja wczesnoszkolna", value: "Opanował materiał w stopniu bardzo dobrym, chętnie pomaga innym.", skill_id: 1, category_id: null, date: iso(today) }],
     }, 1);
