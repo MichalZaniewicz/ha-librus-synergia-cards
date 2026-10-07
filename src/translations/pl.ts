@@ -160,7 +160,8 @@ export const pl: Record<keyof typeof en, string> = {
   "card.messages.unavailable": "Moduł wiadomości nie jest włączony",
   "card.messages.read_notice": "Otwarcie oznaczy jako przeczytane w Librusie",
   "card.messages.fetch_failed": "Nie udało się pobrać pełnej treści",
-  "card.messages.attachment_notice": "Załącznik - pobierz w aplikacji Librus",
+  "card.messages.attachment_notice": "Kliknij plik, aby go pobrać (zapisuje się też w Multimediach)",
+  "card.messages.attachment_error": "nie udało się pobrać - wymaga integracji 0.11.1+",
 
   "card.substitutions.title": "Zastępstwa, alerty i usprawiedliwienia",
   "card.substitutions.subtitle": "Wiadomości specjalne",

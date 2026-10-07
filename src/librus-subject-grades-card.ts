@@ -7,7 +7,7 @@ import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import type { LibrusCardConfig } from "./utils/types";
 import { librusCardEditor } from "./utils/card-editor";
-import { filterAndSortGrades, pointGradeEntries, pointTone, type GradeLogEntry } from "./utils/grade-filters";
+import { filterAndSortGrades, pointGradeEntries, pointTone, textGradeEntries, type GradeLogEntry } from "./utils/grade-filters";
 import { UNAVAILABLE } from "./utils/entities";
 
 /**
@@ -57,6 +57,7 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
     const grades = [
       ...((state?.attributes.grades as GradeLogEntry[] | undefined) ?? []),
       ...pointGradeEntries(state?.attributes),
+      ...textGradeEntries(state?.attributes),
     ];
     const pointsPct = state?.attributes.points_percentage;
 

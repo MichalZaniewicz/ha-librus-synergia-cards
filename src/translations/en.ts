@@ -159,7 +159,8 @@ export const en = {
   "card.messages.unavailable": "Messages module not enabled",
   "card.messages.read_notice": "Opening marks it as read in Librus",
   "card.messages.fetch_failed": "Couldn't load the full message",
-  "card.messages.attachment_notice": "Attached - open in the Librus app to download",
+  "card.messages.attachment_notice": "Tap a file to download it (it's also saved under Media)",
+  "card.messages.attachment_error": "couldn't download - needs integration 0.11.1+",
 
   "card.substitutions.title": "Substitutions, alerts & justifications",
   "card.substitutions.subtitle": "Zastępstwa, alerty i usprawiedliwienia",

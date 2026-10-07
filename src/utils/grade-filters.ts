@@ -14,6 +14,25 @@ export interface GradeLogEntry {
   percentage?: number | null;
   /** True for an entry built from `point_grades` (see `pointGradeEntries`). */
   points?: boolean;
+  /** True for an entry built from `text_grades` (see `textGradeEntries`). */
+  text?: boolean;
+}
+
+/**
+ * A subject sensor's text grades (`text_grades`, integration 0.11.1+): a
+ * grade the teacher entered as text. Shown with a pencil chip and the text
+ * as the quote line.
+ */
+export function textGradeEntries(attributes: Record<string, unknown> | undefined): GradeLogEntry[] {
+  const raw = attributes?.text_grades;
+  if (!Array.isArray(raw)) return [];
+  return (raw as { value: string; category: string | null; date: string | null }[]).map((g) => ({
+    value: "✎",
+    category: g.category,
+    date: g.date,
+    comments: g.value ? [g.value] : [],
+    text: true,
+  }));
 }
 
 /** One entry of a subject sensor's `point_grades` attribute (backend: schools grading in points). */

@@ -14,6 +14,9 @@ interface HomeworkItem {
   text: string;
   due_date: string | null;
   teacher: string | null;
+  /** Homework category name (integration 0.11.1+). */
+  category?: string | null;
+  subject?: string | null;
 }
 
 /**
@@ -222,7 +225,10 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
                 <span class="box"><ha-icon icon=${isDone ? "mdi:checkbox-marked" : "mdi:checkbox-blank-outline"}></ha-icon></span>
                 <div class="body">
                   <div class="row1">
-                    <span>${it.topic || it.text}</span>
+                    <span
+                      >${it.category ? html`<span class="cat-label">${it.category}</span> ` : nothing}${it.topic ||
+                      it.text}</span
+                    >
                     ${it.due_date
                       ? html`<time>${formatShortDate(it.due_date, hass.language)}</time>`
                       : nothing}

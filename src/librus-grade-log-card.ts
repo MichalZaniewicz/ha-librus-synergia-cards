@@ -7,7 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
-import { filterAndSortGrades, pointGradeEntries, pointTone, type GradeLogEntry } from "./utils/grade-filters";
+import { filterAndSortGrades, pointGradeEntries, pointTone, textGradeEntries, type GradeLogEntry } from "./utils/grade-filters";
 
 interface FlatGrade extends GradeLogEntry {
   subject: string;
@@ -52,6 +52,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
       const grades = [
         ...((attributes?.grades as GradeLogEntry[] | undefined) ?? []),
         ...pointGradeEntries(attributes),
+        ...textGradeEntries(attributes),
       ];
       for (const g of grades) flat.push({ ...g, subject: s.subject });
     }

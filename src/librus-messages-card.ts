@@ -6,7 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t, type TranslationKey } from "./utils/localize";
-import { fetchFullMessage, type FullMessage } from "./utils/services";
+import { fetchFullMessage, type FullMessage, downloadAttachment } from "./utils/services";
 import { librusCardEditor } from "./utils/card-editor";
 
 interface RecentMessage {
@@ -107,6 +107,30 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     }
   }
 
+  /** Attachment key ("message:attachment") -> download state. */
+  @state() private _attachmentState: Record<string, "loading" | "error"> = {};
+
+  private async _download(ev: Event, messageId: string, attachmentId: string, key: string): Promise<void> {
+    ev.stopPropagation();
+    const resolved = this._resolveEntities();
+    if (!this.hass || "error" in resolved) return;
+    // Open the tab now, inside the click - a window opened after an await is
+    // blocked as a pop-up by most browsers.
+    const tab = window.open("", "_blank");
+    this._attachmentState = { ...this._attachmentState, [key]: "loading" };
+    try {
+      const url = await downloadAttachment(this.hass, resolved.deviceId, messageId, attachmentId);
+      if (tab) tab.location.href = url;
+      else window.open(url, "_blank");
+      const next = { ...this._attachmentState };
+      delete next[key];
+      this._attachmentState = next;
+    } catch {
+      tab?.close();
+      this._attachmentState = { ...this._attachmentState, [key]: "error" };
+    }
+  }
+
   private _renderMessageBody(m: RecentMessage): TemplateResult {
     const hass = this.hass!;
     if (this._expandedId !== m.id) {
@@ -120,11 +144,22 @@ export class LibrusMessagesCard extends LibrusBaseCard {
         ${full.attachments?.length
           ? html`
               <div class="attachments">
-                ${full.attachments.map(
-                  (a) => html`<div class="attachment">
-                    <ha-icon icon="mdi:paperclip"></ha-icon>${a.filename ?? a.id}
-                  </div>`
-                )}
+                ${full.attachments.map((a) => {
+                  const key = `${m.id}:${a.id}`;
+                  const state = this._attachmentState[key];
+                  return html`<button
+                    class="attachment"
+                    type="button"
+                    ?disabled=${state === "loading"}
+                    @click=${(ev: Event) => this._download(ev, m.id, a.id, key)}
+                  >
+                    <ha-icon icon=${state === "loading" ? "mdi:progress-download" : "mdi:paperclip"}></ha-icon>
+                    <span class="attachment-name">${a.filename ?? a.id}</span>
+                    ${state === "error"
+                      ? html`<span class="attachment-error">${t(hass, "card.messages.attachment_error")}</span>`
+                      : nothing}
+                  </button>`;
+                })}
                 <div class="read-notice">${t(hass, "card.messages.attachment_notice")}</div>
               </div>
             `
@@ -240,8 +275,26 @@ export class LibrusMessagesCard extends LibrusBaseCard {
         display: flex;
         align-items: center;
         gap: 4px;
+        font: inherit;
         font-size: 0.75rem;
-        color: var(--primary-text-color);
+        color: var(--lc-brand);
+        background: none;
+        border: 0;
+        padding: 2px 0;
+        cursor: pointer;
+        text-align: left;
+      }
+      .attachment:disabled {
+        cursor: progress;
+        opacity: 0.7;
+      }
+      .attachment-name {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .attachment-error {
+        color: var(--lc-bad);
+        margin-left: 6px;
       }
       .attachment ha-icon {
         --mdc-icon-size: 14px;

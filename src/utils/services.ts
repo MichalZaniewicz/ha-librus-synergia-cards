@@ -46,3 +46,38 @@ export async function fetchFullMessage(
   });
   return result.response;
 }
+
+/** Result of `librus_synergia.download_attachment` (integration 0.11.1+). */
+export interface DownloadedAttachment {
+  filename: string;
+  content_type: string;
+  size: number;
+  path: string;
+  media_content_id: string;
+}
+
+/**
+ * Downloads one message attachment into Home Assistant's media folder via
+ * `librus_synergia.download_attachment` (doesn't open the message in
+ * Librus) and returns a signed URL the browser can open, via
+ * `media_source/resolve_media`.
+ */
+export async function downloadAttachment(
+  hass: LibrusHass,
+  deviceId: string,
+  messageId: string,
+  attachmentId: string
+): Promise<string> {
+  const result = await hass.callWS<{ response: DownloadedAttachment }>({
+    type: "call_service",
+    domain: "librus_synergia",
+    service: "download_attachment",
+    service_data: { device_id: deviceId, message_id: messageId, attachment_id: attachmentId },
+    return_response: true,
+  });
+  const resolved = await hass.callWS<{ url: string }>({
+    type: "media_source/resolve_media",
+    media_content_id: result.response.media_content_id,
+  });
+  return resolved.url;
+}
