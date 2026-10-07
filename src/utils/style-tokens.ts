@@ -427,6 +427,35 @@ export const librusSharedStyles = css`
     font-weight: 600;
     color: var(--secondary-text-color);
   }
+  /* Timetable lessons Librus marks as cancelled / substitution
+     (utils/calendar.ts lessonInfo): a struck-through, dimmed row or cell,
+     and a small tag after the subject. */
+  .lesson-cancelled {
+    opacity: 0.55;
+  }
+  .lesson-cancelled .lesson-name {
+    text-decoration: line-through;
+  }
+  .lesson-tag {
+    display: inline-block;
+    font-size: 0.66rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 999px;
+    margin-left: 6px;
+    vertical-align: 1px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .lesson-tag.cancelled {
+    background: var(--lc-bad-bg);
+    color: var(--lc-bad);
+  }
+  .lesson-tag.substitution {
+    background: var(--lc-warn-bg);
+    color: var(--lc-warn);
+  }
+
   .stat-label {
     font-size: 0.66rem;
     color: var(--secondary-text-color);

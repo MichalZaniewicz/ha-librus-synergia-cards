@@ -5,7 +5,8 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, isHappeningNow, hasEnded, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, isHappeningNow, hasEnded, lessonInfo, type LibrusCalendarEvent } from "./utils/calendar";
+import { lessonTag } from "./utils/render-helpers";
 import { formatTime } from "./utils/format";
 import { t } from "./utils/localize";
 
@@ -100,15 +101,17 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
         </div>
         <div class="timeline">
           ${this._events.map((ev) => {
-            const now_ = isHappeningNow(ev, now);
+            const info = lessonInfo(ev);
+            const now_ = !info.cancelled && isHappeningNow(ev, now);
             const done = hasEnded(ev, now);
             return html`
-              <div class="tl-item ${now_ ? "now" : ""} ${done ? "done" : ""}">
+              <div class="tl-item ${now_ ? "now" : ""} ${done ? "done" : ""} ${info.cancelled ? "lesson-cancelled" : ""}">
                 <span class="tl-time">${formatTime(ev.start)}</span>
                 <span class="tl-dot"></span>
                 <div class="tl-body">
                   <div class="subj">
-                    ${ev.summary} ${now_ ? html`<span class="pill-now">${t(hass, "label.now")}</span>` : nothing}
+                    <span class="lesson-name">${info.name}</span>${lessonTag(hass, info)}
+                    ${now_ ? html`<span class="pill-now">${t(hass, "label.now")}</span>` : nothing}
                   </div>
                   ${ev.location || ev.description
                     ? html`<div class="meta">${[ev.location, ev.description].filter(Boolean).join(" · ")}</div>`

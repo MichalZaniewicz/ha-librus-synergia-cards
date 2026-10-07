@@ -10,34 +10,24 @@ import {
   hasEnded,
   isHappeningNow,
   isoDate,
+  lessonInfo,
+  type LessonInfo,
   type LibrusCalendarEvent,
 } from "./utils/calendar";
 import { formatTime } from "./utils/format";
 import { formatCountdown, t } from "./utils/localize";
 import { abbreviate } from "./utils/subjects";
 
-const CANCELLED = " (odwołane)";
-const SUBSTITUTION = " (zastępstwo)";
 /** How far ahead to look for the next school day (a long weekend or a
  * short break still finds it). */
 const LOOKAHEAD_DAYS = 10;
 
-interface Lesson {
+interface Lesson extends LessonInfo {
   ev: LibrusCalendarEvent;
-  name: string;
-  cancelled: boolean;
-  substitution: boolean;
 }
 
 function toLesson(ev: LibrusCalendarEvent): Lesson {
-  const cancelled = ev.summary.endsWith(CANCELLED);
-  const substitution = ev.summary.endsWith(SUBSTITUTION);
-  const name = cancelled
-    ? ev.summary.slice(0, -CANCELLED.length)
-    : substitution
-      ? ev.summary.slice(0, -SUBSTITUTION.length)
-      : ev.summary;
-  return { ev, name, cancelled, substitution };
+  return { ev, ...lessonInfo(ev) };
 }
 
 type Status = "before" | "in" | "after" | "free";

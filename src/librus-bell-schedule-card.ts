@@ -4,7 +4,8 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, lessonInfo, type LessonInfo, type LibrusCalendarEvent } from "./utils/calendar";
+import { lessonTag } from "./utils/render-helpers";
 import { t, formatCountdown } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { tapActionHandler } from "./utils/actions";
@@ -134,13 +135,23 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
     }
 
     // Subject + room per bell time, from the fetched day's lessons.
-    const bySlot = new Map<string, { subject: string; room?: string }>();
+    const bySlot = new Map<string, { info: LessonInfo; room?: string }>();
     for (const ev of this._events) {
       const start = hm(new Date(ev.start));
-      if (!bySlot.has(start) && ev.summary) {
-        bySlot.set(start, { subject: ev.summary, room: ev.location || undefined });
+      const info = lessonInfo(ev);
+      // A parallel held lesson wins over a cancelled one in the same slot.
+      const existing = bySlot.get(start);
+      if (ev.summary && (!existing || (existing.info.cancelled && !info.cancelled))) {
+        bySlot.set(start, { info, room: ev.location || undefined });
       }
     }
+    // Only the periods of the day's own lessons: no empty rows before the
+    // first lesson or after the last one (found live: an empty L7 on a
+    // 6-lesson day). Gaps in between stay, they're real free periods.
+    const used = periods.map((p) => bySlot.has(p.start));
+    const firstUsed = used.indexOf(true);
+    const lastUsed = used.lastIndexOf(true);
+    const shown = firstUsed === -1 ? periods : periods.slice(firstUsed, lastUsed + 1);
 
     const targetIsToday = isoDate(this._targetDay()) === isoDate(new Date());
     const nowHM = hm(new Date());
@@ -171,17 +182,21 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="periods">
-          ${periods.map((p) => {
+          ${shown.map((p) => {
             const slot = bySlot.get(p.start);
             const isCurrent = targetIsToday && p.start <= nowHM && nowHM <= p.end;
             const isPast = targetIsToday && nowHM > p.end;
             return html`
-              <div class="period ${isCurrent ? "current" : ""} ${isPast ? "past" : ""} ${slot ? "" : "free"}">
+              <div
+                class="period ${isCurrent && !slot?.info.cancelled ? "current" : ""} ${isPast ? "past" : ""} ${slot ? "" : "free"} ${slot?.info.cancelled ? "lesson-cancelled" : ""}"
+              >
                 <span class="pnum">${t(hass, "label.lesson_short", { n: p.lesson_no })}</span>
                 <span class="ptime">${p.start}<span class="dash">–</span>${p.end}</span>
                 ${slot
                   ? html`<span class="psubj"
-                      >${slot.subject}${slot.room ? html` <span class="proom">${slot.room}</span>` : nothing}</span
+                      ><span class="lesson-name">${slot.info.name}</span>${lessonTag(hass, slot.info)}${slot.room
+                        ? html` <span class="proom">${slot.room}</span>`
+                        : nothing}</span
                     >`
                   : nothing}
               </div>

@@ -202,6 +202,8 @@ export const pl: Record<keyof typeof en, string> = {
   "label.class": "Klasa",
   "label.student_number": "Nr w dzienniku",
   "label.student_number_short": "nr {n}",
+  "label.lesson_cancelled": "odwołana",
+  "label.lesson_substitution": "zastępstwo",
   "label.tutor": "Wychowawca",
   "label.semester_ends": "Koniec semestru",
   "label.year_ends": "Koniec roku szkolnego",

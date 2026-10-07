@@ -4,7 +4,8 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, lessonInfo, type LibrusCalendarEvent } from "./utils/calendar";
+import { lessonTag } from "./utils/render-helpers";
 import { formatTime } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
@@ -137,8 +138,12 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
       return this._message("mdi:calendar-arrow-right", t(hass, "card.tomorrow.empty"));
     }
 
-    const first = this._lessons[0];
-    const last = this._lessons[this._lessons.length - 1];
+    // Cancelled lessons stay on the list (struck through) but don't count
+    // towards the lesson count or the start/end times (found live: "7
+    // lessons, ends 14:35" with the 7th lesson cancelled).
+    const held = this._lessons.filter((ev) => !lessonInfo(ev).cancelled);
+    const first = held[0];
+    const last = held[held.length - 1];
 
     return html`
       <ha-card>
@@ -157,17 +162,21 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
           ? html`
               <div class="stats">
                 <div class="stat">
-                  <div class="stat-value">${this._lessons.length}</div>
+                  <div class="stat-value">${held.length}</div>
                   <div class="stat-label">${t(hass, "card.tomorrow.lessons")}</div>
                 </div>
-                <div class="stat">
-                  <div class="stat-value">${formatTime(first.start)}</div>
-                  <div class="stat-label">${t(hass, "card.tomorrow.starts")}</div>
-                </div>
-                <div class="stat">
-                  <div class="stat-value">${formatTime(last.end)}</div>
-                  <div class="stat-label">${t(hass, "card.tomorrow.ends")}</div>
-                </div>
+                ${first
+                  ? html`
+                      <div class="stat">
+                        <div class="stat-value">${formatTime(first.start)}</div>
+                        <div class="stat-label">${t(hass, "card.tomorrow.starts")}</div>
+                      </div>
+                      <div class="stat">
+                        <div class="stat-value">${formatTime(last.end)}</div>
+                        <div class="stat-label">${t(hass, "card.tomorrow.ends")}</div>
+                      </div>
+                    `
+                  : nothing}
               </div>
             `
           : nothing}
@@ -197,19 +206,20 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
           ? html`
               <hr />
               <div class="scroll-list">
-                ${this._lessons.map(
-                  (ev) => html`
-                    <div class="list-item">
+                ${this._lessons.map((ev) => {
+                  const info = lessonInfo(ev);
+                  return html`
+                    <div class="list-item ${info.cancelled ? "lesson-cancelled" : ""}">
                       <span class="lt">${formatTime(ev.start)}</span>
                       <div class="body">
-                        <div class="row1">${ev.summary}</div>
+                        <div class="row1"><span><span class="lesson-name">${info.name}</span>${lessonTag(hass, info)}</span></div>
                         ${ev.location || ev.description
                           ? html`<div class="item-text">${[ev.location, ev.description].filter(Boolean).join(" · ")}</div>`
                           : nothing}
                       </div>
                     </div>
-                  `
-                )}
+                  `;
+                })}
               </div>
             `
           : nothing}

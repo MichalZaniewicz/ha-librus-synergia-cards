@@ -1,5 +1,8 @@
 import { html, svg, nothing, type TemplateResult } from "lit";
 import type { HistoryPoint } from "./history";
+import type { LessonInfo } from "./calendar";
+import type { LibrusHass } from "./types";
+import { t } from "./localize";
 
 /** A single flex-grow-sized, colored segment of a horizontal stacked bar. */
 export interface BarSegment {
@@ -292,4 +295,15 @@ export function donutChart(
         : nothing}
     </svg>
   `;
+}
+
+/** "odwołana" / "zastępstwo" tag after a lesson name (style: .lesson-tag). */
+export function lessonTag(hass: LibrusHass, info: LessonInfo): TemplateResult | typeof nothing {
+  if (info.cancelled) {
+    return html`<span class="lesson-tag cancelled">${t(hass, "label.lesson_cancelled")}</span>`;
+  }
+  if (info.substitution) {
+    return html`<span class="lesson-tag substitution">${t(hass, "label.lesson_substitution")}</span>`;
+  }
+  return nothing;
 }

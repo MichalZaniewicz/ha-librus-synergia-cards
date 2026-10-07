@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, mondayOfSchoolWeek, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, mondayOfSchoolWeek, type LibrusCalendarEvent, lessonInfo } from "./utils/calendar";
 import { hBarChart, type HBarRow } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 
@@ -99,7 +99,12 @@ export class LibrusSubjectTimeCard extends LibrusBaseCard {
     const counts = new Map<string, number>();
     for (const ev of this._events) {
       if (!ev.summary) continue;
-      counts.set(ev.summary, (counts.get(ev.summary) ?? 0) + 1);
+      // A cancelled lesson isn't time spent on the subject, and a
+      // substitution is still that subject (found live: "Język niemiecki
+      // (zastępstwo)" showed up as a separate bar).
+      const info = lessonInfo(ev);
+      if (info.cancelled) continue;
+      counts.set(info.name, (counts.get(info.name) ?? 0) + 1);
     }
     const rows: HBarRow[] = [...counts.entries()]
       .sort((a, b) => b[1] - a[1])

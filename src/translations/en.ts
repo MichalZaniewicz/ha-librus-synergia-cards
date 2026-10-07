@@ -201,6 +201,8 @@ export const en = {
   "label.class": "Class",
   "label.student_number": "Register no.",
   "label.student_number_short": "no. {n}",
+  "label.lesson_cancelled": "cancelled",
+  "label.lesson_substitution": "substitution",
   "label.tutor": "Homeroom teacher",
   "label.semester_ends": "Semester ends",
   "label.year_ends": "Year ends",

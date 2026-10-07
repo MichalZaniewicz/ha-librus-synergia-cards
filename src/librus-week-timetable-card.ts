@@ -10,6 +10,7 @@ import {
   hasEnded,
   mondayOfSchoolWeek,
   type LibrusCalendarEvent,
+  lessonInfo,
 } from "./utils/calendar";
 import { t, formatCountdown } from "./utils/localize";
 import { minutesUntil } from "./utils/format";
@@ -169,7 +170,9 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
 
     // "Break now": today has a lesson already ended and one still to come,
     // but none happening right now.
-    const todayEvents = todayColumn >= 0 && todayColumn < dayCount ? byDay[todayColumn] : [];
+    const todayEvents = (todayColumn >= 0 && todayColumn < dayCount ? byDay[todayColumn] : []).filter(
+      (e) => !lessonInfo(e).cancelled
+    );
     const lessonNow = todayEvents.find((e) => isHappeningNow(e, now));
     const nextToday = todayEvents.find((e) => new Date(e.start) > now);
     const breakNow = !lessonNow && !!nextToday && todayEvents.some((e) => hasEnded(e, now));
@@ -203,16 +206,30 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
           ${rowLabels.map((label, row) => html`
             <span class="n">${label}</span>
             ${grid[row].map((slot, dayIndex) => {
-              const ev = slot[0];
-              if (!ev) return html`<div class="cell empty"></div>`;
+              if (!slot.length) return html`<div class="cell empty"></div>`;
+              const infos = slot.map((e) => lessonInfo(e));
+              // A held lesson is shown over a cancelled one in the same slot.
+              const shownIndex = Math.max(0, infos.findIndex((i) => !i.cancelled));
+              const info = infos[shownIndex];
+              const cancelled = infos.every((i) => i.cancelled);
+              const substitution = infos.some((i) => i.substitution);
               const isToday = dayIndex === todayColumn;
-              const current = isToday && slot.some((e) => isHappeningNow(e, now));
+              const current = isToday && slot.some((e, i) => !infos[i].cancelled && isHappeningNow(e, now));
               const next = breakNow && isToday && slot.includes(nextToday!);
+              const tip = infos
+                .map((i) =>
+                  i.cancelled
+                    ? `${i.name} (${t(hass, "label.lesson_cancelled")})`
+                    : i.substitution
+                      ? `${i.name} (${t(hass, "label.lesson_substitution")})`
+                      : i.name
+                )
+                .join(" / ");
               // Parallel groups (e.g. split language classes) share one slot.
               return html`<div
-                class="cell on ${current ? "current" : ""} ${next ? "next" : ""}"
-                title=${slot.map((e) => e.summary).join(" / ")}
-              >${abbreviate(ev.summary)}${slot.length > 1 ? "+" : ""}</div>`;
+                class="cell on ${current ? "current" : ""} ${next ? "next" : ""} ${cancelled ? "off" : ""} ${substitution && !cancelled ? "sub" : ""}"
+                title=${tip}
+              >${abbreviate(info.name)}${slot.length > 1 ? "+" : ""}</div>`;
             })}
           `)}
         </div>
@@ -276,6 +293,18 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
       }
       .cell.empty {
         background: transparent;
+      }
+      /* Cancelled: struck through on a dashed outline; substitution: amber
+         dashed outline (same marks as the School day card). */
+      .cell.off {
+        background: transparent;
+        border: 1px dashed var(--divider-color);
+        text-decoration: line-through;
+        opacity: 0.7;
+      }
+      .cell.sub {
+        outline: 2px dashed var(--lc-amber);
+        outline-offset: -2px;
       }
     `,
   ];

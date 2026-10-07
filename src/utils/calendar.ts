@@ -66,6 +66,26 @@ export async function fetchCalendarEvents(
   });
 }
 
+/** What a Timetable calendar event's summary says about the lesson. The
+ * integration appends " (odwołane)" to a cancelled lesson and
+ * " (zastępstwo)" to a substitution (calendar.py); `name` is the subject
+ * without that suffix, so a substitution still counts as its subject. */
+export interface LessonInfo {
+  name: string;
+  cancelled: boolean;
+  substitution: boolean;
+}
+
+const CANCELLED_RE = /\s*\(odwołane\)\s*$/i;
+const SUBSTITUTION_RE = /\s*\(zastępstwo\)\s*$/i;
+
+export function lessonInfo(event: LibrusCalendarEvent): LessonInfo {
+  const cancelled = CANCELLED_RE.test(event.summary);
+  const substitution = !cancelled && SUBSTITUTION_RE.test(event.summary);
+  const name = event.summary.replace(CANCELLED_RE, "").replace(SUBSTITUTION_RE, "");
+  return { name, cancelled, substitution };
+}
+
 /** True if `now` falls within [event.start, event.end) - timed events only. */
 export function isHappeningNow(event: LibrusCalendarEvent, now: Date): boolean {
   if (event.allDay) return false;
