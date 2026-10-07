@@ -298,6 +298,21 @@
         "2": { total: 0, present: 0, percentage: null },
       },
     }, 2);
+    // "Lowest subject attendance" sensor (backend 0.9.0+) - one subject per
+    // colour band, plus two with too few lessons (librus-subject-attendance-card).
+    const subjAtt = {
+      "Fizyka": [4, 10], "Wychowanie fizyczne": [11, 17], "Chemia": [8, 10], "Matematyka": [19, 20],
+      "Język polski": [25, 25], "Język angielski": [15, 15], "Język niemiecki": [9, 9], "Biologia": [9, 9],
+      "Geografia": [10, 10], "Historia": [9, 9], "Informatyka": [5, 5], "Muzyka": [5, 5], "Plastyka": [5, 5],
+      "Zajęcia z wychowawcą": [10, 10], "Religia": [0, 2], "Edukacja zdrowotna": [3, 3],
+    };
+    const subjAttAttr = {};
+    for (const [name, [present, total]] of Object.entries(subjAtt)) {
+      subjAttAttr[name] = { total, present, absent: total - present, percentage: Math.round(present / total * 1000) / 10 };
+    }
+    addEntity("sensor.subject_attendance", "subject_attendance", {
+      subject: "Fizyka", subjects: subjAttAttr, at_risk: ["Fizyka"],
+    }, 40.0);
     // New (ha-librus-synergia 0.6.0): gamification sensors - streaks and a
     // cosmetic rank tier. attendance_streak intentionally matches
     // last_absence_date above (18 days) so librus-streak-card's
@@ -715,7 +730,7 @@
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",
       "librus-subject-spotlight-card",
       "librus-attendance-card", "librus-attendance-tile-card", "librus-attendance-heatmap-card",
-      "librus-attendance-weekday-card", "librus-attendance-subject-card",
+      "librus-attendance-weekday-card", "librus-attendance-subject-card", "librus-subject-attendance-card",
       "librus-behaviour-notices-card", "librus-behaviour-notices-tile-card",
       "librus-messages-card", "librus-messages-tile-card",
       "librus-substitutions-card",

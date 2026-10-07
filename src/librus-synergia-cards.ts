@@ -18,6 +18,7 @@ import "./librus-attendance-tile-card";
 import "./librus-attendance-heatmap-card";
 import "./librus-attendance-weekday-card";
 import "./librus-attendance-subject-card";
+import "./librus-subject-attendance-card";
 import "./librus-behaviour-notices-card";
 import "./librus-behaviour-notices-tile-card";
 import "./librus-messages-card";
@@ -183,6 +184,12 @@ window.customCards.push(
     type: "librus-attendance-subject-card",
     name: "Librus - Nieobecności wg przedmiotu",
     description: "Ranking przedmiotów wg liczby nieobecności, podzielony na usprawiedliwione/nieusprawiedliwione.",
+    preview: true,
+  },
+  {
+    type: "librus-subject-attendance-card",
+    name: "Librus - Frekwencja z przedmiotów",
+    description: "Kafelki z procentem obecności na każdym przedmiocie, kolorem widać, gdzie jest problem.",
     preview: true,
   },
   {
