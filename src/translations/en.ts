@@ -181,6 +181,9 @@ export const en = {
 
   "card.school.title": "School",
   "label.head_teacher": "Head teacher",
+  "label.class": "Class",
+  "label.student_number": "Register no.",
+  "label.student_number_short": "no. {n}",
   "label.tutor": "Homeroom teacher",
   "label.semester_ends": "Semester ends",
   "label.year_ends": "Year ends",

@@ -126,3 +126,14 @@ export function mapAllByTranslationKey(
   }
   return result.sort((a, b) => a.subject.localeCompare(b.subject));
 }
+
+/** Class register number ("nr w dzienniku"): the Class sensor's
+ * `student_number` (backend 0.10.1+), else the Lucky number sensor's (it
+ * carries none while Librus has no number published). */
+export function studentNumberOf(hass: LibrusHass, map: Record<string, string>): number | undefined {
+  for (const key of ["school_class", "lucky_number"]) {
+    const v = map[key] ? hass.states[map[key]]?.attributes.student_number : undefined;
+    if (typeof v === "number") return v;
+  }
+  return undefined;
+}

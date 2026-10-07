@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { UNAVAILABLE } from "./utils/entities";
+import { UNAVAILABLE, studentNumberOf } from "./utils/entities";
 import { t } from "./utils/localize";
 import { tapActionHandler } from "./utils/actions";
 
@@ -55,6 +55,7 @@ export class LibrusStudentCard extends LibrusBaseCard {
 
     const deviceName = hass.devices?.[deviceId]?.name_by_user || hass.devices?.[deviceId]?.name || "";
     const className = map.school_class ? hass.states[map.school_class]?.state : undefined;
+    const studentNumber = studentNumberOf(hass, map);
 
     const scores: Score[] = [];
 
@@ -114,7 +115,13 @@ export class LibrusStudentCard extends LibrusBaseCard {
           <div class="tcard-head">
             <div>
               <div class="tcard-name">${deviceName}</div>
-              ${className ? html`<div class="tcard-class">${className}</div>` : nothing}
+              ${className
+                ? html`<div class="tcard-class">
+                    ${className}${studentNumber !== undefined
+                      ? ` · ${t(hass, "label.student_number_short", { n: studentNumber })}`
+                      : ""}
+                  </div>`
+                : nothing}
             </div>
             <div class="tcard-rating">
               <div class="v">${overallScore}</div>

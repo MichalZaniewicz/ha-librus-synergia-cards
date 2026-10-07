@@ -182,6 +182,9 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.school.title": "Szkoła",
   "label.head_teacher": "Dyrektor",
+  "label.class": "Klasa",
+  "label.student_number": "Nr w dzienniku",
+  "label.student_number_short": "nr {n}",
   "label.tutor": "Wychowawca",
   "label.semester_ends": "Koniec semestru",
   "label.year_ends": "Koniec roku szkolnego",

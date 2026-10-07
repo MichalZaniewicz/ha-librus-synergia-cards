@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { studentNumberOf } from "./utils/entities";
 
 @customElement("librus-school-card")
 export class LibrusSchoolCard extends LibrusBaseCard {
@@ -49,6 +50,7 @@ export class LibrusSchoolCard extends LibrusBaseCard {
     const tutor = cls?.attributes.homeroom_teacher as string | undefined;
     const semesterEnd = cls?.attributes.first_semester_end as string | undefined;
     const yearEnd = cls?.attributes.school_year_end as string | undefined;
+    const studentNumber = studentNumberOf(hass, map);
 
     return html`
       <ha-card>
@@ -61,7 +63,10 @@ export class LibrusSchoolCard extends LibrusBaseCard {
         </div>
         <div class="stats">
           ${cls
-            ? html`<div class="stat"><div class="stat-value">${cls.state}</div><div class="stat-label">Klasa</div></div>`
+            ? html`<div class="stat"><div class="stat-value">${cls.state}</div><div class="stat-label">${t(hass, "label.class")}</div></div>`
+            : nothing}
+          ${studentNumber !== undefined
+            ? html`<div class="stat"><div class="stat-value">${studentNumber}</div><div class="stat-label">${t(hass, "label.student_number")}</div></div>`
             : nothing}
           ${tutor
             ? html`<div class="stat"><div class="stat-value" style="font-size:0.95rem;">${tutor}</div><div class="stat-label">${t(hass, "label.tutor")}</div></div>`
