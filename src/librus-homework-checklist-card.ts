@@ -33,6 +33,8 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
   private _storageKey = "";
   /** The todo entity's `last_updated` the current `_done` was read for. */
   private _todoReadFor?: string;
+  /** Item ids the Homework to-do list currently holds (backend 0.10.1+). */
+  @state() private _todoUids?: Set<string>;
   private _todoReading = false;
   private _migrated = false;
 
@@ -113,6 +115,7 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
         }
       }
       this._done = done;
+      this._todoUids = new Set(result.items.map((i) => i.uid));
       this._todoReadFor = marker;
     } catch {
       // No todo/item/list (very old HA) - stay on local ticks.
@@ -172,14 +175,21 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
 
     const currentIds = new Set(items.map((it) => it.key));
     if (todoId) void this._readTodo(todoId, currentIds);
+    // With the to-do list, show exactly its items: it drops homework that
+    // was ticked off more than 14 days after its due date, and ticking one
+    // of those here failed with "item not found" (found live).
+    const shown = todoId && this._todoUids ? items.filter((it) => this._todoUids!.has(it.key)) : items;
+    if (shown.length === 0) {
+      return this._message("mdi:notebook-edit-outline", t(hass, "card.homework_assignments.empty"));
+    }
     const max = this._config.max_items ?? 12;
-    const sorted = [...items].sort((a, b) => {
+    const sorted = [...shown].sort((a, b) => {
       const da = this._done.has(a.key) ? 1 : 0;
       const db = this._done.has(b.key) ? 1 : 0;
       if (da !== db) return da - db; // not-done first
       return (a.due_date ?? "").localeCompare(b.due_date ?? "");
     });
-    const doneCount = items.filter((it) => this._done.has(it.key)).length;
+    const doneCount = shown.filter((it) => this._done.has(it.key)).length;
 
     return html`
       <ha-card>
@@ -188,7 +198,7 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
           <div class="title-block">
             <div class="title">${this._config.title ?? t(hass, "card.homework_checklist.title")}</div>
             <div class="subtitle">
-              ${t(hass, "card.homework_checklist.progress", { done: doneCount, total: items.length })}
+              ${t(hass, "card.homework_checklist.progress", { done: doneCount, total: shown.length })}
             </div>
           </div>
         </div>
