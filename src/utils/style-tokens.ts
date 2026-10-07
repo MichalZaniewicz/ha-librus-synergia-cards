@@ -500,6 +500,10 @@ export const librusSharedStyles = css`
     background: var(--lc-warn-bg);
     color: var(--lc-warn);
   }
+  .lesson-tag.room {
+    background: var(--lc-brand-bg);
+    color: var(--lc-brand);
+  }
 
   .stat-label {
     font-size: 0.66rem;

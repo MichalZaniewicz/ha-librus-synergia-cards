@@ -212,7 +212,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
               const shownIndex = Math.max(0, infos.findIndex((i) => !i.cancelled));
               const info = infos[shownIndex];
               const cancelled = infos.every((i) => i.cancelled);
-              const substitution = infos.some((i) => i.substitution);
+              const substitution = infos.some((i) => i.substitution || i.roomChange || i.moved);
               const isToday = dayIndex === todayColumn;
               const current = isToday && slot.some((e, i) => !infos[i].cancelled && isHappeningNow(e, now));
               const next = breakNow && isToday && slot.includes(nextToday!);
@@ -220,9 +220,13 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
                 .map((i) =>
                   i.cancelled
                     ? `${i.name} (${t(hass, "label.lesson_cancelled")})`
-                    : i.substitution
-                      ? `${i.name} (${t(hass, "label.lesson_substitution")})`
-                      : i.name
+                    : i.roomChange && i.rooms
+                      ? `${i.name} (${t(hass, "label.lesson_room_change", { from: i.rooms[0], to: i.rooms[1] })})`
+                      : i.moved
+                        ? `${i.name} (${t(hass, "label.lesson_moved")})`
+                        : i.substitution
+                          ? `${i.name} (${t(hass, "label.lesson_substitution")})`
+                          : i.name
                 )
                 .join(" / ");
               // Parallel groups (e.g. split language classes) share one slot.

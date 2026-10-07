@@ -633,10 +633,12 @@
       allDay: false,
       // A substitution and a cancelled last lesson, as Librus marks them
       // (librus-school-day-card outlines / strikes them through).
+      // Plus a room change (lesson 2) - backend 0.11.1+ titles and details.
       summary: LESSON_SUBJECTS[(i + today.getDay()) % LESSON_SUBJECTS.length]
-        + (i === 3 ? " (zastępstwo)" : i === bellSlots.length - 1 ? " (odwołane)" : ""),
+        + (i === 1 ? " (zmiana sali)" : i === 3 ? " (zastępstwo)" : i === bellSlots.length - 1 ? " (odwołane)" : ""),
       location: `sala ${10 + i}`,
-      description: "Nauczyciel " + String.fromCharCode(65 + i),
+      description: "Nauczyciel " + String.fromCharCode(65 + i)
+        + (i === 1 ? `\nZmiana sali: ${4 + i} → ${10 + i}` : i === 3 ? "\nZastępstwo za: Chemia, Nauczyciel X" : ""),
     }));
     const weekdayEventsExToday = weekdayEvents.filter(
       (ev) => new Date(ev.start).toDateString() !== today.toDateString()

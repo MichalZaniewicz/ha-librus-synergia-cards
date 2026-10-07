@@ -66,24 +66,52 @@ export async function fetchCalendarEvents(
   });
 }
 
-/** What a Timetable calendar event's summary says about the lesson. The
- * integration appends " (odwołane)" to a cancelled lesson and
- * " (zastępstwo)" to a substitution (calendar.py); `name` is the subject
- * without that suffix, so a substitution still counts as its subject. */
+/** What a Timetable calendar event says about the lesson. The integration
+ * appends " (odwołane)", " (zastępstwo)", " (zmiana sali)" or
+ * " (przeniesiona)" to the summary (calendar.py) and puts the teacher on the
+ * description's first line, then details such as "Zmiana sali: 12 → 21"
+ * (backend 0.11.1+). `name` is the subject without the suffix, so a changed
+ * lesson still counts as its subject. */
 export interface LessonInfo {
   name: string;
   cancelled: boolean;
   substitution: boolean;
+  roomChange: boolean;
+  moved: boolean;
+  /** The teacher (description's first line), if any. */
+  teacher?: string;
+  /** Detail lines ("Zastępstwo za: ...", "Zmiana sali: 12 → 21", ...). */
+  details: string[];
+  /** For a room change: [old room, new room]. */
+  rooms?: [string, string];
 }
 
-const CANCELLED_RE = /\s*\(odwołane\)\s*$/i;
-const SUBSTITUTION_RE = /\s*\(zastępstwo\)\s*$/i;
+const SUFFIX_RE = /\s*\((odwołane|zastępstwo|zmiana sali|przeniesiona)\)\s*$/i;
+const ROOM_RE = /^Zmiana sali:\s*(.+?)\s*→\s*(.+)$/;
 
 export function lessonInfo(event: LibrusCalendarEvent): LessonInfo {
-  const cancelled = CANCELLED_RE.test(event.summary);
-  const substitution = !cancelled && SUBSTITUTION_RE.test(event.summary);
-  const name = event.summary.replace(CANCELLED_RE, "").replace(SUBSTITUTION_RE, "");
-  return { name, cancelled, substitution };
+  const kind = SUFFIX_RE.exec(event.summary)?.[1]?.toLowerCase();
+  const name = event.summary.replace(SUFFIX_RE, "");
+  const lines = (event.description ?? "").split("\n").map((l) => l.trim());
+  const details = lines.slice(1).filter(Boolean);
+  const roomLine = details.map((l) => ROOM_RE.exec(l)).find(Boolean);
+  return {
+    name,
+    cancelled: kind === "odwołane",
+    substitution: kind === "zastępstwo",
+    roomChange: kind === "zmiana sali" || Boolean(roomLine),
+    moved: kind === "przeniesiona",
+    teacher: lines[0] || undefined,
+    details,
+    rooms: roomLine ? [roomLine[1], roomLine[2]] : undefined,
+  };
+}
+
+/** "sala 12 · Anna Nowak · Zastępstwo za: Chemia" - one meta line under a lesson. */
+export function lessonMeta(event: LibrusCalendarEvent, info: LessonInfo = lessonInfo(event)): string {
+  return [event.location, info.teacher, ...info.details.filter((d) => !ROOM_RE.test(d))]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 /** True if `now` falls within [event.start, event.end) - timed events only. */

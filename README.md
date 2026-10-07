@@ -50,7 +50,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Absences by weekday | `custom:librus-attendance-weekday-card` | Which weekday absences/lates tend to land on - each weekday's bar split into its own excused/unexcused/late segments (requires `ha-librus-synergia` 0.4.21+) |
 | Absences by subject | `custom:librus-attendance-subject-card` | Ranked bar per subject showing which one is missed most often, split into excused/unexcused (requires `ha-librus-synergia` 0.8.0+) |
 | Attendance by subject | `custom:librus-subject-attendance-card` | A tile per subject with the % of lessons attended, coloured green / amber / red (below 50%); subjects with fewer than 5 lessons greyed out (requires `ha-librus-synergia` 0.9.0+) |
-| School day | `custom:librus-school-day-card` | Today's lessons as a strip of cells with short subject names - or the next school day's once school is out: the current lesson highlighted, past ones dimmed, cancelled ones struck through, substitutions outlined. Below: the lesson now (and minutes left), the break before the next one, or the first lesson and when it starts |
+| School day | `custom:librus-school-day-card` | Today's lessons as a strip of cells with short subject names - or the next school day's once school is out: the current lesson highlighted, past ones dimmed, cancelled ones struck through, substitutions, room changes and moved lessons outlined. Below: the lesson now (and minutes left), the break before the next one, or the first lesson and when it starts |
 | Behaviour notices | `custom:librus-behaviour-notices-card` | Recent "uwagi" with category and sentiment (positive/negative/neutral) |
 | Behaviour notices tile | `custom:librus-behaviour-notices-tile-card` | Compact single-row tile - count + latest category |
 | Messages | `custom:librus-messages-card` | Unread counts across every Wiadomości mailbox, with a preview of recent inbox messages - click one to load its full content (requires `ha-librus-synergia` 0.4.11+; this marks the message read in Librus, exactly like opening it in the Librus app). A paperclip badge marks messages with an attachment; the expanded view shows its real filename (requires 0.7.2+) - the file itself still can't be downloaded, only its name. |
@@ -61,13 +61,13 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Homework assignments | `custom:librus-homework-assignments-card` | Real "zadania domowe" with due dates - distinct from the general agenda feed |
 | Homework checklist | `custom:librus-homework-checklist-card` | The same list with a tick-box per item; ticked items drop to the bottom. With `ha-librus-synergia` 0.10.1+ the ticks go to its Homework to-do list, so every device sees the same; on older versions they stay in this browser |
 | What's new | `custom:librus-recent-activity-card` | One chronological feed merging the most recent grades, notices, announcements and messages |
-| Today's lessons | `custom:librus-today-lessons-card` | A timeline of today's timetable, highlighting the current lesson |
+| Today's lessons | `custom:librus-today-lessons-card` | A timeline of today's timetable, highlighting the current lesson. Marks cancelled lessons, substitutions (with what they replace), room changes ("room 12 → 21") and moved lessons |
 | Next lesson | `custom:librus-next-lesson-tile-card` | A single-row tile with the next (or current) lesson, for denser dashboards |
 | Agenda | `custom:librus-agenda-card` | Upcoming terminarz events, grouped by date |
 | Next exam | `custom:librus-exam-countdown-card` | A countdown to the next test/exam - uses the integration's `next_exam` sensor when present, otherwise scans the Agenda feed for "[Sprawdzian]"-tagged items |
 | Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few |
 | Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break |
-| Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted |
+| Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted; substitutions, room changes and moved lessons are outlined (details in the tooltip) |
 | Today's schedule | `custom:librus-bell-schedule-card` | The day's period grid (bell times), current period highlighted, past ones dimmed - needs the integration's `bell_schedule` attribute |
 | Lesson time split | `custom:librus-subject-time-card` | A ranked horizontal bar chart of how the week's lesson slots split across subjects, from the timetable |
 | School & class | `custom:librus-school-card` | School name/address/head teacher, class, homeroom teacher, semester dates |

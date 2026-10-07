@@ -231,7 +231,7 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
             const tip = `${formatTime(l.ev.start)}–${formatTime(l.ev.end)} ${where(l)}${
               l.cancelled ? ` (${t(hass, "card.school_day.cancelled")})` : l.substitution ? ` (${t(hass, "card.school_day.substitution")})` : ""
             }`;
-            return html`<div class="seg ${cls} ${l.substitution ? "sub" : ""}" title=${tip}>${abbreviate(l.name)}</div>`;
+            return html`<div class="seg ${cls} ${l.substitution || l.roomChange || l.moved ? "sub" : ""}" title=${tip}>${abbreviate(l.name)}</div>`;
           })}
         </div>
         <div class="ends"><span>${formatTime(first.ev.start)}</span><span>${formatTime(last.ev.end)}</span></div>

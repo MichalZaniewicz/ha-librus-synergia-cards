@@ -4,7 +4,7 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, lessonInfo, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, lessonInfo, lessonMeta, type LibrusCalendarEvent } from "./utils/calendar";
 import { lessonTag } from "./utils/render-helpers";
 import { formatTime } from "./utils/format";
 import { t } from "./utils/localize";
@@ -213,9 +213,7 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
                       <span class="lt">${formatTime(ev.start)}</span>
                       <div class="body">
                         <div class="row1"><span><span class="lesson-name">${info.name}</span>${lessonTag(hass, info)}</span></div>
-                        ${ev.location || ev.description
-                          ? html`<div class="item-text">${[ev.location, ev.description].filter(Boolean).join(" · ")}</div>`
-                          : nothing}
+                        ${lessonMeta(ev, info) ? html`<div class="item-text">${lessonMeta(ev, info)}</div>` : nothing}
                       </div>
                     </div>
                   `;

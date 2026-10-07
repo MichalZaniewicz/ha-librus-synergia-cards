@@ -302,8 +302,21 @@ export function lessonTag(hass: LibrusHass, info: LessonInfo): TemplateResult | 
   if (info.cancelled) {
     return html`<span class="lesson-tag cancelled">${t(hass, "label.lesson_cancelled")}</span>`;
   }
+  const tags: TemplateResult[] = [];
   if (info.substitution) {
-    return html`<span class="lesson-tag substitution">${t(hass, "label.lesson_substitution")}</span>`;
+    tags.push(html`<span class="lesson-tag substitution">${t(hass, "label.lesson_substitution")}</span>`);
   }
-  return nothing;
+  if (info.moved) {
+    tags.push(html`<span class="lesson-tag substitution">${t(hass, "label.lesson_moved")}</span>`);
+  }
+  if (info.roomChange) {
+    tags.push(
+      html`<span class="lesson-tag room"
+        >${info.rooms
+          ? t(hass, "label.lesson_room_change", { from: info.rooms[0], to: info.rooms[1] })
+          : t(hass, "label.lesson_room_changed")}</span
+      >`
+    );
+  }
+  return tags.length ? html`${tags}` : nothing;
 }
