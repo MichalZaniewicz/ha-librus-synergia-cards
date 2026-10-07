@@ -568,7 +568,10 @@
       start: slot.start.toISOString(),
       end: slot.end.toISOString(),
       allDay: false,
-      summary: LESSON_SUBJECTS[(i + today.getDay()) % LESSON_SUBJECTS.length],
+      // A substitution and a cancelled last lesson, as Librus marks them
+      // (librus-school-day-card outlines / strikes them through).
+      summary: LESSON_SUBJECTS[(i + today.getDay()) % LESSON_SUBJECTS.length]
+        + (i === 3 ? " (zastępstwo)" : i === bellSlots.length - 1 ? " (odwołane)" : ""),
       location: `sala ${10 + i}`,
       description: "Nauczyciel " + String.fromCharCode(65 + i),
     }));
@@ -749,7 +752,7 @@
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",
       "librus-subject-spotlight-card",
       "librus-attendance-card", "librus-attendance-tile-card", "librus-attendance-heatmap-card",
-      "librus-attendance-weekday-card", "librus-attendance-subject-card", "librus-subject-attendance-card",
+      "librus-attendance-weekday-card", "librus-attendance-subject-card", "librus-subject-attendance-card", "librus-school-day-card",
       "librus-behaviour-notices-card", "librus-behaviour-notices-tile-card",
       "librus-messages-card", "librus-messages-tile-card",
       "librus-substitutions-card",

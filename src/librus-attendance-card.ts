@@ -127,11 +127,11 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
             ? html`
                 <div class="stat ${unexcused! > 0 ? "bad" : ""}">
                   <div class="stat-value">${unexcused}</div>
-                  <div class="stat-label">${t(hass, "stat.unexcused")}</div>
+                  <div class="stat-label" title=${t(hass, "stat.unexcused")}>${t(hass, "stat.unexcused_short")}</div>
                 </div>
                 <div class="stat ${excused! > 0 ? "warn" : ""}">
                   <div class="stat-value">${excused}</div>
-                  <div class="stat-label">${t(hass, "stat.excused")}</div>
+                  <div class="stat-label" title=${t(hass, "stat.excused")}>${t(hass, "stat.excused_short")}</div>
                 </div>
               `
             : html`

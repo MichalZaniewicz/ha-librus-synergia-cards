@@ -432,6 +432,9 @@ export const librusSharedStyles = css`
     color: var(--secondary-text-color);
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    /* A long single word in a narrow tile wraps instead of running into
+       the next tile (found live: "NIEUSPRAWIEDLIWIONE"). */
+    overflow-wrap: anywhere;
   }
   .stat.good .stat-value {
     color: var(--lc-good);
