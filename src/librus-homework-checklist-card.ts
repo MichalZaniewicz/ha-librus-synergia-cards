@@ -17,18 +17,24 @@ interface HomeworkItem {
 }
 
 /**
- * The Homework assignments list with a tick-box per item. "Done" is
- * per-viewer local state (`localStorage`, keyed by device + item id) -
- * Librus has no "mark homework done" API, and this is a personal
- * convenience, not shared state. Ticked items drop to the bottom, dimmed
- * and struck through. Stored ids are pruned to what's currently in the
- * list, so it can't grow without bound.
+ * The Homework assignments list with a tick-box per item. Ticked items
+ * drop to the bottom, dimmed and struck through.
+ *
+ * Where "done" lives: with backend 0.10.1+ the integration has a Homework
+ * to-do list (`todo` entity, same item ids), so ticks go through
+ * `todo.update_item` and are shared by every device. Ticks made earlier in
+ * this browser are pushed there once. On an older backend the ticks stay
+ * in `localStorage` (per browser), pruned to the ids still in the list.
  */
 @customElement("librus-homework-checklist-card")
 export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _done: Set<string> = new Set();
   private _storageKey = "";
+  /** The todo entity's `last_updated` the current `_done` was read for. */
+  private _todoReadFor?: string;
+  private _todoReading = false;
+  private _migrated = false;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -69,12 +75,76 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
     }
   }
 
-  private _toggle(id: string, currentIds: Set<string>): void {
+  private _localDone(): Set<string> {
+    try {
+      const raw = window.localStorage.getItem(this._storageKey);
+      return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+    } catch {
+      return new Set();
+    }
+  }
+
+  /** Read the done ticks from the Homework to-do list (once per change of
+   * that entity), and push this browser's old local ticks there once. */
+  private async _readTodo(todoId: string, currentIds: Set<string>): Promise<void> {
+    const stateObj = this.hass?.states[todoId];
+    const marker = stateObj?.last_updated;
+    if (!this.hass || this._todoReading || marker === this._todoReadFor) return;
+    this._todoReading = true;
+    try {
+      const result = await this.hass.callWS<{ items: { uid: string; status: string }[] }>({
+        type: "todo/item/list",
+        entity_id: todoId,
+      });
+      const done = new Set(result.items.filter((i) => i.status === "completed").map((i) => i.uid));
+      if (!this._migrated) {
+        this._migrated = true;
+        const listed = new Set(result.items.map((i) => i.uid));
+        for (const id of this._localDone()) {
+          if (currentIds.has(id) && listed.has(id) && !done.has(id)) {
+            done.add(id);
+            void this._setTodoStatus(todoId, id, true);
+          }
+        }
+        try {
+          window.localStorage.removeItem(this._storageKey);
+        } catch {
+          /* storage disabled - nothing to clean up */
+        }
+      }
+      this._done = done;
+      this._todoReadFor = marker;
+    } catch {
+      // No todo/item/list (very old HA) - stay on local ticks.
+      this._todoReadFor = marker;
+    } finally {
+      this._todoReading = false;
+    }
+  }
+
+  private async _setTodoStatus(todoId: string, id: string, done: boolean): Promise<void> {
+    await this.hass?.callService("todo", "update_item", {
+      entity_id: todoId,
+      item: id,
+      status: done ? "completed" : "needs_action",
+    });
+  }
+
+  private _toggle(id: string, currentIds: Set<string>, todoId?: string): void {
     const next = new Set(this._done);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
+    const nowDone = !next.has(id);
+    if (nowDone) next.add(id);
+    else next.delete(id);
     this._done = next;
-    this._persist(currentIds);
+    if (todoId) {
+      this._setTodoStatus(todoId, id, nowDone).catch(() => {
+        // Put it back if Home Assistant refused (e.g. the homework is gone).
+        this._todoReadFor = undefined;
+        this.requestUpdate();
+      });
+    } else {
+      this._persist(currentIds);
+    }
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -87,6 +157,8 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
     const hass = this.hass;
 
     this._load(deviceId);
+    // The Homework to-do list (backend 0.10.1+) keeps ticks shared.
+    const todoId = map.homework;
 
     const entity = map.homework_assignments ? hass.states[map.homework_assignments] : undefined;
     const items = ((entity?.attributes.recent as HomeworkItem[] | undefined) ?? []).map((it, i) => ({
@@ -99,6 +171,7 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
     }
 
     const currentIds = new Set(items.map((it) => it.key));
+    if (todoId) void this._readTodo(todoId, currentIds);
     const max = this._config.max_items ?? 12;
     const sorted = [...items].sort((a, b) => {
       const da = this._done.has(a.key) ? 1 : 0;
@@ -128,11 +201,11 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
                 role="checkbox"
                 aria-checked=${isDone}
                 tabindex="0"
-                @click=${() => this._toggle(it.key, currentIds)}
+                @click=${() => this._toggle(it.key, currentIds, todoId)}
                 @keydown=${(e: KeyboardEvent) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    this._toggle(it.key, currentIds);
+                    this._toggle(it.key, currentIds, todoId);
                   }
                 }}
               >

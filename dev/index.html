@@ -445,6 +445,10 @@
         { id: 103, topic: "Biologia", text: "Notatka o fotosyntezie.", due_date: iso(new Date(today.getTime() + 4 * 86400000)), date: iso(today), teacher: "K. Nowak" },
       ],
     }, 3);
+    // Homework to-do list (backend 0.10.1+): the checklist card keeps its
+    // ticks here. 103 starts ticked, as if done on another device.
+    window.__todoDone = new Set(["103"]);
+    addEntity("todo.homework", "homework", {}, 2);
     addEntity("sensor.behaviour_grade", "behaviour_grade", {
       // Classic-scale shape seen live (integration 0.10.0-beta.2+): the grade
       // only in grade/name, short_name empty, value 0, the period in a comment.
@@ -638,10 +642,24 @@
       // full-message content this integration actually fetched from a
       // live account, so the click-to-expand demo shows authentic text.
       // Mocks the AI summary card's "Generate now" (button.press).
-      callService: async () => {
+      callService: async (domain, service, data) => {
+        if (domain === "todo" && service === "update_item") {
+          if (data.status === "completed") window.__todoDone.add(String(data.item));
+          else window.__todoDone.delete(String(data.item));
+          return;
+        }
         await new Promise((resolve) => setTimeout(resolve, 900));
       },
       callWS: async (msg) => {
+        if (msg.type === "todo/item/list") {
+          return {
+            items: ["101", "102", "103"].map((uid) => ({
+              uid,
+              summary: uid,
+              status: window.__todoDone.has(uid) ? "completed" : "needs_action",
+            })),
+          };
+        }
         if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "get_message") {
           await new Promise((resolve) => setTimeout(resolve, 500));
           const fullContentByKey = {

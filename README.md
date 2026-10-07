@@ -57,7 +57,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Announcements | `custom:librus-announcements-card` | Unread items from the school notice board - click one to expand its full content (requires `ha-librus-synergia` 0.4.17+; no read-marking side effect, unlike Wiadomości) |
 | Announcements tile | `custom:librus-announcements-tile-card` | Compact single-row tile - unread count + latest subject |
 | Homework assignments | `custom:librus-homework-assignments-card` | Real "zadania domowe" with due dates - distinct from the general agenda feed |
-| Homework checklist | `custom:librus-homework-checklist-card` | The same list with a tick-box per item; ticked items drop to the bottom (done state is per-browser, in `localStorage`) |
+| Homework checklist | `custom:librus-homework-checklist-card` | The same list with a tick-box per item; ticked items drop to the bottom . With `ha-librus-synergia` 0.10.1+ the ticks go to its Homework to-do list, so every device sees the same; on older versions they stay in this browser |
 | What's new | `custom:librus-recent-activity-card` | One chronological feed merging the most recent grades, notices, announcements and messages |
 | Today's lessons | `custom:librus-today-lessons-card` | A timeline of today's timetable, highlighting the current lesson |
 | Next lesson | `custom:librus-next-lesson-tile-card` | A single-row tile with the next (or current) lesson, for denser dashboards |
