@@ -82,7 +82,7 @@ function summarize(events: LibrusCalendarEvent[] | undefined, day: string, now: 
   };
 }
 
-/** "E-dziennik Kacper Zaniewicz" (the integration's default title) -> "Kacper". */
+/** "E-dziennik Ola Kowalska" (the integration's default title) -> "Ola". */
 export function studentName(hass: LibrusHass, deviceId: string, override?: string): string {
   if (override?.trim()) return override.trim();
   const device = hass.devices?.[deviceId];

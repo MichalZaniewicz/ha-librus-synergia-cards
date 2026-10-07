@@ -336,17 +336,17 @@
     addEntity("sensor.weekly_summary", "weekly_summary", {
       status: "good",
       sections: {
-        grades: { status: "good", text: "W tym tygodniu doszły 4 oceny: 6 z geografii (sprawdzian, waga 3), 5 z biologii, 4- z chemii (kartkówka) i plus z edukacji zdrowotnej. Średnia ogólna wzrosła z 4,52 do 4,61, głównie dzięki szóstce z geografii.\n\nChemia (4,88) to jedyny przedmiot, w którym ostatnia ocena wypadła poniżej średniej. Przy jednej kartkówce to jeszcze nie trend, ale warto ją obserwować." },
-        attendance: { status: "caution", text: "34 z 35 lekcji obecny. Jedna nieobecność we wtorek na religii, jeszcze nieusprawiedliwiona. Spóźnień brak." },
+        grades: { status: "good", text: "W tym tygodniu doszły 4 oceny: 5 z historii (sprawdzian, waga 3), 4 z biologii, 3+ z fizyki (kartkówka) i plus z plastyki. Średnia ogólna wzrosła z 4,30 do 4,38, głównie dzięki piątce z historii.\n\nFizyka (4,10) to jedyny przedmiot, w którym ostatnia ocena wypadła poniżej średniej. Przy jednej kartkówce to jeszcze nie trend, ale warto ją obserwować." },
+        attendance: { status: "caution", text: "33 z 34 lekcji obecna. Jedna nieobecność w czwartek na muzyce, jeszcze nieusprawiedliwiona. Spóźnień brak." },
         behaviour: { status: "good", text: "Brak nowych uwag w tym tygodniu. 26 dni bez negatywnej uwagi i seria 5 ocen co najmniej dobrych z rzędu." },
-        next_week: { status: "ok", text: "Wtorek 7.10: sprawdzian z matematyki (działy 1-2). Środa 8.10: zadanie z chemii (s. 34). Czwartek 9.10: kartkówka z angielskiego. W piątek zastępstwo na WF." },
+        next_week: { status: "ok", text: "Wtorek 7.10: sprawdzian z matematyki (działy 1-2). Środa 8.10: zadanie z fizyki (s. 21). Czwartek 9.10: kartkówka z angielskiego. W piątek zastępstwo na WF." },
       },
       advice: [
-        "Usprawiedliwić nieobecność z wtorku (religia).",
+        "Usprawiedliwić nieobecność z czwartku (muzyka).",
         "W niedzielę przejrzeć działy 1-2 z matematyki przed wtorkiem.",
-        "Zapytać o kartkówkę z chemii: nauczycielka wskazała błędy w zapisie wzorów.",
+        "Zapytać o kartkówkę z fizyki: nauczyciel wskazał błędy w jednostkach.",
       ],
-      warning: "Nieobecność z wtorku (religia) jest wciąż nieusprawiedliwiona.",
+      warning: "Nieobecność z czwartku (muzyka) jest wciąż nieusprawiedliwiona.",
       summary: null,
       week_from: iso(new Date(today.getTime() - 6 * 86400000)),
       week_to: iso(today),
@@ -356,7 +356,7 @@
       generating: false,
       paused: false,
       error: null,
-    }, "Mocny tydzień z przyrody, chemia do podciągnięcia przed sprawdzianem z matematyki.");
+    }, "Mocny tydzień z historii, fizyka do podciągnięcia przed sprawdzianem z matematyki.");
     entities["button.weekly_summary_generate"] = { entity_id: "button.weekly_summary_generate", device_id: DEVICE_ID, platform: "librus_synergia", translation_key: "weekly_summary_generate" };
     states["button.weekly_summary_generate"] = { entity_id: "button.weekly_summary_generate", state: lastPolled, attributes: {} };
     addEntity("sensor.unread_announcements", "unread_announcements", {
@@ -373,8 +373,8 @@
     addEntity("sensor.unread_messages", "unread_messages", {
       mailbox_breakdown: { inbox: 1, notes: 0, alerts: 1, substitutions: 1, absences: 0, justifications: 1, trash: 0 },
       recent: [
-        { id: "186536", mailbox: "inbox", sender: "Marciszak Amelia", topic: "Zebranie z rodzicami", content: "Dzień dobry, serdecznie zapraszam na zebranie, które odbędzie się 9 września (środa)…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
-        { id: "428360", mailbox: "inbox", sender: "Siwik Anna", topic: "Materiały informacyjne dotyczące najistotniejszych założeń Kompasu Jutra", content: "Szanowni Państwo, na prośbę Pani Minister Barbary Nowackiej przesyłam w załączeniu prezentację…", date: iso(new Date(today.getTime() - 3 * 86400000)), unread: false, has_attachment: true },
+        { id: "100001", mailbox: "inbox", sender: "Nowak Anna", topic: "Zebranie z rodzicami", content: "Dzień dobry, zapraszam na zebranie z rodzicami w przyszłą środę o 17:00…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
+        { id: "100002", mailbox: "inbox", sender: "Zielińska Maria", topic: "Informacja dla rodziców", content: "Szanowni Państwo, w załączeniu przesyłam informację o organizacji roku szkolnego…", date: iso(new Date(today.getTime() - 3 * 86400000)), unread: false, has_attachment: true },
       ],
       substitutions_recent: [
         { id: "9001", mailbox: "substitutions", sender: "System zastępstw", topic: "Zmiana w planie lekcji", content: "Jutro (7 wrz) lekcja fizyki o 11:40 zostanie odwołana z powodu nieobecności nauczyciela…", date: iso(new Date(today.getTime() - 1 * 86400000)), unread: true, has_attachment: false },
@@ -402,26 +402,26 @@
       bellSlots.push({ start: s, end: e });
     }
     addEntity("sensor.school", "school", {
-      town: "Wrocław", street: "ul. Kłodzka", head_teacher: "Edyta Krajewska", email: "sekretariat@zsp21.wroc.pl",
+      town: "Przykładowo", street: "ul. Szkolna", head_teacher: "Ewa Wiśniewska", email: "sekretariat@example.edu.pl",
       bell_schedule: bellSchedule,
       // subject_teachers requires ha-librus-synergia 0.6.0+ - one subject
       // (Język niemiecki) has two teachers to demo the split-group case.
       subject_teachers: {
-        "Matematyka": ["Weronika Michałowska"],
-        "Język polski": ["Eliza Orman"],
+        "Matematyka": ["Joanna Lewandowska"],
+        "Język polski": ["Katarzyna Wójcik"],
         "Biologia": ["K. Nowak"],
-        "Historia": ["Justyna Bartczak"],
-        "Wychowanie fizyczne": ["Marek Włodarczyk"],
-        "Język niemiecki": ["Aneta Kędzierska", "Michalina Dyduch"],
+        "Historia": ["Agnieszka Kamińska"],
+        "Wychowanie fizyczne": ["Piotr Mazur"],
+        "Język niemiecki": ["Magdalena Zając", "Monika Szymańska"],
       },
-    }, "Zespół Szkolno-Przedszkolny nr 21");
+    }, "Szkoła Podstawowa nr 1");
     addEntity("sensor.current_lesson", "current_lesson", {
       lesson_no: 3, start: bellSchedule[2].start, end: bellSchedule[2].end, minutes_left: 20,
       teacher: "K. Nowak", classroom: "sala 15", is_substitution: false,
     }, "Biologia");
     addEntity("sensor.next_lesson", "next_lesson", {
       lesson_no: 4, start: bellSchedule[3].start, end: bellSchedule[3].end, minutes_until: 40,
-      date: iso(today), teacher: "A. Marciszak", classroom: "sala 22", is_substitution: false,
+      date: iso(today), teacher: "A. Nowak", classroom: "sala 22", is_substitution: false,
     }, "Język polski");
     addEntity("sensor.next_exam", "next_exam", {
       days_until: Math.round((tomorrowDay.getTime() - today.getTime()) / 86400000),
@@ -432,7 +432,7 @@
       ],
     }, tomorrowIso);
     addEntity("sensor.school_class", "school_class", {
-      homeroom_teacher: "Amelia Marciszak",
+      homeroom_teacher: "Anna Nowak",
       student_number: 25,
       school_year_start: iso(new Date(2026, 8, 1)),
       first_semester_end: iso(new Date(2027, 0, 31)),
@@ -441,7 +441,7 @@
     addEntity("sensor.homework_assignments", "homework_assignments", {
       recent: [
         { id: 101, topic: "Matematyka", text: "Zadania 1-5, strona 42 - ułamki dziesiętne.", due_date: tomorrowIso, date: iso(today), teacher: "Jan Kowalski" },
-        { id: 102, topic: "Język polski", text: "Wypracowanie: „Moje wakacje” (min. 150 słów).", due_date: iso(new Date(today.getTime() + 6 * 86400000)), date: iso(today), teacher: "Amelia Marciszak" },
+        { id: 102, topic: "Język polski", text: "Wypracowanie: „Moje wakacje” (min. 150 słów).", due_date: iso(new Date(today.getTime() + 6 * 86400000)), date: iso(today), teacher: "Anna Nowak" },
         { id: 103, topic: "Biologia", text: "Notatka o fotosyntezie.", due_date: iso(new Date(today.getTime() + 4 * 86400000)), date: iso(today), teacher: "K. Nowak" },
       ],
     }, 3);
@@ -617,7 +617,7 @@
       language: "pl",
       themes: { darkMode: false },
       devices: {
-        [DEVICE_ID]: { id: DEVICE_ID, name: "E-dziennik Kacper Zaniewicz", config_entries: ["dev1_entry"] },
+        [DEVICE_ID]: { id: DEVICE_ID, name: "E-dziennik Zosia Kowalska", config_entries: ["dev1_entry"] },
       },
       entities,
       states,
@@ -641,9 +641,8 @@
         }
         return [];
       },
-      // Mocks librus_synergia.get_message (see utils/services.ts) - real
-      // full-message content this integration actually fetched from a
-      // live account, so the click-to-expand demo shows authentic text.
+      // Mocks librus_synergia.get_message (see utils/services.ts) with
+      // made-up messages - never put real people's data in this file.
       // Mocks the AI summary card's "Generate now" (button.press).
       callService: async (domain, service, data) => {
         if (domain === "todo" && service === "update_item") {
@@ -666,19 +665,19 @@
         if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "get_message") {
           await new Promise((resolve) => setTimeout(resolve, 500));
           const fullContentByKey = {
-            "inbox:186536": {
-              sender: "Marciszak Amelia",
+            "inbox:100001": {
+              sender: "Nowak Anna",
               topic: "Zebranie z rodzicami",
-              content: "Dzień dobry,\nserdecznie zapraszam na zebranie, które odbędzie się 9 września (środa) o godz. 17:00 w sali 213.\n\nPodczas spotkania:\n zostanie przedstawiony plan wychowawczy na rok szkolny 2026/2027,\n zostaną rozdane dokumenty do aktualizacji,\n omówimy najważniejsze kwestie organizacyjne i wychowawcze dotyczące nowego roku szkolnego.\n\nBędzie to również okazja do przekazania najważniejszych informacji dotyczących naszej klasy i wspólnego ustalenia zasad dobrej współpracy.\n\nLiczę na Państwa obecność.\nZ wyrazami szacunku,\nAmelia Marciszak",
+              content: "Dzień dobry,\nzapraszam na zebranie z rodzicami w przyszłą środę o godz. 17:00.\n\nOmówimy plan pracy na rok szkolny i sprawy organizacyjne klasy.\n\nZ wyrazami szacunku,\nAnna Nowak",
             },
-            // Real attachments field shape (integration 0.7.2+) - filename
-            // and content both from a live account (2026-09-17 probe).
-            "inbox:428360": {
-              sender: "Siwik Anna",
-              topic: "Materiały informacyjne dotyczące najistotniejszych założeń Kompasu Jutra",
-              content: "Szanowni Państwo,\nna prośbę Pani Minister Barbary Nowackiej przesyłam w załączeniu prezentację dotyczącą najistotniejszych założeń reformy Kompas Jutra.\nZachęcam do zapoznania się z materiałami.\n\nZ poważaniem,\n\n\n--------------------\nAnna Siwik\nwicedyrektorka Zespołu Szkolno-Przedszkolnego nr 21 we Wrocławiu",
+            // Attachments field shape (integration 0.7.2+); the filename and
+            // text are made up.
+            "inbox:100002": {
+              sender: "Zielińska Maria",
+              topic: "Informacja dla rodziców",
+              content: "Szanowni Państwo,\nw załączeniu przesyłam informację o organizacji roku szkolnego.\nZachęcam do zapoznania się z materiałami.\n\nZ poważaniem,\nMaria Zielińska",
               has_attachment: true,
-              attachments: [{ id: "7982536", filename: "PREZENTACJA-RODZICE-WRZESIEN-2026-6a8edfa4a02cd.pdf" }],
+              attachments: [{ id: "500001", filename: "informacja-dla-rodzicow.pdf" }],
             },
             "substitutions:9001": {
               sender: "System zastępstw",
@@ -697,7 +696,7 @@
             },
           };
           const key = `${msg.service_data.mailbox ?? "inbox"}:${msg.service_data.message_id}`;
-          const picked = fullContentByKey[key] ?? fullContentByKey["inbox:186536"];
+          const picked = fullContentByKey[key] ?? fullContentByKey["inbox:100001"];
           return {
             response: {
               id: msg.service_data.message_id,
@@ -785,10 +784,10 @@
     // hass object: with several devices, every single-student card rightly
     // asks which student to show, so the shared `hass` keeps just one.
     const FAMILY = [
-      { id: "dev_ala", name: "E-dziennik Ala Zaniewicz",
+      { id: "dev_ala", name: "E-dziennik Ala Nowicka",
         today: [["07:10", "07:55", "Wychowanie fizyczne", "sala gim."], ["08:00", "08:45", "Język polski", "s. 21"]],
         next: [["07:10", "07:55", "Matematyka", "s. 21"], ["08:00", "08:45", "Przyroda", "s. 3"]] },
-      { id: "dev_ola", name: "E-dziennik Ola Zaniewicz",
+      { id: "dev_ola", name: "E-dziennik Ola Wiśniewska",
         today: [],
         next: [["08:00", "08:45", "Matematyka (odwołane)", "s. 7"], ["08:55", "09:40", "Język angielski (zastępstwo)", "s. 7"]] },
     ];
