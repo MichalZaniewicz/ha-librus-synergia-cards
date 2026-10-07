@@ -47,37 +47,52 @@ export async function fetchFullMessage(
   return result.response;
 }
 
-/** Result of `librus_synergia.download_attachment` (integration 0.11.1+). */
-export interface DownloadedAttachment {
-  filename: string;
-  content_type: string;
-  size: number;
-  path: string;
-  media_content_id: string;
-}
-
 /**
- * Downloads one message attachment into Home Assistant's media folder via
- * `librus_synergia.download_attachment` (doesn't open the message in
- * Librus) and returns a signed URL the browser can open, via
- * `media_source/resolve_media`.
+ * Downloads one message attachment straight to this device, through the
+ * integration's logged-in endpoint `/api/librus_synergia/attachment/...`
+ * (integration 0.11.1+). Nothing is saved in Home Assistant and the message
+ * isn't opened in Librus. The browser saves it under the file's own name.
  */
 export async function downloadAttachment(
   hass: LibrusHass,
   deviceId: string,
   messageId: string,
-  attachmentId: string
-): Promise<string> {
-  const result = await hass.callWS<{ response: DownloadedAttachment }>({
-    type: "call_service",
-    domain: "librus_synergia",
-    service: "download_attachment",
-    service_data: { device_id: deviceId, message_id: messageId, attachment_id: attachmentId },
-    return_response: true,
-  });
-  const resolved = await hass.callWS<{ url: string }>({
-    type: "media_source/resolve_media",
-    media_content_id: result.response.media_content_id,
-  });
-  return resolved.url;
+  attachmentId: string,
+  fallbackName: string
+): Promise<void> {
+  const path = `/api/librus_synergia/attachment/${encodeURIComponent(deviceId)}/${encodeURIComponent(
+    messageId
+  )}/${encodeURIComponent(attachmentId)}`;
+  const withAuth = hass as unknown as {
+    fetchWithAuth?: (path: string, init?: RequestInit) => Promise<Response>;
+    auth?: { data?: { access_token?: string } };
+  };
+  const response = withAuth.fetchWithAuth
+    ? await withAuth.fetchWithAuth(path)
+    : await fetch(path, { headers: { Authorization: `Bearer ${withAuth.auth?.data?.access_token ?? ""}` } });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filenameFrom(response.headers.get("Content-Disposition")) ?? fallbackName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+/** The file name from a Content-Disposition header (`filename*` first). */
+function filenameFrom(header: string | null): string | null {
+  if (!header) return null;
+  const star = /filename\*=UTF-8''([^;]+)/i.exec(header);
+  if (star) {
+    try {
+      return decodeURIComponent(star[1]);
+    } catch {
+      /* fall through */
+    }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(header);
+  return plain ? plain[1] : null;
 }

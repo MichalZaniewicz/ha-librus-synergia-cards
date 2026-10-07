@@ -110,23 +110,17 @@ export class LibrusMessagesCard extends LibrusBaseCard {
   /** Attachment key ("message:attachment") -> download state. */
   @state() private _attachmentState: Record<string, "loading" | "error"> = {};
 
-  private async _download(ev: Event, messageId: string, attachmentId: string, key: string): Promise<void> {
+  private async _download(ev: Event, messageId: string, attachmentId: string, key: string, name: string): Promise<void> {
     ev.stopPropagation();
     const resolved = this._resolveEntities();
     if (!this.hass || "error" in resolved) return;
-    // Open the tab now, inside the click - a window opened after an await is
-    // blocked as a pop-up by most browsers.
-    const tab = window.open("", "_blank");
     this._attachmentState = { ...this._attachmentState, [key]: "loading" };
     try {
-      const url = await downloadAttachment(this.hass, resolved.deviceId, messageId, attachmentId);
-      if (tab) tab.location.href = url;
-      else window.open(url, "_blank");
+      await downloadAttachment(this.hass, resolved.deviceId, messageId, attachmentId, name);
       const next = { ...this._attachmentState };
       delete next[key];
       this._attachmentState = next;
     } catch {
-      tab?.close();
       this._attachmentState = { ...this._attachmentState, [key]: "error" };
     }
   }
@@ -151,7 +145,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
                     class="attachment"
                     type="button"
                     ?disabled=${state === "loading"}
-                    @click=${(ev: Event) => this._download(ev, m.id, a.id, key)}
+                    @click=${(ev: Event) => this._download(ev, m.id, a.id, key, a.filename ?? a.id)}
                   >
                     <ha-icon icon=${state === "loading" ? "mdi:progress-download" : "mdi:paperclip"}></ha-icon>
                     <span class="attachment-name">${a.filename ?? a.id}</span>

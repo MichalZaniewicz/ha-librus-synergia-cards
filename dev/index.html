@@ -540,6 +540,25 @@
 
     // Connection health (backend: Status / Last successful update sensors).
     // "Symuluj awarię" in the toolbar flips these to an outage.
+    // Lesson topics (integration 0.11.1+): today's and the last days' topics,
+    // one missed day.
+    {
+      const dayIso = (offset) => iso(new Date(today.getTime() - offset * 86400000));
+      const topicRows = [
+        [0, 1, "Matematyka", "Dodawanie i odejmowanie ułamków zwykłych", false, false],
+        [0, 2, "Język polski", "„Mały Książę” – charakterystyka bohatera", false, false],
+        [0, 3, "Biologia", "Wyjście do ogrodu botanicznego", true, false],
+        [1, 1, "Chemia", "Mieszaniny jednorodne i niejednorodne", false, true],
+        [1, 2, "Historia", "Polska Piastów – podsumowanie działu", false, true],
+        [2, 1, "Geografia", "Strefy klimatyczne Ziemi", false, false],
+        [2, 4, "Fizyka", "Ruch jednostajny prostoliniowy", false, false],
+      ].map(([offset, lesson_no, subject, topic, is_trip, absent]) => ({ date: dayIso(offset), lesson_no, subject, topic, is_trip, absent }));
+      addEntity("sensor.lesson_topics", "lesson_topics", {
+        today: topicRows.filter((r) => r.date === dayIso(0)),
+        recent: topicRows,
+      }, 3);
+    }
+
     addEntity("sensor.status", "status", {
       data_source: "live", last_success: lastPolled, failures: 0, next_attempt: null, fallback_sections: [],
     }, "ok");
@@ -719,6 +738,13 @@
         }
         await new Promise((resolve) => setTimeout(resolve, 900));
       },
+      // Attachment endpoint (integration 0.11.1+): a tiny made-up text file.
+      fetchWithAuth: async (path) => {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return new Response("Przykładowy załącznik (dev harness)", {
+          headers: { "Content-Type": "text/plain", "Content-Disposition": "attachment; filename*=UTF-8''informacja-dla-rodzicow.txt" },
+        });
+      },
       callWS: async (msg) => {
         if (msg.type === "todo/item/list") {
           return {
@@ -728,17 +754,6 @@
               status: window.__todoDone.has(uid) ? "completed" : "needs_action",
             })),
           };
-        }
-        // download_attachment + resolve_media (integration 0.11.1+): opens a
-        // tiny made-up PDF in a new tab.
-        if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "download_attachment") {
-          await new Promise((resolve) => setTimeout(resolve, 600));
-          return { response: { filename: "informacja-dla-rodzicow.pdf", content_type: "application/pdf", size: 120,
-            path: "/media/librus_synergia/100002/informacja-dla-rodzicow.pdf",
-            media_content_id: "media-source://media_source/local/librus_synergia/100002/informacja-dla-rodzicow.pdf" } };
-        }
-        if (msg.type === "media_source/resolve_media") {
-          return { url: "data:text/plain;charset=utf-8," + encodeURIComponent("Przykładowy załącznik (dev harness)"), mime_type: "text/plain" };
         }
         if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "get_message") {
           await new Promise((resolve) => setTimeout(resolve, 500));
@@ -817,6 +832,7 @@
 
     const FULL_CARDS = [
       "librus-grades-card", "librus-grade-log-card",
+      "librus-lesson-topics-card",
       { tag: "librus-subject-grades-card", config: { type: "custom:librus-subject-grades-card", subject_id: 1 } },
       "librus-grade-trend-card",
       { tag: "librus-grade-trend-card", config: { type: "custom:librus-grade-trend-card", subject_id: 1 } },

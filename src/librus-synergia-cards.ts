@@ -1,6 +1,7 @@
 import "./utils/card-editor";
 import "./librus-grades-card";
 import "./librus-grade-log-card";
+import "./librus-lesson-topics-card";
 import "./librus-subject-grades-card";
 import "./librus-grade-trend-card";
 import "./librus-grade-goal-card";
@@ -78,6 +79,12 @@ window.customCards.push(
     type: "librus-grades-card",
     name: "Librus - Średnia ocen",
     description: "Średnia ogólna i średnie z każdego przedmiotu, z paskami porównawczymi.",
+    preview: true,
+  },
+  {
+    type: "librus-lesson-topics-card",
+    name: "Librus - Co było na lekcji",
+    description: "Tematy lekcji z ostatnich dni szkolnych, dzień po dniu; lekcje z nieobecnością wyróżnione.",
     preview: true,
   },
   {
@@ -432,7 +439,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 53 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 54 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );
