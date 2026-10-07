@@ -460,6 +460,8 @@
       recent: [{ subject: "Edukacja wczesnoszkolna", value: "Opanował materiał w stopniu bardzo dobrym, chętnie pomaga innym.", skill_id: 1, category_id: null, date: iso(today) }],
     }, 1);
 
+    const MOCK_THRESHOLDS = [1.75, 2.75, 3.75, 4.75, 5.5];
+    const MOCK_FORECASTS = [];
     for (const s of SUBJECTS) {
       const entityId = `sensor.subject_${s.id}_average`;
       const grades = [
@@ -472,8 +474,34 @@
         grades[1] = { ...grades[1], value: "4", improves: "2", improved: false };
         grades.push({ value: "2", category: "Kartkówka", date: iso(new Date(today.getTime() - 20 * 86400000)), comments: [], improves: null, improved: true });
       }
-      const avg = 4 + (s.id % 7) * 0.28;
+      // Fizyka heads for a 1 so the forecast's "at risk" state shows.
+      const avg = s.id === 9 ? 1.62 : 4 + (s.id % 7) * 0.28;
+      // Grade forecast (backend 0.11.1+), on the default thresholds.
+      const predicted = 1 + MOCK_THRESHOLDS.filter((t) => avg >= t).length;
+      const nextAt = predicted < 6 ? MOCK_THRESHOLDS[predicted - 1] : null;
+      const weight = 6;
+      const forecast = {
+        subject_id: s.id,
+        subject: s.name,
+        average: Math.round(avg * 100) / 100,
+        predicted,
+        next_grade_at: nextAt,
+        sixes_to_next: nextAt ? Math.max(1, Math.ceil((nextAt * weight - avg * weight) / (6 - nextAt))) : null,
+        ones_to_drop: predicted > 1 ? Math.floor((avg * weight - MOCK_THRESHOLDS[predicted - 2] * weight) / (MOCK_THRESHOLDS[predicted - 2] - 1)) + 1 : null,
+        // Historia fell by a grade in the last two weeks.
+        declining: s.id === 4,
+        at_risk: predicted === 1,
+        proposed: null,
+      };
+      MOCK_FORECASTS.push(forecast);
       addEntity(entityId, "subject_average", {
+        forecast_average: forecast.average,
+        forecast_weight: weight,
+        predicted_grade: predicted,
+        next_grade_at: nextAt,
+        sixes_to_next_grade: forecast.sixes_to_next,
+        ones_to_drop_grade: forecast.ones_to_drop,
+        forecast_declining: forecast.declining,
         subject_id: s.id,
         subject: s.name,
         latest_grade: grades[0].value,
@@ -490,6 +518,17 @@
         average_semester_2: Math.round((avg + (s.id % 2 ? 0.15 : -0.35)) * 100) / 100,
       }, avg.toFixed(2));
     }
+
+    MOCK_FORECASTS.sort((a, b) => a.predicted - b.predicted || a.average - b.average);
+    const reportAverage = MOCK_FORECASTS.reduce((sum, f) => sum + f.predicted, 0) / MOCK_FORECASTS.length;
+    addEntity("sensor.grade_forecast", "grade_forecast", {
+      basis: "semester_1",
+      thresholds: MOCK_THRESHOLDS,
+      honours_average: reportAverage >= 4.75,
+      at_risk: MOCK_FORECASTS.filter((f) => f.at_risk).map((f) => f.subject),
+      declining: MOCK_FORECASTS.filter((f) => f.declining).map((f) => f.subject),
+      subjects: MOCK_FORECASTS,
+    }, reportAverage.toFixed(2));
 
     // Calendars - state attributes mirror what a real HA CalendarEntity exposes.
     // 612 min out on purpose - matches a real "za 612 min" screenshot that

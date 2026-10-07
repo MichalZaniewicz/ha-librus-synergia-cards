@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
+import { predictedGrade, subjectForecast, thresholdsOf } from "./utils/forecast";
 
 const GRADES = [1, 2, 3, 4, 5, 6];
 const MAX_WEIGHT = 5;
@@ -14,10 +15,11 @@ const MAX_WEIGHT = 5;
  * "What if I got a __ (weight __) next?" - pick a subject in the config,
  * tap a grade and adjust the weight, see where the average would land.
  *
- * The projection is a simplification: it treats every EXISTING grade as
- * weight 1 (the `grades` attribute doesn't carry per-grade weights) and
- * just blends the hypothetical one in. It's a feel-for-it toy, not an
- * exact predictor - the subtitle says so.
+ * With the integration's grade forecast (0.11.1+) the projection is exact:
+ * the subject sensor carries the average and the sum of weights it is
+ * computed on, and the card shows what the new average would make of the
+ * report-card grade. On an older integration it falls back to treating
+ * every existing grade as weight 1 (the subtitle then says "rough").
  */
 @customElement("librus-grade-simulator-card")
 export class LibrusGradeSimulatorCard extends LibrusBaseCard {
@@ -48,7 +50,7 @@ export class LibrusGradeSimulatorCard extends LibrusBaseCard {
 
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
-    const { deviceId } = resolved;
+    const { deviceId, map } = resolved;
     const hass = this.hass;
 
     const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average");
@@ -65,8 +67,14 @@ export class LibrusGradeSimulatorCard extends LibrusBaseCard {
       return this._message("mdi:calculator-variant-outline", t(hass, "card.grade_simulator.empty"));
     }
 
-    const projected = (current * count + this._grade * this._weight) / (count + this._weight);
-    const delta = Math.round((projected - current) * 100) / 100;
+    const forecast = subjectForecast(subjectState);
+    const exact = forecast !== undefined && forecast.weight > 0;
+    const base = exact ? forecast.average : current;
+    const baseWeight = exact ? forecast.weight : count;
+    const projected = (base * baseWeight + this._grade * this._weight) / (baseWeight + this._weight);
+    const delta = Math.round((projected - base) * 100) / 100;
+    const thresholds = thresholdsOf(hass, map);
+    const gradeAfter = predictedGrade(projected, thresholds);
     const deltaClass = delta > 0 ? "good" : delta < 0 ? "bad" : "";
 
     return html`
@@ -75,17 +83,29 @@ export class LibrusGradeSimulatorCard extends LibrusBaseCard {
           <div class="icon-badge"><ha-icon icon="mdi:calculator-variant-outline"></ha-icon></div>
           <div class="title-block">
             <div class="title">${match.subject}</div>
-            <div class="subtitle">${t(hass, "card.grade_simulator.subtitle")}</div>
+            <div class="subtitle">
+              ${t(hass, exact ? "card.grade_simulator.subtitle_exact" : "card.grade_simulator.subtitle")}
+            </div>
           </div>
         </div>
         <div class="projection">
-          <span class="from">${current.toFixed(2)}</span>
+          <span class="from">${base.toFixed(2)}</span>
           <ha-icon icon="mdi:arrow-right-thin"></ha-icon>
           <span class="to ${deltaClass}">${projected.toFixed(2)}</span>
           ${delta !== 0
             ? html`<span class="delta ${deltaClass}">${delta > 0 ? "+" : ""}${delta}</span>`
             : nothing}
         </div>
+        ${forecast
+          ? html`<div class="report">
+              ${t(hass, "card.grade_simulator.report")}
+              <b>${forecast.predicted}</b>
+              <ha-icon icon="mdi:arrow-right-thin"></ha-icon>
+              <b class=${gradeAfter > forecast.predicted ? "good" : gradeAfter < forecast.predicted ? "bad" : ""}
+                >${gradeAfter}</b
+              >
+            </div>`
+          : nothing}
         <div class="grade-row">
           ${GRADES.map(
             (g) => html`
@@ -167,6 +187,26 @@ export class LibrusGradeSimulatorCard extends LibrusBaseCard {
       }
       .delta.bad {
         color: var(--lc-bad);
+      }
+      .report {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        color: var(--secondary-text-color);
+      }
+      .report b {
+        font-size: 0.95rem;
+        color: var(--primary-text-color);
+      }
+      .report b.good {
+        color: var(--lc-good);
+      }
+      .report b.bad {
+        color: var(--lc-bad);
+      }
+      .report ha-icon {
+        --mdc-icon-size: 16px;
       }
       .grade-row {
         display: flex;

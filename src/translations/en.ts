@@ -334,6 +334,13 @@ export const en = {
   "card.grade_simulator.subtitle": "What if… (rough estimate)",
   "card.grade_simulator.empty": "Pick a subject that has grades",
   "label.weight": "Weight",
+  "card.grades.forecast_hint": "Report-card forecast: {grade}",
+  "label.forecast_grade": "forecast {grade}",
+  "card.grade_simulator.subtitle_exact": "What if… (exact average)",
+  "card.grade_simulator.report": "Report card:",
+  "label.sixes_needed_exact": "{n}× a 6 (weight 1)",
+  "label.forecast": "Forecast",
+  "label.forecast_report_average": "Report-card forecast",
 
   "card.homework_checklist.title": "Homework checklist",
   "card.homework_checklist.progress": "{done}/{total} done",

@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
 import { t } from "./utils/localize";
+import { subjectForecast } from "./utils/forecast";
 
 /**
  * The strongest and weakest subject, side by side, computed client-side
@@ -47,7 +48,11 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
     const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average")
       .map((s) => ({ subject: s.subject, state: hass.states[s.entityId] }))
       .filter((s) => s.state && !UNAVAILABLE.has(s.state.state))
-      .map((s) => ({ subject: s.subject, value: Number(s.state!.state) }))
+      .map((s) => ({
+        subject: s.subject,
+        value: Number(s.state!.state),
+        forecast: subjectForecast(s.state)?.predicted,
+      }))
       .filter((s) => !Number.isNaN(s.value));
 
     if (subjects.length < 2) {
@@ -73,12 +78,18 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
             <div class="spotlight-value">${fmt(best.value)}</div>
             <div class="spotlight-subject">${best.subject}</div>
             <div class="spotlight-label">${t(hass, "card.subject_spotlight.best")}</div>
+            ${best.forecast !== undefined
+              ? html`<div class="spotlight-forecast">${t(hass, "label.forecast_grade", { grade: best.forecast })}</div>`
+              : nothing}
           </div>
           <div class="spotlight-tile warn">
             <ha-icon icon="mdi:book-open-page-variant-outline"></ha-icon>
             <div class="spotlight-value">${fmt(weakest.value)}</div>
             <div class="spotlight-subject">${weakest.subject}</div>
             <div class="spotlight-label">${t(hass, "card.subject_spotlight.weakest")}</div>
+            ${weakest.forecast !== undefined
+              ? html`<div class="spotlight-forecast">${t(hass, "label.forecast_grade", { grade: weakest.forecast })}</div>`
+              : nothing}
           </div>
         </div>
       </ha-card>
@@ -126,6 +137,12 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
         font-size: 0.78rem;
         font-weight: 700;
         color: var(--primary-text-color);
+      }
+      .spotlight-forecast {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--secondary-text-color);
+        margin-top: 2px;
       }
       .spotlight-label {
         font-size: 0.62rem;

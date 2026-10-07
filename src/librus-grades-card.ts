@@ -8,6 +8,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { progressRing } from "./utils/render-helpers";
 import { UNAVAILABLE } from "./utils/entities";
 import { t } from "./utils/localize";
+import { forecastTone, subjectForecast } from "./utils/forecast";
 
 @customElement("librus-grades-card")
 export class LibrusGradesCard extends LibrusBaseCard {
@@ -79,6 +80,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
               <div class="sub-list">
                 ${subjects.map((s) => {
                   const value = Number(s.state!.state);
+                  const forecast = subjectForecast(s.state);
                   return html`
                     <div class="sub-row">
                       <span class="name" title=${s.subject}>${s.subject}</span>
@@ -88,6 +90,13 @@ export class LibrusGradesCard extends LibrusBaseCard {
                         ></span
                       ></span>
                       <span class="val">${value.toLocaleString(hass.language, { maximumFractionDigits: 2 })}</span>
+                      ${forecast
+                        ? html`<span
+                            class="fc ${forecastTone(forecast)}"
+                            title=${t(hass, "card.grades.forecast_hint", { grade: forecast.predicted })}
+                            >${forecast.predicted}</span
+                          >`
+                        : nothing}
                     </div>
                   `;
                 })}
@@ -167,6 +176,27 @@ export class LibrusGradesCard extends LibrusBaseCard {
         height: 100%;
         background: var(--lc-brand);
         border-radius: 4px;
+      }
+      .sub-row .fc {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.72rem;
+        font-weight: 800;
+        background: var(--divider-color);
+        color: var(--primary-text-color);
+      }
+      .sub-row .fc.warn {
+        background: var(--lc-warn-bg);
+        color: var(--lc-warn);
+      }
+      .sub-row .fc.bad {
+        background: var(--lc-bad-bg);
+        color: var(--lc-bad);
       }
       .sub-row .val {
         font-size: 0.76rem;

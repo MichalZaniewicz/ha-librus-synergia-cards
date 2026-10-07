@@ -8,6 +8,7 @@ import { progressRing } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { tapActionHandler } from "./utils/actions";
+import { sixesToReach, subjectForecast } from "./utils/forecast";
 
 interface GradeLogEntry {
   value: string;
@@ -87,10 +88,22 @@ export class LibrusGradeGoalCard extends LibrusBaseCard {
           ? 100
           : 0
         : Math.max(0, Math.min(100, ((current - 1) / (target - 1)) * 100));
-    const needed =
-      !reached && target < MAX_GRADE && count > 0
-        ? Math.ceil((count * (target - current)) / (MAX_GRADE - target))
-        : null;
+    // Exact with the integration's forecast attributes (subject goal), else
+    // the rough unweighted estimate.
+    const forecast = subjectMatch ? subjectForecast(entityState) : undefined;
+    const exact = forecast !== undefined && forecast.weight > 0;
+    const needed = reached
+      ? null
+      : exact
+        ? sixesToReach(forecast.average, forecast.weight, target)
+        : target < MAX_GRADE && count > 0
+          ? Math.ceil((count * (target - current)) / (MAX_GRADE - target))
+          : null;
+    const reportForecast = subjectMatch
+      ? forecast?.predicted
+      : map.grade_forecast
+        ? Number(hass.states[map.grade_forecast]?.state)
+        : undefined;
 
     return html`
       <ha-card @click=${tapActionHandler(this, this._config.tap_action, entityId)}>
@@ -123,11 +136,23 @@ export class LibrusGradeGoalCard extends LibrusBaseCard {
               ${reached
                 ? t(hass, "card.grade_goal.reached")
                 : needed !== null
-                  ? t(hass, "label.sixes_needed", { n: needed })
+                  ? t(hass, exact ? "label.sixes_needed_exact" : "label.sixes_needed", { n: needed })
                   : "—"}
             </div>
             <div class="stat-label">${reached || needed === null ? "" : t(hass, "label.to_go")}</div>
           </div>
+          ${reportForecast !== undefined && !Number.isNaN(reportForecast)
+            ? html`<div class="stat">
+                <div class="stat-value">
+                  ${subjectMatch
+                    ? reportForecast
+                    : reportForecast.toLocaleString(hass.language, { maximumFractionDigits: 2 })}
+                </div>
+                <div class="stat-label">
+                  ${t(hass, subjectMatch ? "label.forecast" : "label.forecast_report_average")}
+                </div>
+              </div>`
+            : nothing}
         </div>
       </ha-card>
     `;

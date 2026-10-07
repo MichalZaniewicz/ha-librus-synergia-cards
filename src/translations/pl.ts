@@ -335,6 +335,13 @@ export const pl: Record<keyof typeof en, string> = {
   "card.grade_simulator.subtitle": "A gdyby… (szacunkowo)",
   "card.grade_simulator.empty": "Wybierz przedmiot, który ma oceny",
   "label.weight": "Waga",
+  "card.grades.forecast_hint": "Prognoza na świadectwo: {grade}",
+  "label.forecast_grade": "prognoza {grade}",
+  "card.grade_simulator.subtitle_exact": "Co jeśli… (dokładna średnia)",
+  "card.grade_simulator.report": "Na świadectwie:",
+  "label.sixes_needed_exact": "{n}× szóstka (waga 1)",
+  "label.forecast": "Prognoza",
+  "label.forecast_report_average": "Prognoza świadectwa",
 
   "card.homework_checklist.title": "Zadania do odhaczenia",
   "card.homework_checklist.progress": "{done}/{total} zrobione",
