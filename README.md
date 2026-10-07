@@ -29,9 +29,9 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 
 | Card | `type` | What it shows |
 |---|---|---|
-| Grade average | `custom:librus-grades-card` | Overall weighted average and per-subject averages with comparison bars |
-| Grade log | `custom:librus-grade-log-card` | Every grade from every subject, newest first, one chronological list |
-| Subject grades | `custom:librus-subject-grades-card` | Every grade from ONE subject you pick in the card's own config |
+| Grade average | `custom:librus-grades-card` | Overall weighted average and per-subject averages with comparison bars (a subject graded in points shows its percentage) |
+| Grade log | `custom:librus-grade-log-card` | Every grade from every subject, newest first, one chronological list (point grades as "17/20 85%") |
+| Subject grades | `custom:librus-subject-grades-card` | Every grade from ONE subject you pick in the card's own config (point grades as "17/20 85%") |
 | Grade trend | `custom:librus-grade-trend-card` | How the overall (or one subject's) average has moved over the last 60 days, from its own state history |
 | Grade goal | `custom:librus-grade-goal-card` | Progress ring toward a target average you pick (overall or one subject), plus a rough "how many more top grades" estimate |
 | Grade simulator | `custom:librus-grade-simulator-card` | Tap a grade + weight and see where the chosen subject's average would land (rough estimate) |
@@ -86,7 +86,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Hero | `custom:librus-hero-card` | One deterministic result computed from subject averages, attendance, behaviour and streaks - never random, same data always gives the same answer. "Mode" in the card's editor picks the tone: a school-counsellor-style **Archetype** (e.g. "Naukowiec") or an RPG-flavoured **Hero** (e.g. "Archimag") for the exact same underlying result. Every name/description is written to a fixed length so the card's height never changes across any of the 12 possible results |
 | Hero Stats | `custom:librus-hero-stats-card` | An RPG character sheet - six stats (Siła/Intelekt/Wiedza/Charyzma/Wytrwałość/Szczęście), each 0-10 and each from exactly one real signal (a subject cluster average, the behaviour grade, the attendance streak, the rank tier), on a radar chart |
 | Hero History | `custom:librus-hero-history-card` | A timeline of the Hero card's own past results and how long each one lasted, tracked locally in the browser from whenever this card was first added (same limitation as Achievements - nothing before that can be recovered) |
-| Last Update | `custom:librus-last-update-tile-card` | How long ago the integration last refreshed its data - a quick "is this still fresh" signal without opening Settings |
+| Last Update | `custom:librus-last-update-tile-card` | How long ago Librus last answered - a quick "is this still fresh" signal without opening Settings. Turns amber with the next retry time while Librus isn't responding |
 | Weekly AI summary | `custom:librus-ai-summary-card` | The weekly AI summary written for the parent or the student: headline and status, one tab per section (grades, attendance, behaviour, next week, optionally news from the school) with its own status dot, the to-dos for the coming week, and a **Generate now** button. Requires `ha-librus-synergia` 0.10+ with the weekly AI summary turned on - see [how to set it up](https://github.com/MichalZaniewicz/ha-librus-synergia#weekly-ai-summary) |
 
 Each card auto-detects your child's device - **zero YAML required** for the common case of one student.
@@ -155,6 +155,7 @@ card supports:
 | `icon` | every card | Override the header icon, e.g. `mdi:star` |
 | `hide_header` | every card | Hide the header row entirely |
 | `compact` | every card | Tighter padding, smaller icon badge, subtitle hidden - for a denser dashboard |
+| `hide_outage_warning` | every card | Hide the "Librus not responding" strip. By default a card with a header shows it under the header while the integration's *Connection status* sensor is `stale` (Librus isn't answering and the last data is shown), with the time of that data |
 | `tap_action` | the glanceable cards: all six tiles, Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Streaks, Rank | Standard Lovelace action config (YAML) - `navigate`, `more-info`, `url`, `perform-action`, `none` |
 
 `tap_action` is set in YAML (no visual-editor field yet), e.g.:
@@ -206,7 +207,7 @@ and empty state, with a light/dark toggle and a language switcher.
    `exam_keywords`, `category_filter`), a `number` (`max_items`, `days_ahead`, `days`, `target`), a
    `boolean` (`show_saturday`), a `subject` picker, or a `select` (`mailbox`, `sort`). The editor
    renders the student picker automatically whenever more than one Librus device exists, and always
-   appends the universal `icon` / `hide_header` / `compact` fields - those are honored generically by
+   appends the universal `icon` / `hide_header` / `compact` / `hide_outage_warning` fields - those are honored generically by
    `LibrusBaseCard` (see `utils/base-card.ts`), so a new card gets them for free.
 4. Every user-facing string goes through `t(hass, key)` from
    [`src/utils/localize.ts`](src/utils/localize.ts) - add the key to

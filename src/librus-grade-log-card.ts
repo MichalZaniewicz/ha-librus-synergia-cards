@@ -7,7 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
-import { filterAndSortGrades, type GradeLogEntry } from "./utils/grade-filters";
+import { filterAndSortGrades, pointGradeEntries, pointTone, type GradeLogEntry } from "./utils/grade-filters";
 
 interface FlatGrade extends GradeLogEntry {
   subject: string;
@@ -48,7 +48,11 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
 
     const flat: FlatGrade[] = [];
     for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
-      const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
+      const attributes = hass.states[s.entityId]?.attributes;
+      const grades = [
+        ...((attributes?.grades as GradeLogEntry[] | undefined) ?? []),
+        ...pointGradeEntries(attributes),
+      ];
       for (const g of grades) flat.push({ ...g, subject: s.subject });
     }
 
@@ -74,7 +78,11 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
           ${filtered.slice(0, max).map(
             (g) => html`
               <div class="list-item">
-                <div class="grade-chip ${g.improved ? "improved" : ""}">${g.value}</div>
+                <div class="grade-chip ${g.improved ? "improved" : ""} ${g.points ? `points ${pointTone(g.percentage)}` : ""}">
+                  ${g.value}${g.points && g.percentage !== null && g.percentage !== undefined
+                    ? html`<small>${Math.round(g.percentage)}%</small>`
+                    : nothing}
+                </div>
                 <div class="body">
                   <div class="row1">
                     <span>${g.subject}${g.category ? html` · <span class="cat-label">${g.category}</span>` : nothing}${g.improves ? html` · <span class="fix-label">${t(hass, "label.grade_improves", { value: g.improves })}</span>` : nothing}</span>

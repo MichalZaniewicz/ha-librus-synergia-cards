@@ -3,6 +3,7 @@ import { property } from "lit/decorators.js";
 import type { LibrusCardConfig, LibrusHass } from "./types";
 import { resolveLibrusDevice, mapByTranslationKey, mapAllByTranslationKey, LibrusConfigError, type SubjectEntity } from "./entities";
 import { t } from "./localize";
+import { formatShortDate, formatTime } from "./format";
 
 /**
  * Shared plumbing for every Librus card: dark-mode class sync, device
@@ -123,12 +124,63 @@ export abstract class LibrusBaseCard extends LitElement {
    */
   protected updated(changed: PropertyValues): void {
     super.updated(changed);
+    this._syncOutageStrip();
     const icon = this._cardConfig?.icon;
     if (!icon) return;
     const target = this.renderRoot.querySelector(".icon-badge ha-icon");
     if (target && target.getAttribute("icon") !== icon) {
       target.setAttribute("icon", icon);
     }
+  }
+
+  /**
+   * "Librus nie odpowiada · dane z 14:20" strip right under the header,
+   * while the integration's Status sensor (translation_key `status`) is
+   * `stale` - i.e. Librus isn't answering and every entity shows the last
+   * good data. Inserted after render, same reasoning as the icon override
+   * above: one place instead of every card's template. Cards without a
+   * `.header` (tiles, the student card) get no strip - it would crowd them.
+   * Off with the universal `hide_outage_warning` option.
+   */
+  private _syncOutageStrip(): void {
+    const root = this.renderRoot;
+    const existing = root.querySelector<HTMLElement>(".lc-outage");
+    const text = this._outageText();
+    const header = root.querySelector(".header");
+    if (!text || !header) {
+      existing?.remove();
+      return;
+    }
+    const strip = existing ?? document.createElement("div");
+    if (!existing) {
+      strip.className = "lc-outage";
+      strip.setAttribute("role", "status");
+    }
+    if (strip.dataset.text !== text.join("|")) {
+      strip.dataset.text = text.join("|");
+      const icon = document.createElement("ha-icon");
+      icon.setAttribute("icon", "mdi:cloud-alert-outline");
+      const title = document.createElement("b");
+      title.textContent = text[0];
+      const detail = document.createElement("span");
+      detail.textContent = `· ${text[1]}`;
+      strip.replaceChildren(icon, title, detail);
+    }
+    if (strip.previousElementSibling !== header) header.after(strip);
+  }
+
+  private _outageText(): [string, string] | null {
+    if (!this.hass || this._cardConfig?.hide_outage_warning) return null;
+    const resolved = this._resolveEntities();
+    if ("error" in resolved) return null;
+    const statusId = resolved.map["status"];
+    const status = statusId ? this.hass.states[statusId] : undefined;
+    if (status?.state !== "stale") return null;
+    const since = status.attributes["last_success"];
+    return [
+      t(this.hass, "outage.title"),
+      t(this.hass, "outage.data_from", { time: outageTime(typeof since === "string" ? since : undefined, this.hass.language) }),
+    ];
   }
 
   /** Resolves the device + translation_key map, or a ready-to-return error template. */
@@ -173,4 +225,18 @@ export abstract class LibrusBaseCard extends LitElement {
       </ha-card>
     `;
   }
+}
+
+/** "14:20" for today, "6 paź 14:20" for an older day, "?" when unknown. */
+export function outageTime(iso: string | undefined, locale: string | undefined): string {
+  if (!iso) return "?";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "?";
+  const time = formatTime(iso);
+  const today = new Date();
+  const sameDay =
+    d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+  if (sameDay) return time;
+  const local = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return `${formatShortDate(local, locale)} ${time}`;
 }

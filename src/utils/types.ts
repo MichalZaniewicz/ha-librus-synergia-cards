@@ -49,6 +49,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   hide_header?: boolean;
   /** Shrinks padding and drops subtitles for a denser dashboard. Universal - see `LibrusBaseCard`. */
   compact?: boolean;
+  /** Hides the "Librus not responding" strip under the header. Universal - see `LibrusBaseCard`. */
+  hide_outage_warning?: boolean;
   /** First-lesson card: device_id -> display name. */
   names?: Record<string, string>;
   /** First-lesson card: which students to show, in this order (YAML only). */

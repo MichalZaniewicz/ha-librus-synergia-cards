@@ -20,6 +20,9 @@ export const en = {
   "editor.icon": "Icon override (e.g. mdi:star)",
   "editor.hide_header": "Hide header",
   "editor.compact": "Compact mode",
+  "editor.hide_outage_warning": "Hide the \"Librus not responding\" warning",
+  "outage.title": "Librus not responding",
+  "outage.data_from": "data from {time}",
   "editor.category_filter": "Category filter (comma-separated, optional)",
   "editor.sort": "Sort order",
   "sort.newest": "Newest first",
@@ -473,7 +476,9 @@ export const en = {
   "card.hero_history.empty": "No history yet - it appears once your result changes",
   "card.hero_history.current": "current ({n}d)",
 
+  "card.grades.points_percentage": "{value}% of points",
   "card.last_update.subtitle": "Last data refresh",
+  "card.last_update.not_responding": "Librus not responding · next attempt {time}",
 
   "label.just_now": "Just now",
   "label.minutes_ago": "{minutes} min ago",

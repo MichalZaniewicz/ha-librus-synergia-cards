@@ -21,6 +21,9 @@ export const pl: Record<keyof typeof en, string> = {
   "editor.icon": "Własna ikona (np. mdi:star)",
   "editor.hide_header": "Ukryj nagłówek",
   "editor.compact": "Tryb kompaktowy",
+  "editor.hide_outage_warning": "Ukryj ostrzeżenie „Librus nie odpowiada”",
+  "outage.title": "Librus nie odpowiada",
+  "outage.data_from": "dane z {time}",
   "editor.category_filter": "Filtr kategorii (po przecinku, opcjonalnie)",
   "editor.sort": "Kolejność",
   "sort.newest": "Najpierw najnowsze",
@@ -474,7 +477,9 @@ export const pl: Record<keyof typeof en, string> = {
   "card.hero_history.empty": "Brak historii jeszcze - pojawi się, gdy wynik się zmieni",
   "card.hero_history.current": "obecnie ({n} dni)",
 
+  "card.grades.points_percentage": "{value}% punktów",
   "card.last_update.subtitle": "Ostatnia aktualizacja danych",
+  "card.last_update.not_responding": "Librus nie odpowiada · następna próba {time}",
 
   "label.just_now": "Przed chwilą",
   "label.minutes_ago": "{minutes} min temu",

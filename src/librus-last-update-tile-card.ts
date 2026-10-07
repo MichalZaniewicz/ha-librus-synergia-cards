@@ -2,24 +2,27 @@ import { html, css, nothing, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
-import { LibrusBaseCard } from "./utils/base-card";
+import { LibrusBaseCard, outageTime } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t, formatTimeAgo } from "./utils/localize";
 
-// Any core sensor works - every librus_synergia entity on one device
-// updates together (same coordinator, same poll cycle), so this is just
-// picking one that's virtually always present, not a special one.
+// Fallback for an integration without the Last successful update sensor:
+// any core sensor works - every librus_synergia entity on one device updates
+// together (same coordinator, same poll cycle).
 const REFERENCE_KEYS = ["overall_average", "attendance", "school"];
 
 /**
  * A tiny diagnostic tile: how long ago the integration's own data was last
  * refreshed, so a family relying on this daily has a quick "is this still
  * fresh" signal without digging into Settings -> Devices & Services.
- * `last_reported` (updates on every poll, even when nothing changed) is
- * preferred over `last_updated`/`last_changed` (only move when the STATE
- * VALUE itself changes) for exactly that reason - a sensor whose value
- * happens to be identical two polls running shouldn't look "stale".
+ * Reads the integration's *Last successful update* sensor (translation_key
+ * `last_update`): when Librus last answered. While Librus is down the
+ * integration keeps re-publishing the last data, so a sensor's
+ * `last_reported` would wrongly read "just now". With the *Connection
+ * status* sensor at `stale` the tile turns amber and shows the next attempt.
+ * Older integrations without that sensor fall back to a core sensor's
+ * `last_reported`.
  */
 @customElement("librus-last-update-tile-card")
 export class LibrusLastUpdateTileCard extends LibrusBaseCard {
@@ -62,18 +65,32 @@ export class LibrusLastUpdateTileCard extends LibrusBaseCard {
     const { map } = resolved;
     const hass = this.hass;
 
-    const entityId = REFERENCE_KEYS.map((k) => map[k]).find((id) => id && hass.states[id]);
-    const entity = entityId ? hass.states[entityId] : undefined;
-    if (!entity) return this._message("mdi:clock-check-outline", t(hass, "empty.generic_error"));
+    let timestamp: string | undefined;
+    const lastUpdate = map["last_update"] ? hass.states[map["last_update"]] : undefined;
+    if (lastUpdate && !["unknown", "unavailable"].includes(lastUpdate.state)) {
+      timestamp = lastUpdate.state;
+    } else {
+      const entityId = REFERENCE_KEYS.map((k) => map[k]).find((id) => id && hass.states[id]);
+      const entity = entityId ? hass.states[entityId] : undefined;
+      if (!entity) return this._message("mdi:clock-check-outline", t(hass, "empty.generic_error"));
+      timestamp = (entity as unknown as { last_reported?: string }).last_reported ?? entity.last_updated;
+    }
 
-    const timestamp = (entity as unknown as { last_reported?: string }).last_reported ?? entity.last_updated;
+    const status = map["status"] ? hass.states[map["status"]] : undefined;
+    const stale = status?.state === "stale" || status?.state === "error";
+    const next = status?.attributes["next_attempt"];
+    const meta = stale
+      ? t(hass, "card.last_update.not_responding", {
+          time: typeof next === "string" ? outageTime(next, hass.language) : "?",
+        })
+      : t(hass, "card.last_update.subtitle");
 
     return html`
-      <ha-card class="tile">
+      <ha-card class="tile ${stale ? "stale" : ""}">
         <div class="icon-badge"><ha-icon icon="mdi:clock-check-outline"></ha-icon></div>
         <div class="tile-body">
           <div class="subj">${formatTimeAgo(hass, timestamp)}</div>
-          <div class="meta">${t(hass, "card.last_update.subtitle")}</div>
+          <div class="meta">${meta}</div>
         </div>
       </ha-card>
     `;
@@ -94,6 +111,13 @@ export class LibrusLastUpdateTileCard extends LibrusBaseCard {
       .subj {
         font-weight: 700;
         font-size: 0.86rem;
+      }
+      ha-card.stale .icon-badge {
+        background: var(--lc-warn-bg);
+        color: var(--lc-warn);
+      }
+      ha-card.stale .subj {
+        color: var(--lc-warn);
       }
       .meta {
         font-size: 0.7rem;

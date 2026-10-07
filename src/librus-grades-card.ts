@@ -41,18 +41,24 @@ export class LibrusGradesCard extends LibrusBaseCard {
     const hass = this.hass;
 
     const overall = map.overall_average ? hass.states[map.overall_average] : undefined;
+    // A subject graded only in points has no 1-6 average (state unknown) -
+    // it's listed with its points percentage instead.
     const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average")
-      .map((s) => ({ ...s, state: hass.states[s.entityId] }))
-      .filter((s) => s.state && !UNAVAILABLE.has(s.state.state));
+      .map((s) => {
+        const state = hass.states[s.entityId];
+        const pct = state?.attributes.points_percentage;
+        const points = state && UNAVAILABLE.has(state.state) && typeof pct === "number" ? pct : undefined;
+        return { ...s, state, points };
+      })
+      .filter((s) => s.state && (!UNAVAILABLE.has(s.state.state) || s.points !== undefined));
 
     if ((!overall || UNAVAILABLE.has(overall.state)) && subjects.length === 0) {
       return this._message("mdi:school-outline", t(hass, "card.grades.empty"));
     }
 
     const overallValue = overall && !UNAVAILABLE.has(overall.state) ? Number(overall.state) : undefined;
-    const maxSubject = subjects.length
-      ? Math.max(...subjects.map((s) => Number(s.state!.state)))
-      : 6;
+    const averages = subjects.filter((s) => s.points === undefined).map((s) => Number(s.state!.state));
+    const maxSubject = averages.length ? Math.max(...averages) : 6;
 
     return html`
       <ha-card>
@@ -79,6 +85,15 @@ export class LibrusGradesCard extends LibrusBaseCard {
           ? html`
               <div class="sub-list">
                 ${subjects.map((s) => {
+                  if (s.points !== undefined) {
+                    return html`
+                      <div class="sub-row">
+                        <span class="name" title=${s.subject}>${s.subject}</span>
+                        <span class="bar"><span style="width:${Math.min(100, s.points)}%"></span></span>
+                        <span class="val">${s.points.toLocaleString(hass.language, { maximumFractionDigits: 1 })}%</span>
+                      </div>
+                    `;
+                  }
                   const value = Number(s.state!.state);
                   const forecast = subjectForecast(s.state);
                   return html`

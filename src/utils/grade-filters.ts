@@ -10,6 +10,50 @@ export interface GradeLogEntry {
   improves?: string | null;
   /** True on a grade that was later corrected (backend 0.10.1+). */
   improved?: boolean;
+  /** Point grades only: the share of the maximum, e.g. 85 for 17/20. */
+  percentage?: number | null;
+  /** True for an entry built from `point_grades` (see `pointGradeEntries`). */
+  points?: boolean;
+}
+
+/** One entry of a subject sensor's `point_grades` attribute (backend: schools grading in points). */
+interface PointGradeAttr {
+  value: string;
+  points: number | null;
+  max_points: number | null;
+  percentage: number | null;
+  category: string | null;
+  date: string | null;
+}
+
+/**
+ * A subject sensor's point grades as grade-log entries ("17/20", or the raw
+ * value when the maximum is unknown), so the grade lists show them next to
+ * ordinary 1-6 grades. Empty for schools without point grades.
+ */
+export function pointGradeEntries(attributes: Record<string, unknown> | undefined): GradeLogEntry[] {
+  const raw = attributes?.point_grades;
+  if (!Array.isArray(raw)) return [];
+  return (raw as PointGradeAttr[]).map((p) => ({
+    value: p.points !== null && p.max_points ? `${formatPoints(p.points)}/${formatPoints(p.max_points)}` : p.value,
+    category: p.category,
+    date: p.date,
+    comments: [],
+    percentage: p.percentage,
+    points: true,
+  }));
+}
+
+function formatPoints(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1).replace(".", ",");
+}
+
+/** Chip tone for a point grade: green from 75%, red under 50%. */
+export function pointTone(percentage: number | null | undefined): string {
+  if (percentage === null || percentage === undefined) return "";
+  if (percentage >= 75) return "pt-good";
+  if (percentage < 50) return "pt-bad";
+  return "";
 }
 
 export interface GradeFilterConfig {

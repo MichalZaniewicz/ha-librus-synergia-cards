@@ -7,7 +7,8 @@ import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import type { LibrusCardConfig } from "./utils/types";
 import { librusCardEditor } from "./utils/card-editor";
-import { filterAndSortGrades, type GradeLogEntry } from "./utils/grade-filters";
+import { filterAndSortGrades, pointGradeEntries, pointTone, type GradeLogEntry } from "./utils/grade-filters";
+import { UNAVAILABLE } from "./utils/entities";
 
 /**
  * Shows the full grade log for ONE subject, chosen in the card's own
@@ -53,7 +54,11 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
     if (!match) return this._message("mdi:notebook-outline", t(hass, "card.grades.empty"));
 
     const state = hass.states[match.entityId];
-    const grades = (state?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
+    const grades = [
+      ...((state?.attributes.grades as GradeLogEntry[] | undefined) ?? []),
+      ...pointGradeEntries(state?.attributes),
+    ];
+    const pointsPct = state?.attributes.points_percentage;
 
     if (grades.length === 0) return this._message("mdi:notebook-outline", t(hass, "card.grades.empty"));
 
@@ -70,14 +75,24 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
           <div class="icon-badge"><ha-icon icon="mdi:notebook-outline"></ha-icon></div>
           <div class="title-block">
             <div class="title">${match.subject}</div>
-            <div class="subtitle">${state.state}</div>
+            <div class="subtitle">
+              ${UNAVAILABLE.has(state.state) && typeof pointsPct === "number"
+                ? t(hass, "card.grades.points_percentage", {
+                    value: pointsPct.toLocaleString(hass.language, { maximumFractionDigits: 1 }),
+                  })
+                : state.state}
+            </div>
           </div>
         </div>
         <div class="scroll-list">
           ${shown.map(
             (g) => html`
               <div class="list-item">
-                <div class="grade-chip ${g.improved ? "improved" : ""}">${g.value}</div>
+                <div class="grade-chip ${g.improved ? "improved" : ""} ${g.points ? `points ${pointTone(g.percentage)}` : ""}">
+                  ${g.value}${g.points && g.percentage !== null && g.percentage !== undefined
+                    ? html`<small>${Math.round(g.percentage)}%</small>`
+                    : nothing}
+                </div>
                 <div class="body">
                   <div class="row1">
                     <span><span class="cat-label">${g.category ?? ""}</span>${g.improves

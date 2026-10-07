@@ -82,6 +82,7 @@
 <body>
   <h1>librus-synergia-cards dev harness (mock hass, no live HA needed)</h1>
   <button id="toggle" type="button">Toggle dark mode</button>
+  <button id="outage" type="button">Symuluj awarię Librusa</button>
   <select id="lang">
     <option value="pl">Polski</option>
     <option value="en">English</option>
@@ -519,6 +520,29 @@
       }, avg.toFixed(2));
     }
 
+    // A subject graded in points (backend: schools with PointGrades) - no
+    // 1-6 average, so the state is unknown and the cards use
+    // points_percentage / point_grades instead.
+    addEntity("sensor.subject_99_average", "subject_average", {
+      subject_id: 99,
+      subject: "Technika",
+      grade_count: 0,
+      grades: [],
+      points_percentage: 84.1,
+      point_grades: [
+        { value: "17", points: 17, max_points: 20, percentage: 85, category: "Kartkówka", date: iso(new Date(today.getTime() - 3 * 86400000)) },
+        { value: "85", points: 85, max_points: 100, percentage: 85, category: "Sprawdzian", date: iso(new Date(today.getTime() - 9 * 86400000)) },
+        { value: "9", points: 9, max_points: 20, percentage: 45, category: "Kartkówka", date: iso(new Date(today.getTime() - 16 * 86400000)) },
+      ],
+    }, "unknown");
+
+    // Connection health (backend: Status / Last successful update sensors).
+    // "Symuluj awarię" in the toolbar flips these to an outage.
+    addEntity("sensor.status", "status", {
+      data_source: "live", last_success: lastPolled, failures: 0, next_attempt: null, fallback_sections: [],
+    }, "ok");
+    addEntity("sensor.last_update", "last_update", {}, lastPolled);
+
     MOCK_FORECASTS.sort((a, b) => a.predicted - b.predicted || a.average - b.average);
     const reportAverage = MOCK_FORECASTS.reduce((sum, f) => sum + f.predicted, 0) / MOCK_FORECASTS.length;
     addEntity("sensor.grade_forecast", "grade_forecast", {
@@ -906,6 +930,21 @@
         hass.themes.darkMode = document.body.classList.contains("dark");
         emptyHass.themes.darkMode = hass.themes.darkMode;
         [...cardEls, ...emptyEls].forEach((el) => { el.hass = { ...el.hass, themes: { darkMode: hass.themes.darkMode } }; });
+      });
+      let outage = false;
+      document.getElementById("outage").addEventListener("click", (e) => {
+        outage = !outage;
+        e.target.textContent = outage ? "Librus znowu działa" : "Symuluj awarię Librusa";
+        const since = outage ? new Date(Date.now() - 260 * 60_000).toISOString() : new Date().toISOString();
+        const next = new Date(Date.now() + 40 * 60_000).toISOString();
+        hass.states["sensor.status"] = {
+          ...hass.states["sensor.status"],
+          state: outage ? "stale" : "ok",
+          attributes: { ...hass.states["sensor.status"].attributes, data_source: outage ? "stale" : "live", last_success: since, failures: outage ? 3 : 0, next_attempt: outage ? next : null },
+        };
+        hass.states["sensor.last_update"] = { ...hass.states["sensor.last_update"], state: since };
+        hass.states = { ...hass.states };
+        cardEls.forEach((el) => { el.hass = { ...el.hass, states: hass.states }; });
       });
       document.getElementById("lang").addEventListener("change", (e) => {
         hass.language = e.target.value;

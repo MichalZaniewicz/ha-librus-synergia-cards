@@ -136,6 +136,51 @@ export const librusSharedStyles = css`
     display: none;
   }
 
+  /* Point grades in the grade lists ("17/20 85%") - see pointGradeEntries. */
+  .grade-chip.points {
+    gap: 4px;
+    padding: 0 7px;
+    font-variant-numeric: tabular-nums;
+  }
+  .grade-chip.points small {
+    font-weight: 500;
+    font-size: 0.68rem;
+    opacity: 0.75;
+  }
+  .grade-chip.pt-good {
+    background: var(--lc-good-bg);
+    color: var(--lc-good);
+  }
+  .grade-chip.pt-bad {
+    background: var(--lc-bad-bg);
+    color: var(--lc-bad);
+  }
+
+  /* "Librus not responding" strip, inserted after .header by LibrusBaseCard. */
+  .lc-outage {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--lc-warn-bg);
+    color: var(--lc-warn);
+    border: 1px solid color-mix(in srgb, var(--lc-warn) 35%, transparent);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    line-height: 1.3;
+  }
+  .lc-outage b {
+    font-weight: 500;
+  }
+  .lc-outage span {
+    color: var(--primary-text-color);
+    opacity: 0.8;
+  }
+  .lc-outage ha-icon {
+    --mdc-icon-size: 15px;
+    flex: none;
+  }
+
   .header {
     display: flex;
     align-items: center;

@@ -49,6 +49,7 @@ type EditorField =
         | "show_saturday"
         | "hide_header"
         | "compact"
+        | "hide_outage_warning"
         | "hide_room"
         | "only_tomorrow"
         | "summary_only"
@@ -80,6 +81,7 @@ const COMMON_FIELDS: EditorField[] = [
   { kind: "text", key: "icon", label: "editor.icon" },
   { kind: "boolean", key: "hide_header", label: "editor.hide_header" },
   { kind: "boolean", key: "compact", label: "editor.compact" },
+  { kind: "boolean", key: "hide_outage_warning", label: "editor.hide_outage_warning" },
 ];
 
 const MAILBOX_OPTIONS: { value: string; label: TranslationKey }[] = [
