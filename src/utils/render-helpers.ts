@@ -152,6 +152,8 @@ export function lineChart(
 export interface RadarAxis {
   label: string;
   value: number;
+  /** Full name shown as a hover tooltip when `label` is shortened. */
+  title?: string;
 }
 
 /**
@@ -211,7 +213,7 @@ export function radarChart(
         const [lx, ly] = point(i, max * 1.18);
         const cosA = Math.cos(angle(i));
         const anchor = Math.abs(cosA) < 0.3 ? "middle" : cosA > 0 ? "start" : "end";
-        return svg`<text x=${lx} y=${ly + 3} text-anchor=${anchor} class="radar-label">${a.label}</text>`;
+        return svg`<text x=${lx} y=${ly + 3} text-anchor=${anchor} class="radar-label">${a.title ? svg`<title>${a.title}</title>` : ""}${a.label}</text>`;
       })}
     </svg>
   `;

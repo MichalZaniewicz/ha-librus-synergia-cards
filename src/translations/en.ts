@@ -71,6 +71,7 @@ export const en = {
   "card.recent_activity.empty": "Nothing new yet",
 
   "card.grade_log.title": "Grade log",
+  "label.grade_improves": "corrects {value}",
   "card.grade_log.subtitle": "All subjects",
   "card.grade_log.empty_filtered": "No grades match this filter",
 

@@ -14,6 +14,7 @@ import {
 import { t, formatCountdown } from "./utils/localize";
 import { minutesUntil } from "./utils/format";
 import { librusCardEditor } from "./utils/card-editor";
+import { abbreviate } from "./utils/subjects";
 
 function isoWeekday(iso: string): number {
   const d = new Date(iso);
@@ -46,12 +47,6 @@ function lessonNoFor(ev: LibrusCalendarEvent, periods: BellPeriod[]): number | u
   const exact = periods.find((p) => p.start === start);
   if (exact) return exact.lesson_no;
   return periods.find((p) => p.start <= start && start < p.end)?.lesson_no;
-}
-
-/** A short, deterministic abbreviation for a subject name (first syllable-ish chunk). */
-function abbreviate(name: string): string {
-  const clean = name.replace(/\(.*\)/, "").trim();
-  return clean.length <= 4 ? clean : clean.slice(0, 3);
 }
 
 @customElement("librus-week-timetable-card")

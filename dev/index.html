@@ -203,6 +203,17 @@
       { id: 3, name: "Biologia" },
       { id: 4, name: "Historia" },
       { id: 5, name: "Wychowanie fizyczne" },
+      // The rest of a real 7th-grade subject list (2026-10-07) - long names
+      // and three "Język ..." subjects are what broke the radar labels.
+      { id: 6, name: "Język angielski" },
+      { id: 7, name: "Język niemiecki" },
+      { id: 8, name: "Chemia" },
+      { id: 9, name: "Fizyka" },
+      { id: 10, name: "Geografia" },
+      { id: 11, name: "Plastyka" },
+      { id: 12, name: "Muzyka" },
+      { id: 13, name: "Edukacja zdrowotna" },
+      { id: 14, name: "Zajęcia z wychowawcą" },
     ];
 
     const entities = {};
@@ -436,7 +447,12 @@
         { value: "4+", category: "Kartkówka", date: iso(new Date(today.getTime() - 9 * 86400000)), comments: [] },
         { value: "4", category: "Odpowiedź", date: iso(new Date(today.getTime() - 15 * 86400000)), comments: [] },
       ];
-      const avg = 4 + s.id * 0.3;
+      if (s.id === 1) {
+        // A correction ("poprawa") - backend 0.10.1+ `improves`/`improved`.
+        grades[1] = { ...grades[1], value: "4", improves: "2", improved: false };
+        grades.push({ value: "2", category: "Kartkówka", date: iso(new Date(today.getTime() - 20 * 86400000)), comments: [], improves: null, improved: true });
+      }
+      const avg = 4 + (s.id % 7) * 0.28;
       addEntity(entityId, "subject_average", {
         subject_id: s.id,
         subject: s.name,

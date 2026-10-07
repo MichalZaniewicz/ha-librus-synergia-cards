@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { radarChart, type RadarAxis } from "./utils/render-helpers";
+import { abbreviate } from "./utils/subjects";
 import { t } from "./utils/localize";
 
 const MIN_SUBJECTS = 3; // fewer than 3 axes degenerates to a line, not a shape
@@ -51,7 +52,7 @@ export class LibrusGradesRadarCard extends LibrusBaseCard {
     for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
       const raw = hass.states[s.entityId]?.state;
       const value = raw !== undefined ? Number(raw) : NaN;
-      if (Number.isFinite(value)) axes.push({ label: s.subject, value });
+      if (Number.isFinite(value)) axes.push({ label: abbreviate(s.subject), title: s.subject, value });
     }
 
     if (axes.length < MIN_SUBJECTS) {

@@ -74,10 +74,10 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
           ${filtered.slice(0, max).map(
             (g) => html`
               <div class="list-item">
-                <div class="grade-chip">${g.value}</div>
+                <div class="grade-chip ${g.improved ? "improved" : ""}">${g.value}</div>
                 <div class="body">
                   <div class="row1">
-                    <span>${g.subject}${g.category ? html` · <span class="cat-label">${g.category}</span>` : nothing}</span>
+                    <span>${g.subject}${g.category ? html` · <span class="cat-label">${g.category}</span>` : nothing}${g.improves ? html` · <span class="fix-label">${t(hass, "label.grade_improves", { value: g.improves })}</span>` : nothing}</span>
                     ${g.date ? html`<time>${formatShortDate(g.date, hass.language)}</time>` : nothing}
                   </div>
                   ${g.comments.length ? html`<div class="quote">${g.comments.join(" · ")}</div>` : nothing}
@@ -94,6 +94,14 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
     librusTokens,
     librusSharedStyles,
     css`
+      .grade-chip.improved {
+        text-decoration: line-through;
+        opacity: 0.55;
+      }
+      .fix-label {
+        color: var(--lc-good);
+        font-weight: 600;
+      }
       .grade-chip {
         flex: none;
         min-width: 26px;

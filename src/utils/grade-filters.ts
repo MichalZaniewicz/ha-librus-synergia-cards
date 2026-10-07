@@ -6,6 +6,10 @@ export interface GradeLogEntry {
   category: string | null;
   date: string | null;
   comments: string[];
+  /** On a correction ("poprawa"): the value of the grade it improves (backend 0.10.1+). */
+  improves?: string | null;
+  /** True on a grade that was later corrected (backend 0.10.1+). */
+  improved?: boolean;
 }
 
 export interface GradeFilterConfig {

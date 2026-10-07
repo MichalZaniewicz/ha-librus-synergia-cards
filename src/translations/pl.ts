@@ -72,6 +72,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.recent_activity.empty": "Nic nowego",
 
   "card.grade_log.title": "Dziennik ocen",
+  "label.grade_improves": "poprawa z {value}",
   "card.grade_log.subtitle": "Wszystkie przedmioty",
   "card.grade_log.empty_filtered": "Brak ocen pasujących do filtra",
 
