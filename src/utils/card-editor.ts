@@ -120,6 +120,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     TITLE_FIELD,
     { kind: "number", key: "days", label: "editor.school_days_shown", min: 1, max: 10 },
   ],
+  "custom:librus-school-trips-card": [TITLE_FIELD, MAX_ITEMS_FIELD(10)],
   "custom:librus-grade-log-card": [TITLE_FIELD, MAX_ITEMS_FIELD(100), CATEGORY_FILTER_FIELD, DAYS_BACK_FIELD, SORT_FIELD],
   "custom:librus-recent-activity-card": [TITLE_FIELD, MAX_ITEMS_FIELD(50)],
   "custom:librus-subject-attendance-card": [TITLE_FIELD],

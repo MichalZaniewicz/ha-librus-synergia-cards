@@ -559,6 +559,17 @@
       }, 3);
     }
 
+    // Next school trip (integration 0.11.1+): made-up trips.
+    {
+      const tripDay = (offset) => iso(new Date(today.getTime() + offset * 86400000));
+      const trips = [
+        { destination: "Muzeum Narodowe – lekcja muzealna", route: "Szkoła, ul. Przykładowa 1 → Muzeum Narodowe, pl. Muzealny 5", transport: "komunikacja miejska", date_from: tripDay(1), date_to: tripDay(1), coordinator: "Anna Nowak" },
+        { destination: "Kino – „Po co nam bioróżnorodność?”", route: "Szkoła → kino", transport: "pieszo", date_from: tripDay(16), date_to: tripDay(16), coordinator: "Jan Kowalski" },
+        { destination: "Próbny egzamin ósmoklasisty – wyjazd", route: "", transport: "autokar", date_from: tripDay(36), date_to: tripDay(36), coordinator: null },
+      ];
+      addEntity("sensor.school_trips", "school_trips", { ...trips[0], days_until: 1, upcoming: trips, past: [] }, trips[0].date_from);
+    }
+
     addEntity("sensor.status", "status", {
       data_source: "live", last_success: lastPolled, failures: 0, next_attempt: null, fallback_sections: [],
     }, "ok");
@@ -833,6 +844,7 @@
     const FULL_CARDS = [
       "librus-grades-card", "librus-grade-log-card",
       "librus-lesson-topics-card",
+      "librus-school-trips-card",
       { tag: "librus-subject-grades-card", config: { type: "custom:librus-subject-grades-card", subject_id: 1 } },
       "librus-grade-trend-card",
       { tag: "librus-grade-trend-card", config: { type: "custom:librus-grade-trend-card", subject_id: 1 } },

@@ -30,6 +30,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Card | `type` | What it shows |
 |---|---|---|
 | Grade average | `custom:librus-grades-card` | Overall weighted average and per-subject averages with comparison bars (a subject graded in points shows its percentage) |
+| School trips | `custom:librus-school-trips-card` | The next school trip - date, how the class travels, the route and the coordinator - with a "tomorrow" / "in N days" badge, and the trips after it. Options: title, how many trips to list. Needs `ha-librus-synergia` 0.11.1+ (Next school trip sensor) |
 | What was taught | `custom:librus-lesson-topics-card` | The topics of the last few school days, day by day and lesson by lesson; lessons the student missed are marked, so it doubles as a "what to catch up on" list. Options: title, number of school days. Needs `ha-librus-synergia` 0.11.1+ (Lesson topics sensor) |
 | Grade log | `custom:librus-grade-log-card` | Every grade from every subject, newest first, one chronological list (point grades as "17/20 85%") |
 | Subject grades | `custom:librus-subject-grades-card` | Every grade from ONE subject you pick in the card's own config (point grades as "17/20 85%") |
