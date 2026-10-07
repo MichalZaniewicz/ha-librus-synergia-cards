@@ -19,6 +19,7 @@ import "./librus-attendance-heatmap-card";
 import "./librus-attendance-weekday-card";
 import "./librus-attendance-subject-card";
 import "./librus-subject-attendance-card";
+import "./librus-report-card-card";
 import "./librus-school-day-card";
 import "./librus-behaviour-notices-card";
 import "./librus-behaviour-notices-tile-card";
@@ -191,6 +192,12 @@ window.customCards.push(
     type: "librus-school-day-card",
     name: "Librus - Dzień szkolny",
     description: "Lekcje dzisiaj (albo w następny dzień szkolny) jako pasek: bieżąca podświetlona, odwołane przekreślone, pod spodem co teraz i ile zostało.",
+    preview: true,
+  },
+  {
+    type: "librus-report-card-card",
+    name: "Librus - Świadectwo (prognoza)",
+    description: "Przewidywane oceny na świadectwo ze średnich: kafelki przedmiotów, średnia świadectwa, droga do paska i co jedna ocena może zmienić.",
     preview: true,
   },
   {
