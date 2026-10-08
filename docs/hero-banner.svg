@@ -21,9 +21,9 @@
 
   <text x="60" y="72" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="2.5" fill="#F5B93D">COMPANION LOVELACE CARDS FOR HOME ASSISTANT</text>
   <text x="60" y="134" font-family="Georgia, 'Times New Roman', serif" font-size="54" font-weight="700" fill="#FFFFFF">Librus Synergia Cards</text>
-  <text x="60" y="172" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#D8D4FA">64 purpose-built cards for grades, attendance,</text>
+  <text x="60" y="172" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#D8D4FA">65 purpose-built cards for grades, attendance,</text>
   <text x="60" y="198" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#D8D4FA">timetable, messages and more.</text>
-  <text x="60" y="240" font-family="Consolas, Menlo, monospace" font-size="14" fill="#B7B0EE">64 cards&#160;&#160;&#183;&#160;&#160;zero YAML&#160;&#160;&#183;&#160;&#160;EN / PL</text>
+  <text x="60" y="240" font-family="Consolas, Menlo, monospace" font-size="14" fill="#B7B0EE">65 cards&#160;&#160;&#183;&#160;&#160;zero YAML&#160;&#160;&#183;&#160;&#160;EN / PL</text>
 
   <g transform="translate(870,25)">
     <rect x="-18" y="18" width="150" height="230" rx="26" fill="#2A2568"/>

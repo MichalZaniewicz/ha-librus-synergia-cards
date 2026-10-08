@@ -127,6 +127,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   ],
   "custom:librus-school-documents-card": [TITLE_FIELD, MAX_ITEMS_FIELD(20)],
   "custom:librus-justifications-card": [TITLE_FIELD, MAX_ITEMS_FIELD(10)],
+  "custom:librus-catch-up-card": [TITLE_FIELD],
   "custom:librus-grade-log-card": [TITLE_FIELD, MAX_ITEMS_FIELD(100), CATEGORY_FILTER_FIELD, DAYS_BACK_FIELD, SORT_FIELD],
   "custom:librus-recent-activity-card": [TITLE_FIELD, MAX_ITEMS_FIELD(50)],
   "custom:librus-subject-attendance-card": [TITLE_FIELD],

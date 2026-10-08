@@ -627,6 +627,22 @@
         [2, 4, "Fizyka", "Ruch jednostajny prostoliniowy", false, false],
       ].map(([offset, lesson_no, subject, topic, is_trip, absent]) => ({ date: dayIso(offset), lesson_no, subject, topic, is_trip, absent }));
       addEntity("sensor.lesson_topics", "lesson_topics", {
+      // Catch-up after the latest absence (integration 0.12.2+): made-up data.
+      catch_up: {
+        from: iso(new Date(today.getTime() - 2 * 86400000)), to: iso(new Date(today.getTime() - 1 * 86400000)), days: 2,
+        back_on: iso(today), back_today: true,
+        lessons: [
+          { date: iso(new Date(today.getTime() - 2 * 86400000)), lesson_no: 1, subject: "Matematyka", topic: "Dodawanie ułamków zwykłych" },
+          { date: iso(new Date(today.getTime() - 2 * 86400000)), lesson_no: 2, subject: "Język polski", topic: "„Mały Książę” - charakterystyka bohatera" },
+          { date: iso(new Date(today.getTime() - 2 * 86400000)), lesson_no: 3, subject: "Biologia", topic: "Budowa komórki roślinnej" },
+          { date: iso(new Date(today.getTime() - 2 * 86400000)), lesson_no: 4, subject: "Historia", topic: null },
+          { date: iso(new Date(today.getTime() - 1 * 86400000)), lesson_no: 1, subject: "Chemia", topic: "Mieszaniny jednorodne" },
+          { date: iso(new Date(today.getTime() - 1 * 86400000)), lesson_no: 2, subject: "Matematyka", topic: "Mnożenie ułamków" },
+        ],
+        homework: [
+          { id: 901, date: iso(new Date(today.getTime() - 2 * 86400000)), due_date: iso(new Date(today.getTime() + 1 * 86400000)), subject: "Matematyka", topic: "Zadania 1-5, str. 42" },
+        ],
+      },
         today: topicRows.filter((r) => r.date === dayIso(0)),
         recent: topicRows,
       }, 3);
@@ -921,6 +937,7 @@
       "librus-exam-prep-card",
       "librus-school-documents-card",
       "librus-justifications-card",
+      "librus-catch-up-card",
       { tag: "librus-subject-grades-card", config: { type: "custom:librus-subject-grades-card", subject_id: 1 } },
       "librus-grade-trend-card",
       { tag: "librus-grade-trend-card", config: { type: "custom:librus-grade-trend-card", subject_id: 1 } },
