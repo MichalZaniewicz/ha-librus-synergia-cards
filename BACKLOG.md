@@ -3,16 +3,11 @@
 Card ideas raised but not built yet. Not a roadmap.
 
 ## New cards
-- **Semester comparison** — semester 1 vs semester 2 average per subject,
-  side by side. Data already exists: `average_semester_1` /
-  `average_semester_2` attributes on every `subject_average` sensor (and
-  the overall one).
+- ~~**Semester comparison**~~ — done: `librus-semester-comparison-card`.
 - **Month mini-calendar** — a month grid highlighting exam days and free
   days. More work than the linear `librus-exam-countdown-card`.
 - ~~**Teacher directory**~~ — done: `librus-teachers-card`, homeroom +
   subject teachers from the School/Class sensors' existing attributes.
-- **Month mini-calendar** — a month grid highlighting exam days and free
-  days. More work than the linear `librus-exam-countdown-card`.
 - **Multi-student switcher** — flip a dashboard view between students. A
   card can't drive other cards' `device_id`, so this needs a different
   mechanism (a helper + conditional cards, or a dashboard-level trick).
@@ -48,10 +43,9 @@ Card ideas raised but not built yet. Not a roadmap.
 - **`librus-messages-card` mark-as-read button** — an explicit action
   calling `librus_synergia.get_message` (which marks read) without
   expanding the row.
-- **`librus-homework-checklist-card` shared done-state** — currently
-  per-browser `localStorage`. A `todo` entity or `input_boolean` helper
-  would sync it across devices, but that's a bigger lift and needs the
-  user to create the helper.
-- **Other donut → bar** — `librus-grade-category-distribution-card` still
-  uses a donut; the `hBarChart` helper (added for `librus-subject-time-card`)
-  could replace it if a school has many grade categories.
+- ~~**`librus-homework-checklist-card` shared done-state**~~ — done: with
+  integration 0.11.0+ the ticks go to its Homework to-do entity
+  (`todo.update_item`), so every device sees the same; `localStorage` is
+  only the fallback for older integrations.
+- ~~**Other donut → bar**~~ — done: `librus-grade-category-distribution-card`
+  uses the `hBarChart` helper.

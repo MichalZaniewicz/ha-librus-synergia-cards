@@ -29,7 +29,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 
 | Card | `type` | What it shows |
 |---|---|---|
-| Grade average | `custom:librus-grades-card` | Overall weighted average and per-subject averages with comparison bars (a subject graded in points shows its percentage) |
+| Grade average | `custom:librus-grades-card` | Overall average (weighted, or arithmetic if the integration's average mode says so) and per-subject averages with comparison bars (a subject graded in points shows its percentage) |
 | School trips | `custom:librus-school-trips-card` | The next school trip - date, how the class travels, the route and the coordinator - with a "tomorrow" / "in N days" badge, and the trips after it. Options: title, how many trips to list. Needs `ha-librus-synergia` 0.12.0+ (Next school trip sensor) |
 | What was taught | `custom:librus-lesson-topics-card` | The topics of the last few school days, day by day and lesson by lesson; lessons the student missed are marked, so it doubles as a "what to catch up on" list. Options: title, number of school days. Needs `ha-librus-synergia` 0.12.0+ (Lesson topics sensor) |
 | Grade log | `custom:librus-grade-log-card` | Every grade from every subject, newest first, one chronological list (point grades as "17/20 85%") |
@@ -50,18 +50,18 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Attendance tile | `custom:librus-attendance-tile-card` | Compact single-row tile - unexcused absence count + percentage, with excused ones called out separately (requires `ha-librus-synergia` 0.4.19+) |
 | Attendance heatmap | `custom:librus-attendance-heatmap-card` | A GitHub-contributions-style calendar of the school year so far, one square per school day colored by that day's worst attendance status (requires `ha-librus-synergia` 0.4.20+) |
 | Absences by weekday | `custom:librus-attendance-weekday-card` | Which weekday absences/lates tend to land on - each weekday's bar split into its own excused/unexcused/late segments (requires `ha-librus-synergia` 0.4.21+) |
-| Absences by subject | `custom:librus-attendance-subject-card` | Ranked bar per subject showing which one is missed most often, split into excused/unexcused (requires `ha-librus-synergia` 0.8.0+) |
+| Absences by subject | `custom:librus-attendance-subject-card` | Ranked bar per subject showing which one is missed most often, split into excused/unexcused (requires `ha-librus-synergia` 0.7.7+) |
 | Attendance by subject | `custom:librus-subject-attendance-card` | A tile per subject with the % of lessons attended, coloured green / amber / red (below 50%); subjects with fewer than 5 lessons greyed out (requires `ha-librus-synergia` 0.9.0+) |
 | School day | `custom:librus-school-day-card` | Today's lessons as a strip of cells with short subject names - or the next school day's once school is out: the current lesson highlighted, past ones dimmed, cancelled ones struck through, substitutions, room changes and moved lessons outlined. Below: the lesson now (and minutes left), the break before the next one, or the first lesson and when it starts |
 | Behaviour notices | `custom:librus-behaviour-notices-card` | Recent "uwagi" with category and sentiment (positive/negative/neutral) |
 | Behaviour notices tile | `custom:librus-behaviour-notices-tile-card` | Compact single-row tile - count + latest category |
-| Messages | `custom:librus-messages-card` | Unread counts across every Wiadomości mailbox, with a preview of recent inbox messages - click one to load its full content (requires `ha-librus-synergia` 0.4.11+; this marks the message read in Librus, exactly like opening it in the Librus app). A paperclip badge marks messages with an attachment; the expanded view shows its real filename (requires 0.7.2+); with 0.12.0+ a tap on the file name downloads it to your device, without saving it in Home Assistant or opening the message in Librus |
+| Messages | `custom:librus-messages-card` | Unread counts across every Wiadomości mailbox, with a preview of recent messages from the chosen mailbox (inbox by default) - click one to load its full content (requires `ha-librus-synergia` 0.4.11+; this marks the message read in Librus, exactly like opening it in the Librus app). A paperclip badge marks messages with an attachment; the expanded view shows its real filename (requires 0.7.2+); with 0.12.0+ a tap on the file name downloads it to your device, without saving it in Home Assistant or opening the message in Librus |
 | Messages tile | `custom:librus-messages-tile-card` | Compact single-row tile - unread count + latest sender/topic |
 | Substitutions, alerts & justifications | `custom:librus-substitutions-card` | Full content (not just a count) for "Zastępstwa", "Alerty" and "Usprawiedliwienia" (a submitted absence excuse and its pending/accepted status) - click one to load it in full (requires `ha-librus-synergia` 0.4.13+, justifications 0.4.18+). Same paperclip badge + attachment filename as the Messages card (requires 0.7.2+). |
 | Announcements | `custom:librus-announcements-card` | Unread items from the school notice board - click one to expand its full content (requires `ha-librus-synergia` 0.4.17+; no read-marking side effect, unlike Wiadomości) |
 | Announcements tile | `custom:librus-announcements-tile-card` | Compact single-row tile - unread count + latest subject |
 | Homework assignments | `custom:librus-homework-assignments-card` | Real "zadania domowe" with due dates - distinct from the general agenda feed |
-| Homework checklist | `custom:librus-homework-checklist-card` | The same list with a tick-box per item; ticked items drop to the bottom. With `ha-librus-synergia` 0.10.1+ the ticks go to its Homework to-do list, so every device sees the same; on older versions they stay in this browser |
+| Homework checklist | `custom:librus-homework-checklist-card` | The same list with a tick-box per item; ticked items drop to the bottom. With `ha-librus-synergia` 0.11.0+ the ticks go to its Homework to-do list, so every device sees the same; on older versions they stay in this browser |
 | What's new | `custom:librus-recent-activity-card` | One chronological feed merging the most recent grades, notices, announcements and messages |
 | Today's lessons | `custom:librus-today-lessons-card` | A timeline of today's timetable, highlighting the current lesson. Marks cancelled lessons, substitutions (with what they replace), room changes ("room 12 → 21") and moved lessons |
 | Next lesson | `custom:librus-next-lesson-tile-card` | A single-row tile with the next (or current) lesson, for denser dashboards |
@@ -70,7 +70,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
 | Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few |
 | Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break |
 | Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted; substitutions, room changes and moved lessons are outlined (details in the tooltip) |
-| Today's schedule | `custom:librus-bell-schedule-card` | The day's period grid (bell times), current period highlighted, past ones dimmed - needs the integration's `bell_schedule` attribute |
+| Today's schedule | `custom:librus-bell-schedule-card` | The day's period grid (bell times) with each period's subject and room from the timetable, current period highlighted, past ones dimmed; once the day's lessons are over it shows the next school day - needs the integration's `bell_schedule` attribute |
 | Lesson time split | `custom:librus-subject-time-card` | A ranked horizontal bar chart of how the week's lesson slots split across subjects, from the timetable |
 | School & class | `custom:librus-school-card` | School name/address/head teacher, class, homeroom teacher, semester dates |
 | End of school year | `custom:librus-school-year-card` | A countdown to the end of the school year, a progress ring for how far through it you are, and the current semester's own end date |
@@ -98,7 +98,7 @@ If you ever have more than one, the card's visual editor shows a device picker.
 type: custom:librus-grades-card
 ```
 
-**Subject grades** takes one extra field, editable from its own visual editor (a subject picker):
+**Subject grades** needs one extra field, editable from its own visual editor (a subject picker):
 
 ```yaml
 type: custom:librus-subject-grades-card
@@ -141,15 +141,17 @@ card supports:
 | Student | all except First lesson | Only shown when more than one child's e-dziennik is configured |
 | Names | First lesson | The name shown for each child (default: the first name from the device name) |
 | `hide_room` / `only_tomorrow` | First lesson | Hide the classroom; show only the next school day (e.g. for an evening dashboard) |
-| `title` | Weekly AI summary, Grade log, Recent activity, Announcements, Agenda, Messages, Grade trend, Grade goal, Today's schedule, Tomorrow, First lesson, Homework checklist, Semester comparison, Next exam, Level | Header title override |
-| `max_items` | Grade log, Subject grades, Recent activity, Announcements, Messages, Homework checklist | Row cap |
+| `title` | most cards with a header (26 of them - the editor shows the field wherever it applies), e.g. Grade log, Agenda, Messages, What was taught, School trips, Report card forecast, Hero | Header title override |
+| `max_items` | Grade log, Subject grades, Recent activity, Announcements, Messages, Homework checklist, School trips | Row cap (School trips: default 4) |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days` | Grade trend | How much history to chart (default 60) |
 | `days` | Grade log, Subject grades | Only include grades from the last N days (unset = no limit) |
+| `days` | What was taught | Number of school days shown (default 3, 1-10) |
 | `category_filter` | Grade log, Subject grades | Comma-separated category keywords - keeps a grade if its category matches any, e.g. `sprawdzian, kartkówka` |
 | `sort` | Grade log, Subject grades | `newest` (default) or `oldest` first |
 | `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator | Pick one subject (Grade trend / Grade goal default to the overall average) |
 | `target` | Grade goal | Target average, e.g. `4.5` |
+| `mode` | Hero, Hero History | `archetype` or `hero` - which set of names and descriptions to use |
 | `mailbox` | Messages | `inbox` / `substitutions` / `alerts` / `justifications` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
 | `summary_only` / `hide_generate` | Weekly AI summary | Show only the headline, warning and to-dos (no section tabs); hide the Generate now button |
@@ -158,7 +160,7 @@ card supports:
 | `hide_header` | every card | Hide the header row entirely |
 | `compact` | every card | Tighter padding, smaller icon badge, subtitle hidden - for a denser dashboard |
 | `hide_outage_warning` | every card | Hide the "Librus not responding" strip. By default a card with a header shows it under the header while the integration's *Connection status* sensor is `stale` (Librus isn't answering and the last data is shown), with the time of that data |
-| `tap_action` | the glanceable cards: all six tiles, Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Streaks, Rank | Standard Lovelace action config (YAML) - `navigate`, `more-info`, `url`, `perform-action`, `none` |
+| `tap_action` | the glanceable cards: the tiles (except Last update), Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Streaks, Rank | Standard Lovelace action config (YAML) - `navigate`, `more-info`, `url`, `perform-action`, `none` |
 
 `tap_action` is set in YAML (no visual-editor field yet), e.g.:
 
@@ -207,7 +209,7 @@ and empty state, with a light/dark toggle and a language switcher.
    If a student picker is all the card needs, that's it (no `EDITOR_FIELDS` entry required); for
    extra controls add one, keyed by the card's `custom:` type - a `text` field (`title`,
    `exam_keywords`, `category_filter`), a `number` (`max_items`, `days_ahead`, `days`, `target`), a
-   `boolean` (`show_saturday`), a `subject` picker, or a `select` (`mailbox`, `sort`). The editor
+   `boolean` (`show_saturday`), a `subject` picker, or a `select` (`mailbox`, `sort`, `mode`). The editor
    renders the student picker automatically whenever more than one Librus device exists, and always
    appends the universal `icon` / `hide_header` / `compact` / `hide_outage_warning` fields - those are honored generically by
    `LibrusBaseCard` (see `utils/base-card.ts`), so a new card gets them for free.
@@ -234,7 +236,7 @@ subject NAME comes from that entity's own `subject` attribute (added in `ha-libr
 v0.4.7 specifically for this), not from `entity_id` or `friendly_name`, both of which are
 per-language and/or user-renameable.
 
-The calendar-reading cards (Today's lessons, Agenda, Free days, Week timetable) fetch events via
+The calendar-reading cards (Today's lessons, Agenda, Week timetable, Today's schedule, Tomorrow, First lesson, School day, Free days, Free days tile, Lesson-time split, and Next exam as a fallback) fetch events via
 Home Assistant's REST API (`GET /api/calendars/<entity_id>?start=...&end=...`) rather than reading
 sensor state - `src/utils/calendar.ts` normalizes both response shapes HA has shipped for
 `start`/`end` (a bare ISO string, and a Google-Calendar-style `{date}`/`{dateTime}` object)
