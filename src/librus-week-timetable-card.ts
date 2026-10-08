@@ -40,6 +40,17 @@ function hm(d: Date): string {
   return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
+/** One entry of the Changes to the usual timetable sensor's `changes`. */
+interface PlanChange {
+  date: string;
+  lesson_no: number | null;
+  kind: "cancelled" | "missing" | "extra" | "subject" | "room" | "no_lessons";
+  subject: string | null;
+  planned_subject: string | null;
+  classroom: string | null;
+  planned_classroom: string | null;
+}
+
 /** Lesson number for an event, from the School sensor's `bell_schedule`:
  * an exact start-time match first, else the period the start falls inside
  * (a lesson that starts a few minutes late). `undefined` if neither. */
@@ -168,6 +179,26 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     const now = new Date();
     const todayColumn = isoWeekday(now.toISOString()) - 1; // out of range on days not shown
 
+    // How the week differs from the usual plan (Changes to the usual
+    // timetable sensor, integration 0.12.1+): an extra lesson, another
+    // subject or room, a planned lesson that isn't there. Needs real lesson
+    // numbers as rows. Cancelled lessons are already marked by the calendar.
+    const planEntity = resolved.map.plan_changes ? hass.states[resolved.map.plan_changes] : undefined;
+    const planChanges = new Map<string, PlanChange>();
+    if (allPlaced) {
+      for (const change of (planEntity?.attributes.changes as PlanChange[] | undefined) ?? []) {
+        if (change.kind !== "cancelled" && change.lesson_no !== null) {
+          planChanges.set(`${change.date}|${change.lesson_no}`, change);
+        }
+      }
+    }
+    const firstDay = new Date(this._events[0].start);
+    const monday = new Date(firstDay.getFullYear(), firstDay.getMonth(), firstDay.getDate() - (isoWeekday(this._events[0].start) - 1));
+    const columnDate = (dayIndex: number): string => {
+      const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + dayIndex);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    };
+
     // "Break now": today has a lesson already ended and one still to come,
     // but none happening right now.
     const todayEvents = (todayColumn >= 0 && todayColumn < dayCount ? byDay[todayColumn] : []).filter(
@@ -206,13 +237,34 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
           ${rowLabels.map((label, row) => html`
             <span class="n">${label}</span>
             ${grid[row].map((slot, dayIndex) => {
-              if (!slot.length) return html`<div class="cell empty"></div>`;
+              const change = planChanges.get(`${columnDate(dayIndex)}|${label}`);
+              if (!slot.length) {
+                if (change?.kind === "missing" && change.planned_subject) {
+                  return html`<div
+                    class="cell missing"
+                    title=${`${change.planned_subject} (${t(hass, "label.lesson_missing")})`}
+                  >${abbreviate(change.planned_subject)}</div>`;
+                }
+                return html`<div class="cell empty"></div>`;
+              }
               const infos = slot.map((e) => lessonInfo(e));
               // A held lesson is shown over a cancelled one in the same slot.
               const shownIndex = Math.max(0, infos.findIndex((i) => !i.cancelled));
               const info = infos[shownIndex];
               const cancelled = infos.every((i) => i.cancelled);
-              const substitution = infos.some((i) => i.substitution || i.roomChange || i.moved);
+              const planNote =
+                change?.kind === "extra"
+                  ? t(hass, "label.lesson_extra")
+                  : change?.kind === "subject" && change.planned_subject
+                    ? t(hass, "label.lesson_instead_of", { subject: change.planned_subject })
+                    : change?.kind === "room" && change.planned_classroom && change.classroom
+                      ? t(hass, "label.lesson_room_change", { from: change.planned_classroom, to: change.classroom })
+                      : null;
+              const substitution =
+                infos.some((i) => i.substitution || i.roomChange || i.moved) ||
+                change?.kind === "subject" ||
+                change?.kind === "room";
+              const extra = change?.kind === "extra";
               const isToday = dayIndex === todayColumn;
               const current = isToday && slot.some((e, i) => !infos[i].cancelled && isHappeningNow(e, now));
               const next = breakNow && isToday && slot.includes(nextToday!);
@@ -228,10 +280,10 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
                           ? `${i.name} (${t(hass, "label.lesson_substitution")})`
                           : i.name
                 )
-                .join(" / ");
+                .join(" / ") + (planNote ? ` (${planNote})` : "");
               // Parallel groups (e.g. split language classes) share one slot.
               return html`<div
-                class="cell on ${current ? "current" : ""} ${next ? "next" : ""} ${cancelled ? "off" : ""} ${substitution && !cancelled ? "sub" : ""}"
+                class="cell on ${current ? "current" : ""} ${next ? "next" : ""} ${cancelled ? "off" : ""} ${substitution && !cancelled ? "sub" : ""} ${extra && !cancelled ? "extra" : ""}"
                 title=${tip}
               >${abbreviate(info.name)}${slot.length > 1 ? "+" : ""}</div>`;
             })}
@@ -309,6 +361,18 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
       .cell.sub {
         outline: 2px dashed var(--lc-amber);
         outline-offset: -2px;
+      }
+      /* Against the usual plan: an extra lesson (green outline), a planned
+         lesson that isn't there (ghost cell, struck through). */
+      .cell.extra {
+        outline: 2px dashed var(--lc-good);
+        outline-offset: -2px;
+      }
+      .cell.missing {
+        background: transparent;
+        border: 1px dashed var(--divider-color);
+        text-decoration: line-through;
+        opacity: 0.55;
       }
     `,
   ];

@@ -483,6 +483,22 @@
           { id: 1, status: "accept", decision: "accepted", posted: ago(24) + " 20:05:00", date_from: ago(27), date_to: ago(25), justified_absences: 15, message: "" },
         ],
       }, 1);
+      // Changes to the usual timetable (integration 0.12.1+): made-up
+      // differences in the week the week-timetable card shows.
+      {
+        const shown = new Date(today);
+        if (shown.getDay() === 0 || shown.getDay() === 6) shown.setDate(shown.getDate() + 7);
+        const monday = new Date(shown.getFullYear(), shown.getMonth(), shown.getDate() - ((shown.getDay() + 6) % 7));
+        const weekday = (n) => iso(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + n - 1));
+        addEntity("sensor.plan_changes", "plan_changes", {
+          changes: [
+            { date: weekday(1), lesson_no: 3, kind: "room", subject: "Matematyka", planned_subject: "Matematyka", classroom: "21", planned_classroom: "12", free_day: null },
+            { date: weekday(2), lesson_no: 5, kind: "extra", subject: "Biologia", planned_subject: null, classroom: "15", planned_classroom: null, free_day: null },
+            { date: weekday(3), lesson_no: 1, kind: "subject", subject: "Matematyka", planned_subject: "Język polski", classroom: "10", planned_classroom: "10", free_day: null },
+            { date: weekday(5), lesson_no: 4, kind: "missing", subject: null, planned_subject: "Chemia", classroom: null, planned_classroom: "8", free_day: null },
+          ],
+        }, 4);
+      }
       addEntity("sensor.unexcused_absences", "unexcused_absences", {
         recent_dates: [ago(1), ago(2)],
         awaiting_justification: [ago(2), ago(1)],
