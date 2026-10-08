@@ -23,6 +23,18 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
   <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=MichalZaniewicz&repository=ha-librus-synergia-cards&category=plugin"><img alt="Open your Home Assistant instance and open this repository inside the Home Assistant Community Store." src="https://my.home-assistant.io/badges/hacs_repository.svg"></a>
 </p>
 
+## A school dashboard, ready-made
+
+<p align="center">
+  <img src="docs/trailer.webp" alt="Librus Synergia Cards trailer: 65 cards, light and dark, English and Polish, the visual editor">
+</p>
+
+65 cards built for one job: showing a child's school life from Librus on a Home Assistant dashboard. Today's lessons and what changed, grades with a report card forecast, attendance, messages, homework, tests and the lucky number. Every card follows your light or dark theme, speaks English or Polish, and is set up in the visual editor, without YAML. With more than one child, each card picks a student, and some show all of them at once.
+
+The cards read the entities of the [Librus Synergia integration](https://github.com/MichalZaniewicz/ha-librus-synergia), so install that first.
+
+## Meet the cards
+
 ![Preview of the Librus Synergia cards](docs/screenshots/cards-overview-dark.png)
 
 ## Cards
