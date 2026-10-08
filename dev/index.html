@@ -427,11 +427,67 @@
     addEntity("sensor.next_exam", "next_exam", {
       days_until: Math.round((tomorrowDay.getTime() - today.getTime()) / 86400000),
       subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne",
+      // Topics to revise (integration 0.12.1+): made-up lessons since the
+      // previous test in the subject; one the student missed.
+      topics: [
+        { date: iso(new Date(today.getTime() - 15 * 86400000)), lesson_no: 2, topic: "Skracanie i rozszerzanie ułamków", absent: false },
+        { date: iso(new Date(today.getTime() - 13 * 86400000)), lesson_no: 3, topic: "Porównywanie ułamków zwykłych", absent: false },
+        { date: iso(new Date(today.getTime() - 8 * 86400000)), lesson_no: 2, topic: "Dodawanie i odejmowanie ułamków zwykłych", absent: true },
+        { date: iso(new Date(today.getTime() - 6 * 86400000)), lesson_no: 4, topic: "Ułamki dziesiętne - zamiana", absent: false },
+        { date: iso(new Date(today.getTime() - 1 * 86400000)), lesson_no: 1, topic: "Powtórzenie wiadomości", absent: false },
+      ],
+      topics_since: iso(new Date(today.getTime() - 20 * 86400000)),
+      missed_topics: 1,
       upcoming: [
-        { date: tomorrowIso, subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne" },
-        { date: iso(new Date(today.getTime() + 9 * 86400000)), subject: "Historia", category: "Sprawdzian", content: "Rozdział 2" },
+        { id: 1, date: tomorrowIso, days_until: Math.round((tomorrowDay.getTime() - today.getTime()) / 86400000),
+          subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne",
+          topics_since: iso(new Date(today.getTime() - 20 * 86400000)), missed_topics: 1, more_topics: 0,
+          topics: [
+            { date: iso(new Date(today.getTime() - 15 * 86400000)), lesson_no: 2, topic: "Skracanie i rozszerzanie ułamków", absent: false },
+            { date: iso(new Date(today.getTime() - 13 * 86400000)), lesson_no: 3, topic: "Porównywanie ułamków zwykłych", absent: false },
+            { date: iso(new Date(today.getTime() - 8 * 86400000)), lesson_no: 2, topic: "Dodawanie i odejmowanie ułamków zwykłych", absent: true },
+            { date: iso(new Date(today.getTime() - 6 * 86400000)), lesson_no: 4, topic: "Ułamki dziesiętne - zamiana", absent: false },
+            { date: iso(new Date(today.getTime() - 1 * 86400000)), lesson_no: 1, topic: "Powtórzenie wiadomości", absent: false },
+          ] },
+        { id: 2, date: iso(new Date(today.getTime() + 9 * 86400000)), days_until: 9, subject: "Historia", category: "Sprawdzian", content: "Rozdział 2",
+          topics_since: null, missed_topics: 0, more_topics: 0,
+          topics: [
+            { date: iso(new Date(today.getTime() - 12 * 86400000)), lesson_no: 5, topic: "Polska Piastów", absent: false },
+            { date: iso(new Date(today.getTime() - 5 * 86400000)), lesson_no: 5, topic: "Chrzest Polski", absent: false },
+          ] },
+        { id: 3, date: iso(new Date(today.getTime() + 12 * 86400000)), days_until: 12, subject: "Biologia", category: "Kartkówka", content: "Komórka",
+          topics_since: iso(new Date(today.getTime() - 18 * 86400000)), missed_topics: 0, more_topics: 0,
+          topics: [
+            { date: iso(new Date(today.getTime() - 4 * 86400000)), lesson_no: 6, topic: "Budowa komórki", absent: false },
+          ] },
       ],
     }, tomorrowIso);
+    // School documents and justifications (integration 0.12.0+, decision
+    // field 0.12.1+): made-up documents and dates.
+    {
+      const ago = (days) => iso(new Date(today.getTime() - days * 86400000));
+      addEntity("sensor.school_documents", "school_documents", {
+        recent: [
+          { id: "d1", name: "Regulamin wycieczek szkolnych", added: ago(2) + " 10:12:00", url: "https://synergia.librus.pl/" },
+          { id: "d2", name: "Zgoda na wyjście - Muzeum Narodowe", added: ago(9) + " 08:30:00", url: "https://synergia.librus.pl/" },
+          { id: "d3", name: "Statut szkoły 2026/2027", added: ago(36) + " 12:00:00", url: "https://synergia.librus.pl/" },
+          { id: "d4", name: "Kalendarz roku szkolnego", added: ago(37) + " 12:00:00", url: null },
+        ],
+      }, 4);
+      addEntity("sensor.justifications", "justifications", {
+        accepted: 2, rejected: 0, pending: 1,
+        recent: [
+          { id: 3, status: "new", decision: "pending", posted: ago(1) + " 18:20:00", date_from: ago(4), date_to: ago(3), justified_absences: 5, message: "Choroba, zwolnienie lekarskie w załączeniu." },
+          { id: 2, status: "accept", decision: "accepted", posted: ago(11) + " 07:40:00", date_from: ago(12), date_to: ago(12), justified_absences: 3, message: "Wizyta u lekarza." },
+          { id: 1, status: "accept", decision: "accepted", posted: ago(24) + " 20:05:00", date_from: ago(27), date_to: ago(25), justified_absences: 15, message: "" },
+        ],
+      }, 1);
+      addEntity("sensor.unexcused_absences", "unexcused_absences", {
+        recent_dates: [ago(1), ago(2)],
+        awaiting_justification: [ago(2), ago(1)],
+        justification_sent: [],
+      }, 2);
+    }
     addEntity("sensor.school_class", "school_class", {
       homeroom_teacher: "Anna Nowak",
       student_number: 25,
@@ -845,6 +901,9 @@
       "librus-grades-card", "librus-grade-log-card",
       "librus-lesson-topics-card",
       "librus-school-trips-card",
+      "librus-exam-prep-card",
+      "librus-school-documents-card",
+      "librus-justifications-card",
       { tag: "librus-subject-grades-card", config: { type: "custom:librus-subject-grades-card", subject_id: 1 } },
       "librus-grade-trend-card",
       { tag: "librus-grade-trend-card", config: { type: "custom:librus-grade-trend-card", subject_id: 1 } },
