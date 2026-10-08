@@ -8,7 +8,7 @@ import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { isoDate } from "./utils/calendar";
 
-/** One row of the Lesson topics sensor's `recent` attribute (integration 0.11.1+). */
+/** One row of the Lesson topics sensor's `recent` attribute (integration 0.12.0+). */
 interface TopicRow {
   date: string;
   lesson_no: number | null;

@@ -14,7 +14,7 @@ interface HomeworkItem {
   text: string;
   due_date: string | null;
   teacher: string | null;
-  /** Homework category name (integration 0.11.1+). */
+  /** Homework category name (integration 0.12.0+). */
   category?: string | null;
   subject?: string | null;
 }

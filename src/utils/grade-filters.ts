@@ -19,7 +19,7 @@ export interface GradeLogEntry {
 }
 
 /**
- * A subject sensor's text grades (`text_grades`, integration 0.11.1+): a
+ * A subject sensor's text grades (`text_grades`, integration 0.12.0+): a
  * grade the teacher entered as text. Shown with a pencil chip and the text
  * as the quote line.
  */

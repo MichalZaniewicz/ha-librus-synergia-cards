@@ -50,7 +50,7 @@ export async function fetchFullMessage(
 /**
  * Downloads one message attachment straight to this device, through the
  * integration's logged-in endpoint `/api/librus_synergia/attachment/...`
- * (integration 0.11.1+). Nothing is saved in Home Assistant and the message
+ * (integration 0.12.0+). Nothing is saved in Home Assistant and the message
  * isn't opened in Librus. The browser saves it under the file's own name.
  */
 export async function downloadAttachment(

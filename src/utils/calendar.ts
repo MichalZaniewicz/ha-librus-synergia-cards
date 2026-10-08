@@ -70,7 +70,7 @@ export async function fetchCalendarEvents(
  * appends " (odwołane)", " (zastępstwo)", " (zmiana sali)" or
  * " (przeniesiona)" to the summary (calendar.py) and puts the teacher on the
  * description's first line, then details such as "Zmiana sali: 12 → 21"
- * (backend 0.11.1+). `name` is the subject without the suffix, so a changed
+ * (backend 0.12.0+). `name` is the subject without the suffix, so a changed
  * lesson still counts as its subject. */
 export interface LessonInfo {
   name: string;

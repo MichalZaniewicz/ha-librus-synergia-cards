@@ -8,7 +8,7 @@ import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { formatShortDate } from "./utils/format";
 
-/** One trip in the Next school trip sensor's attributes (integration 0.11.1+). */
+/** One trip in the Next school trip sensor's attributes (integration 0.12.0+). */
 interface Trip {
   destination: string;
   route: string;

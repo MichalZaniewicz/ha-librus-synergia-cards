@@ -15,7 +15,7 @@ const MAX_WEIGHT = 5;
  * "What if I got a __ (weight __) next?" - pick a subject in the config,
  * tap a grade and adjust the weight, see where the average would land.
  *
- * With the integration's grade forecast (0.11.1+) the projection is exact:
+ * With the integration's grade forecast (0.12.0+) the projection is exact:
  * the subject sensor carries the average and the sum of weights it is
  * computed on, and the card shows what the new average would make of the
  * report-card grade. On an older integration it falls back to treating

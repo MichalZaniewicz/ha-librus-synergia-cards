@@ -477,7 +477,7 @@
       }
       // Fizyka heads for a 1 so the forecast's "at risk" state shows.
       const avg = s.id === 9 ? 1.62 : 4 + (s.id % 7) * 0.28;
-      // Grade forecast (backend 0.11.1+), on the default thresholds.
+      // Grade forecast (backend 0.12.0+), on the default thresholds.
       const predicted = 1 + MOCK_THRESHOLDS.filter((t) => avg >= t).length;
       const nextAt = predicted < 6 ? MOCK_THRESHOLDS[predicted - 1] : null;
       const weight = 6;
@@ -510,7 +510,7 @@
         latest_grade_comments: grades[0].comments,
         grade_count: grades.length,
         grades,
-        // A text grade on Matematyka (integration 0.11.1+).
+        // A text grade on Matematyka (integration 0.12.0+).
         ...(s.id === 1 ? { text_grades: [{ value: "Bardzo dobrze opanowany materiał, aktywny na lekcji.", category: "praca na lekcji", date: iso(new Date(today.getTime() - 2 * 86400000)), teacher: "Jan Kowalski" }] } : {}),
         proposed_semester_grade: null,
         final_grade: null,
@@ -540,7 +540,7 @@
 
     // Connection health (backend: Status / Last successful update sensors).
     // "Symuluj awarię" in the toolbar flips these to an outage.
-    // Lesson topics (integration 0.11.1+): today's and the last days' topics,
+    // Lesson topics (integration 0.12.0+): today's and the last days' topics,
     // one missed day.
     {
       const dayIso = (offset) => iso(new Date(today.getTime() - offset * 86400000));
@@ -559,7 +559,7 @@
       }, 3);
     }
 
-    // Next school trip (integration 0.11.1+): made-up trips.
+    // Next school trip (integration 0.12.0+): made-up trips.
     {
       const tripDay = (offset) => iso(new Date(today.getTime() + offset * 86400000));
       const trips = [
@@ -665,7 +665,7 @@
       allDay: false,
       // A substitution and a cancelled last lesson, as Librus marks them
       // (librus-school-day-card outlines / strikes them through).
-      // Plus a room change (lesson 2) - backend 0.11.1+ titles and details.
+      // Plus a room change (lesson 2) - backend 0.12.0+ titles and details.
       summary: LESSON_SUBJECTS[(i + today.getDay()) % LESSON_SUBJECTS.length]
         + (i === 1 ? " (zmiana sali)" : i === 3 ? " (zastępstwo)" : i === bellSlots.length - 1 ? " (odwołane)" : ""),
       location: `sala ${10 + i}`,
@@ -749,7 +749,7 @@
         }
         await new Promise((resolve) => setTimeout(resolve, 900));
       },
-      // Attachment endpoint (integration 0.11.1+): a tiny made-up text file.
+      // Attachment endpoint (integration 0.12.0+): a tiny made-up text file.
       fetchWithAuth: async (path) => {
         await new Promise((resolve) => setTimeout(resolve, 400));
         return new Response("Przykładowy załącznik (dev harness)", {

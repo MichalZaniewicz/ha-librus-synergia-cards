@@ -28,7 +28,7 @@ const MAX_CLOSEST = 3;
  * report card the averages point to, as a grid of subject tiles, with the
  * forecast report-card average, the progress to a certificate with
  * distinction and the subjects where one grade moves something. All from
- * the integration's Grade forecast sensor (0.11.1+); the teacher decides
+ * the integration's Grade forecast sensor (0.12.0+); the teacher decides
  * the real grade, which the footer says.
  */
 @customElement("librus-report-card-card")

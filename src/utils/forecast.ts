@@ -2,7 +2,7 @@ import type { HassEntity } from "home-assistant-js-websocket";
 import type { LibrusHass } from "./types";
 
 /**
- * Helpers for the integration's grade forecast (0.11.1+): the Grade
+ * Helpers for the integration's grade forecast (0.12.0+): the Grade
  * forecast sensor carries the school's thresholds, each subject-average
  * sensor its own `predicted_grade` plus the exact average and weight total
  * the forecast is computed on. Everything degrades to "no forecast" on an
