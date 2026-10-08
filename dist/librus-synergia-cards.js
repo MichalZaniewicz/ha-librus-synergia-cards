@@ -1215,7 +1215,11 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
                 ${o.map(e=>W`<div class="topic">
                     <time>${Oe(e.date,a.language)}</time>
                     <span class="text"
-                      >${e.topic}${e.absent?W` <span class="tag">${je(a,"card.exam_prep.absent")}</span>`:q}</span
+                      >${e.topic}${(e.dates?.length??1)>1?W` <span
+                            class="times"
+                            title=${e.dates.map(e=>Oe(e,a.language)).join(", ")}
+                            >×${e.dates.length}</span
+                          >`:q}${e.absent?W` <span class="tag">${je(a,"card.exam_prep.absent")}</span>`:q}</span
                     >
                   </div>`)}
               </div>`:W`<div class="none">
@@ -1340,6 +1344,15 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
         font-weight: 700;
         color: var(--lc-bad);
         background: var(--lc-bad-bg);
+        border-radius: 999px;
+        padding: 1px 6px;
+        white-space: nowrap;
+      }
+      .times {
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: var(--secondary-text-color);
+        background: var(--lc-chip-bg);
         border-radius: 999px;
         padding: 1px 6px;
         white-space: nowrap;

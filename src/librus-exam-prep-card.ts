@@ -14,6 +14,8 @@ interface Topic {
   lesson_no: number | null;
   topic: string;
   absent: boolean;
+  /** Every lesson with this topic (integration 0.12.1-beta.2+). */
+  dates?: string[];
 }
 
 /** One test in the Next exam sensor's `upcoming` attribute. */
@@ -143,7 +145,13 @@ export class LibrusExamPrepCard extends LibrusBaseCard {
                   (topic) => html`<div class="topic">
                     <time>${formatShortDate(topic.date, hass.language)}</time>
                     <span class="text"
-                      >${topic.topic}${topic.absent
+                      >${topic.topic}${(topic.dates?.length ?? 1) > 1
+                        ? html` <span
+                            class="times"
+                            title=${topic.dates!.map((d) => formatShortDate(d, hass.language)).join(", ")}
+                            >×${topic.dates!.length}</span
+                          >`
+                        : nothing}${topic.absent
                         ? html` <span class="tag">${t(hass, "card.exam_prep.absent")}</span>`
                         : nothing}</span
                     >
@@ -290,6 +298,15 @@ export class LibrusExamPrepCard extends LibrusBaseCard {
         font-weight: 700;
         color: var(--lc-bad);
         background: var(--lc-bad-bg);
+        border-radius: 999px;
+        padding: 1px 6px;
+        white-space: nowrap;
+      }
+      .times {
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: var(--secondary-text-color);
+        background: var(--lc-chip-bg);
         border-radius: 999px;
         padding: 1px 6px;
         white-space: nowrap;
