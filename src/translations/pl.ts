@@ -225,6 +225,8 @@ export const pl: Record<keyof typeof en, string> = {
   "card.messages.fetch_failed": "Nie udało się pobrać pełnej treści",
   "card.messages.attachment_notice": "Kliknij plik, aby pobrać go na to urządzenie",
   "card.messages.attachment_error": "nie udało się pobrać - wymaga integracji 0.12.0+",
+  "card.messages.to": "Do: {name}",
+  "card.messages.empty": "Brak wiadomości",
 
   "card.substitutions.title": "Zastępstwa, alerty i usprawiedliwienia",
   "card.substitutions.subtitle": "Wiadomości specjalne",
@@ -236,6 +238,8 @@ export const pl: Record<keyof typeof en, string> = {
   "mailbox.absences": "Nieobecności",
   "mailbox.justifications": "Usprawiedliwienia",
   "mailbox.trash": "Kosz",
+  "mailbox.outbox": "Wysłane",
+  "mailbox.archive": "Archiwum",
 
   "card.announcements.title": "Ogłoszenia",
   "card.announcements.empty": "Brak ogłoszeń",
@@ -435,6 +439,7 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.homework_checklist.title": "Zadania do odhaczenia",
   "card.homework_checklist.progress": "{done}/{total} zrobione",
+  "card.homework_checklist.file_error": "nie udało się pobrać",
 
   "card.semester_comparison.title": "Porównanie semestrów",
   "card.semester_comparison.subtitle": "Semestr 1 vs 2, wg przedmiotu",

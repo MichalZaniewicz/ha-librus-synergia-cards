@@ -89,6 +89,8 @@ const MAILBOX_OPTIONS: { value: string; label: TranslationKey }[] = [
   { value: "substitutions", label: "mailbox.substitutions" },
   { value: "alerts", label: "mailbox.alerts" },
   { value: "justifications", label: "mailbox.justifications" },
+  { value: "outbox", label: "mailbox.outbox" },
+  { value: "archive", label: "mailbox.archive" },
 ];
 
 const SORT_OPTIONS: { value: string; label: TranslationKey }[] = [

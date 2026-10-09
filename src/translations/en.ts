@@ -224,6 +224,8 @@ export const en = {
   "card.messages.fetch_failed": "Couldn't load the full message",
   "card.messages.attachment_notice": "Tap a file to download it to this device",
   "card.messages.attachment_error": "couldn't download - needs integration 0.12.0+",
+  "card.messages.to": "To {name}",
+  "card.messages.empty": "No messages here",
 
   "card.substitutions.title": "Substitutions, alerts & justifications",
   "card.substitutions.subtitle": "Zastępstwa, alerty i usprawiedliwienia",
@@ -235,6 +237,8 @@ export const en = {
   "mailbox.absences": "Absences",
   "mailbox.justifications": "Justifications",
   "mailbox.trash": "Trash",
+  "mailbox.outbox": "Sent",
+  "mailbox.archive": "Archive",
 
   "card.announcements.title": "Announcements",
   "card.announcements.empty": "No announcements",
@@ -434,6 +438,7 @@ export const en = {
 
   "card.homework_checklist.title": "Homework checklist",
   "card.homework_checklist.progress": "{done}/{total} done",
+  "card.homework_checklist.file_error": "couldn't download",
 
   "card.semester_comparison.title": "Semester comparison",
   "card.semester_comparison.subtitle": "Semester 1 vs 2, by subject",

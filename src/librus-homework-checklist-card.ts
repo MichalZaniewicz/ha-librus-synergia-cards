@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
+import { downloadHomeworkAttachment } from "./utils/services";
 
 interface HomeworkItem {
   id?: number;
@@ -17,6 +18,8 @@ interface HomeworkItem {
   /** Homework category name (integration 0.12.0+). */
   category?: string | null;
   subject?: string | null;
+  /** Files the teacher attached (newer integration). */
+  attachments?: { id: string; filename: string | null }[];
 }
 
 /**
@@ -40,6 +43,8 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
   @state() private _todoUids?: Set<string>;
   private _todoReading = false;
   private _migrated = false;
+  /** Attachment id -> download state. */
+  @state() private _fileState: Record<string, "loading" | "error"> = {};
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -153,6 +158,45 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
     }
   }
 
+  /** Download a file without ticking the homework off. */
+  private async _download(ev: Event, deviceId: string, file: { id: string; filename: string | null }): Promise<void> {
+    ev.stopPropagation();
+    if (!this.hass) return;
+    this._fileState = { ...this._fileState, [file.id]: "loading" };
+    try {
+      await downloadHomeworkAttachment(this.hass, deviceId, file.id, file.filename ?? file.id);
+      const next = { ...this._fileState };
+      delete next[file.id];
+      this._fileState = next;
+    } catch {
+      this._fileState = { ...this._fileState, [file.id]: "error" };
+    }
+  }
+
+  private _renderFiles(deviceId: string, files: HomeworkItem["attachments"]): TemplateResult | typeof nothing {
+    if (!files?.length || !this.hass) return nothing;
+    return html`
+      <div class="files">
+        ${files.map((file) => {
+          const state = this._fileState[file.id];
+          return html`<button
+            class="file"
+            type="button"
+            ?disabled=${state === "loading"}
+            @click=${(ev: Event) => this._download(ev, deviceId, file)}
+            @keydown=${(ev: KeyboardEvent) => ev.stopPropagation()}
+          >
+            <ha-icon icon=${state === "loading" ? "mdi:progress-download" : "mdi:paperclip"}></ha-icon>
+            <span class="file-name">${file.filename ?? file.id}</span>
+            ${state === "error"
+              ? html`<span class="file-error">${t(this.hass!, "card.homework_checklist.file_error")}</span>`
+              : nothing}
+          </button>`;
+        })}
+      </div>
+    `;
+  }
+
   protected render(): TemplateResult | typeof nothing {
     if (!this._config || !this.hass) return nothing;
     this._syncTheme();
@@ -236,6 +280,7 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
                   ${it.text && it.text !== it.topic
                     ? html`<div class="item-text">${it.text}</div>`
                     : nothing}
+                  ${this._renderFiles(deviceId, it.attachments)}
                 </div>
               </div>
             `;
@@ -277,6 +322,38 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
       }
       .hw-item.done .row1 span {
         text-decoration: line-through;
+      }
+      .files {
+        margin-top: 4px;
+      }
+      .file {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font: inherit;
+        font-size: 0.75rem;
+        color: var(--lc-brand);
+        background: none;
+        border: 0;
+        padding: 2px 0;
+        cursor: pointer;
+        text-align: left;
+      }
+      .file:disabled {
+        cursor: progress;
+        opacity: 0.7;
+      }
+      .file ha-icon {
+        --mdc-icon-size: 14px;
+        flex: none;
+      }
+      .file-name {
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .file-error {
+        color: var(--lc-bad);
+        margin-left: 6px;
       }
     `,
   ];

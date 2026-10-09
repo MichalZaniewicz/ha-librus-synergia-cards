@@ -13,6 +13,8 @@ interface RecentMessage {
   id: string;
   mailbox?: string;
   sender: string;
+  /** Set for sent messages (outbox). */
+  receiver?: string | null;
   topic: string;
   content: string;
   date: string | null;
@@ -26,7 +28,15 @@ const RECENT_ATTR: Record<string, string> = {
   substitutions: "substitutions_recent",
   alerts: "alerts_recent",
   justifications: "justifications_recent",
+  outbox: "outbox_recent",
+  archive: "archive_recent",
 };
+
+/** Mailboxes without an unread count. */
+const NO_COUNT = new Set(["outbox", "archive"]);
+
+/** The integration's mailbox name, where it differs from the tab key. */
+const SERVICE_MAILBOX: Record<string, string> = { archive: "archive/inbox" };
 
 const MAILBOXES: { key: string; label: TranslationKey }[] = [
   { key: "inbox", label: "mailbox.inbox" },
@@ -36,6 +46,8 @@ const MAILBOXES: { key: string; label: TranslationKey }[] = [
   { key: "absences", label: "mailbox.absences" },
   { key: "justifications", label: "mailbox.justifications" },
   { key: "trash", label: "mailbox.trash" },
+  { key: "outbox", label: "mailbox.outbox" },
+  { key: "archive", label: "mailbox.archive" },
 ];
 
 @customElement("librus-messages-card")
@@ -49,6 +61,8 @@ export class LibrusMessagesCard extends LibrusBaseCard {
   @state() private _fullById: Record<string, FullMessage> = {};
   @state() private _pendingIds: Set<string> = new Set();
   @state() private _errorIds: Set<string> = new Set();
+  /** Mailbox picked by tapping a chip; overrides the configured one. */
+  @state() private _viewMailbox?: string;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -59,7 +73,14 @@ export class LibrusMessagesCard extends LibrusBaseCard {
   }
 
   private get _mailbox(): string {
+    if (this._viewMailbox) return this._viewMailbox;
     return this._config?.mailbox && RECENT_ATTR[this._config.mailbox] ? this._config.mailbox : "inbox";
+  }
+
+  private _pickMailbox(key: string): void {
+    if (!RECENT_ATTR[key] || key === this._mailbox) return;
+    this._viewMailbox = key;
+    this._expandedId = undefined;
   }
 
   public setConfig(config: LibrusCardConfig): void {
@@ -89,7 +110,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     const resolved = this._resolveEntities();
     if ("error" in resolved || !this.hass) return;
 
-    const mailbox = m.mailbox ?? this._mailbox;
+    const mailbox = m.mailbox ?? SERVICE_MAILBOX[this._mailbox] ?? this._mailbox;
     this._pendingIds = new Set(this._pendingIds).add(m.id);
     const nextErrors = new Set(this._errorIds);
     nextErrors.delete(m.id);
@@ -158,7 +179,9 @@ export class LibrusMessagesCard extends LibrusBaseCard {
               </div>
             `
           : nothing}
-        <div class="read-notice">${t(hass, "card.messages.read_notice")}</div>
+        ${this._mailbox === "outbox"
+          ? nothing
+          : html`<div class="read-notice">${t(hass, "card.messages.read_notice")}</div>`}
       `;
     }
     if (this._errorIds.has(m.id)) {
@@ -198,12 +221,23 @@ export class LibrusMessagesCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="chips">
-          ${MAILBOXES.map(
-            ({ key, label }) => html`
-              <span class="chip ${key === mailbox ? "hot" : ""}"
-                >${t(hass, label)} <span class="n">${breakdown[key] ?? 0}</span></span
-              >
-            `
+          ${MAILBOXES.filter(
+            // Sent/archive only once the integration provides them.
+            ({ key }) => !NO_COUNT.has(key) || entity.attributes[RECENT_ATTR[key]] !== undefined
+          ).map(
+            ({ key, label }) => {
+              const pickable = entity.attributes[RECENT_ATTR[key]] !== undefined;
+              return html`
+                <span
+                  class="chip ${key === mailbox ? "hot" : ""} ${pickable ? "pickable" : ""}"
+                  role=${pickable ? "button" : nothing}
+                  @click=${pickable ? () => this._pickMailbox(key) : nothing}
+                  >${t(hass, label)}${NO_COUNT.has(key)
+                    ? nothing
+                    : html` <span class="n">${breakdown[key] ?? 0}</span>`}</span
+                >
+              `;
+            }
           )}
         </div>
         ${recent.length
@@ -213,11 +247,13 @@ export class LibrusMessagesCard extends LibrusBaseCard {
                 ${recent.slice(0, max).map(
                   (m) => html`
                     <div class="list-item clickable" @click=${() => this._onMessageClick(m)}>
-                      <span class="dot ${m.unread ? "good" : "neutral"}"></span>
+                      <span class="dot ${m.unread && !m.receiver ? "good" : "neutral"}"></span>
                       <div class="body">
                         <div class="row1">
                           <span class="sender"
-                            >${m.sender}${m.has_attachment
+                            >${m.receiver
+                              ? t(hass, "card.messages.to", { name: m.receiver })
+                              : m.sender}${m.has_attachment
                               ? html`<ha-icon class="clip" icon="mdi:paperclip"></ha-icon>`
                               : nothing}</span
                           >
@@ -230,7 +266,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
                 )}
               </div>
             `
-          : nothing}
+          : html`<div class="empty-box">${t(hass, "card.messages.empty")}</div>`}
       </ha-card>
     `;
   }
@@ -241,6 +277,14 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     css`
       .list-item.clickable {
         cursor: pointer;
+      }
+      .chip.pickable {
+        cursor: pointer;
+      }
+      .empty-box {
+        font-size: 0.75rem;
+        color: var(--secondary-text-color);
+        padding: 10px 2px 2px;
       }
       .full-text {
         font-size: 0.75rem;

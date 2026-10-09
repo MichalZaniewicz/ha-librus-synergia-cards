@@ -60,9 +60,32 @@ export async function downloadAttachment(
   attachmentId: string,
   fallbackName: string
 ): Promise<void> {
-  const path = `/api/librus_synergia/attachment/${encodeURIComponent(deviceId)}/${encodeURIComponent(
-    messageId
-  )}/${encodeURIComponent(attachmentId)}`;
+  await downloadFile(
+    hass,
+    `/api/librus_synergia/attachment/${encodeURIComponent(deviceId)}/${encodeURIComponent(
+      messageId
+    )}/${encodeURIComponent(attachmentId)}`,
+    fallbackName
+  );
+}
+
+/** A file attached to a homework assignment, through `/api/librus_synergia/homework_attachment/...`. */
+export async function downloadHomeworkAttachment(
+  hass: LibrusHass,
+  deviceId: string,
+  attachmentId: string,
+  fallbackName: string
+): Promise<void> {
+  await downloadFile(
+    hass,
+    `/api/librus_synergia/homework_attachment/${encodeURIComponent(deviceId)}/${encodeURIComponent(
+      attachmentId
+    )}`,
+    fallbackName
+  );
+}
+
+async function downloadFile(hass: LibrusHass, path: string, fallbackName: string): Promise<void> {
   const withAuth = hass as unknown as {
     fetchWithAuth?: (path: string, init?: RequestInit) => Promise<Response>;
     auth?: { data?: { access_token?: string } };

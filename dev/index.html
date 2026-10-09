@@ -389,6 +389,14 @@
       justifications_recent: [
         { id: "9003", mailbox: "justifications", sender: "Wychowawca", topic: "Usprawiedliwienie nieobecności", content: "Twoje usprawiedliwienie nieobecności z dnia 3 września oczekuje na akceptację wychowawcy.", date: iso(today), unread: true, has_attachment: false },
       ],
+      // Sent messages and the archive (newer integration). Made-up people.
+      outbox_recent: [
+        { id: "9101", mailbox: "outbox", sender: "", receiver: "Nowak Anna", topic: "Pytanie o zebranie", content: "Dzień dobry, czy zebranie odbędzie się w sali 12?", date: iso(new Date(today.getTime() - 1 * 86400000)), unread: false, has_attachment: false },
+        { id: "9102", mailbox: "outbox", sender: "", receiver: "Zielińska Maria", topic: "Nieobecność", content: "Zosia jutro będzie nieobecna z powodu wizyty u lekarza.", date: iso(new Date(today.getTime() - 5 * 86400000)), unread: false, has_attachment: false },
+      ],
+      archive_recent: [
+        { id: "9201", mailbox: "archive/inbox", sender: "Sekretariat", topic: "Zakończenie roku szkolnego", content: "Uroczyste zakończenie roku szkolnego odbędzie się 26 czerwca o 9:00.", date: "2026-06-20", unread: false, has_attachment: false },
+      ],
     }, 1);
     // Bell schedule built around the real wall-clock now so the
     // bell-schedule card always has a "current" period to highlight in the
@@ -514,7 +522,7 @@
     }, "7d");
     addEntity("sensor.homework_assignments", "homework_assignments", {
       recent: [
-        { id: 101, topic: "Matematyka", text: "Zadania 1-5, strona 42 - ułamki dziesiętne.", due_date: tomorrowIso, date: iso(today), teacher: "Jan Kowalski", category: "ćwiczenia" },
+        { id: 101, topic: "Matematyka", text: "Zadania 1-5, strona 42 - ułamki dziesiętne.", due_date: tomorrowIso, date: iso(today), teacher: "Jan Kowalski", category: "ćwiczenia", attachments: [{ id: "31", filename: "karta-pracy-ulamki.pdf" }] },
         { id: 102, topic: "Język polski", text: "Wypracowanie: „Moje wakacje” (min. 150 słów).", due_date: iso(new Date(today.getTime() + 6 * 86400000)), date: iso(today), teacher: "Anna Nowak" },
         { id: 103, topic: "Biologia", text: "Notatka o fotosyntezie.", due_date: iso(new Date(today.getTime() + 4 * 86400000)), date: iso(today), teacher: "K. Nowak" },
       ],
@@ -838,7 +846,7 @@
         }
         await new Promise((resolve) => setTimeout(resolve, 900));
       },
-      // Attachment endpoint (integration 0.12.0+): a tiny made-up text file.
+      // Attachment endpoints (message and homework files): a tiny made-up text file.
       fetchWithAuth: async (path) => {
         await new Promise((resolve) => setTimeout(resolve, 400));
         return new Response("Przykładowy załącznik (dev harness)", {
