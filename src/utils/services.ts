@@ -85,6 +85,21 @@ export async function downloadHomeworkAttachment(
   );
 }
 
+/** Download one school document through Home Assistant (integration 0.12.5+);
+ * its Synergia link needs a logged-in Synergia session the browser lacks. */
+export async function downloadSchoolFile(
+  hass: LibrusHass,
+  deviceId: string,
+  fileId: string,
+  fallbackName: string
+): Promise<void> {
+  await downloadFile(
+    hass,
+    `/api/librus_synergia/school_file/${encodeURIComponent(deviceId)}/${encodeURIComponent(fileId)}`,
+    fallbackName
+  );
+}
+
 async function downloadFile(hass: LibrusHass, path: string, fallbackName: string): Promise<void> {
   const withAuth = hass as unknown as {
     fetchWithAuth?: (path: string, init?: RequestInit) => Promise<Response>;

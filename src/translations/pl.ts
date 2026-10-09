@@ -47,6 +47,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.school_documents.requires": "Wymaga ha-librus-synergia 0.12.0+ (sensor Dokumenty szkoły)",
   "card.school_documents.new": "nowy",
   "card.school_documents.added": "dodano {date}",
+  "card.school_documents.download_error": "nie udało się pobrać",
   "card.justifications.title": "Usprawiedliwienia",
   "card.justifications.subtitle_pending": "czeka na decyzję szkoły: {count}",
   "card.justifications.subtitle_done": "nic nie czeka na decyzję szkoły",
@@ -247,6 +248,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.messages.read_some": "Przeczytana przez {read} z {total}",
   "card.messages.read_none": "Jeszcze nieprzeczytana",
   "card.messages.empty": "Brak wiadomości",
+  "card.messages.attachment_archived": "Librus nie pozwala tu pobrać plików z wiadomości w archiwum - otwórz wiadomość w Synergii",
 
   "card.substitutions.title": "Zastępstwa, alerty i usprawiedliwienia",
   "card.substitutions.subtitle": "Wiadomości specjalne",

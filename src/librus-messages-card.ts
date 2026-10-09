@@ -161,7 +161,19 @@ export class LibrusMessagesCard extends LibrusBaseCard {
       return html`
         <div class="item-text"><b>${full.topic}</b></div>
         <div class="full-text">${full.content}</div>
-        ${full.attachments?.length
+        ${full.attachments?.length && this._mailbox === "archive"
+          ? html`
+              <div class="attachments">
+                ${full.attachments.map(
+                  (a) => html`<div class="attachment archived">
+                    <ha-icon icon="mdi:paperclip"></ha-icon>
+                    <span class="attachment-name">${a.filename ?? a.id}</span>
+                  </div>`
+                )}
+                <div class="read-notice">${t(hass, "card.messages.attachment_archived")}</div>
+              </div>
+            `
+          : full.attachments?.length
           ? html`
               <div class="attachments">
                 ${full.attachments.map((a) => {

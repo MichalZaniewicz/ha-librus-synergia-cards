@@ -46,6 +46,7 @@ export const en = {
   "card.school_documents.requires": "Needs ha-librus-synergia 0.12.0+ (School documents sensor)",
   "card.school_documents.new": "new",
   "card.school_documents.added": "added {date}",
+  "card.school_documents.download_error": "download failed",
   "card.justifications.title": "Justifications",
   "card.justifications.subtitle_pending": "waiting for the school: {count}",
   "card.justifications.subtitle_done": "nothing waiting for the school",
@@ -246,6 +247,7 @@ export const en = {
   "card.messages.read_some": "Read by {read} of {total}",
   "card.messages.read_none": "Not read yet",
   "card.messages.empty": "No messages here",
+  "card.messages.attachment_archived": "Librus doesn't let you download files from archived messages here - open the message in Synergia",
 
   "card.substitutions.title": "Substitutions, alerts & justifications",
   "card.substitutions.subtitle": "Zastępstwa, alerty i usprawiedliwienia",

@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { formatShortDate } from "./utils/format";
+import { downloadSchoolFile } from "./utils/services";
 
 /** One document in the School documents sensor's `recent` attribute. */
 interface SchoolDocument {
@@ -20,12 +21,16 @@ interface SchoolDocument {
 const NEW_DAYS = 7;
 
 /**
- * Forms and regulations the school shares with parents. A tap opens the
- * document in Synergia (where the parent is logged in).
+ * Forms and regulations the school shares with parents. A tap downloads the
+ * document through Home Assistant (integration 0.12.5+) - its Synergia link
+ * only works in a browser logged in to Synergia; with an older integration
+ * the card falls back to opening that link.
  */
 @customElement("librus-school-documents-card")
 export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  /** Per-document download state. */
+  @state() private _fileState: Record<string, "loading" | "error"> = {};
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -51,6 +56,7 @@ export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
     const hass = this.hass;
+    const deviceId = resolved.deviceId;
     const entityId = resolved.map["school_documents"];
     const entity = entityId ? hass.states[entityId] : undefined;
     const icon = "mdi:file-document-multiple-outline";
@@ -94,15 +100,48 @@ export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
                     >`
                   : nothing}
               </span>
-              ${doc.url ? html`<ha-icon class="open" icon="mdi:open-in-new"></ha-icon>` : nothing}
+              ${this._fileState[doc.id] === "error"
+                ? html`<span class="doc-error">${t(hass, "card.school_documents.download_error")}</span>`
+                : nothing}
+              <ha-icon
+                class="open"
+                icon=${this._fileState[doc.id] === "loading" ? "mdi:progress-download" : "mdi:download"}
+              ></ha-icon>
             `;
-            return doc.url
-              ? html`<a class="doc" href=${doc.url} target="_blank" rel="noopener noreferrer">${body}</a>`
-              : html`<div class="doc">${body}</div>`;
+            return html`<button
+              class="doc"
+              type="button"
+              ?disabled=${this._fileState[doc.id] === "loading"}
+              @click=${() => this._download(deviceId, doc)}
+            >
+              ${body}
+            </button>`;
           })}
         </div>
       </ha-card>
     `;
+  }
+
+  private async _download(deviceId: string, doc: SchoolDocument): Promise<void> {
+    if (!this.hass) return;
+    this._fileState = { ...this._fileState, [doc.id]: "loading" };
+    try {
+      await downloadSchoolFile(this.hass, deviceId, doc.id, doc.name);
+      const next = { ...this._fileState };
+      delete next[doc.id];
+      this._fileState = next;
+    } catch {
+      // An integration older than 0.12.5 has no download path: open the
+      // Synergia page instead (works where the browser is logged in).
+      if (doc.url) {
+        window.open(doc.url, "_blank", "noopener,noreferrer");
+        const next = { ...this._fileState };
+        delete next[doc.id];
+        this._fileState = next;
+      } else {
+        this._fileState = { ...this._fileState, [doc.id]: "error" };
+      }
+    }
   }
 
   private _isNew(doc: SchoolDocument): boolean {
@@ -129,11 +168,26 @@ export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
         border-radius: 10px;
         color: inherit;
         text-decoration: none;
+        /* A button now (the download goes through Home Assistant). */
+        width: calc(100% + 12px);
+        background: none;
+        border: 0;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
       }
-      a.doc:hover {
+      .doc:disabled {
+        cursor: progress;
+      }
+      .doc-error {
+        font-size: 0.72rem;
+        color: var(--lc-bad);
+        white-space: nowrap;
+      }
+      .doc:hover {
         background: var(--lc-chip-bg);
       }
-      a.doc:focus-visible {
+      .doc:focus-visible {
         outline: 2px solid var(--lc-brand);
       }
       .file {
