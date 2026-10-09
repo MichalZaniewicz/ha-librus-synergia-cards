@@ -3571,6 +3571,14 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
         --mdc-icon-size: 14px;
         flex: none;
       }
+      /* Files of an archived message: listed, but not downloadable. */
+      .attachment.archived {
+        color: var(--secondary-text-color);
+        cursor: default;
+      }
+      .attachment.archived .attachment-name {
+        text-decoration: none;
+      }
     `],e([me()],Ba.prototype,"_config",void 0),e([me()],Ba.prototype,"_expandedId",void 0),e([me()],Ba.prototype,"_fullById",void 0),e([me()],Ba.prototype,"_pendingIds",void 0),e([me()],Ba.prototype,"_errorIds",void 0),e([me()],Ba.prototype,"_viewMailbox",void 0),e([me()],Ba.prototype,"_attachmentState",void 0),Ba=e([he("librus-messages-card")],Ba);let Oa=class extends Ve{static getConfigElement(){return Ue()}static getStubConfig(){return{type:"custom:librus-messages-tile-card"}}setConfig(e){this._config=e,this._configuredDeviceId=e.device_id}getCardSize(){return 1}render(){if(!this._config||!this.hass)return G;this._syncTheme();const e=this._resolveEntities();if("error"in e)return e.error;const{map:t}=e,a=this.hass,s=t.unread_messages?a.states[t.unread_messages]:void 0;if(!s||"unavailable"===s.state)return this._message("mdi:email-outline",je(a,"card.messages.unavailable"));const i=Number(s.state)||0,r=(s.attributes.recent??[])[0];return W`
       <ha-card class="tile" @click=${Rt(this,this._config.tap_action,t.unread_messages)}>
         <div class="icon-badge ${i>0?"amber":""}">

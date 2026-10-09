@@ -404,6 +404,14 @@ export class LibrusMessagesCard extends LibrusBaseCard {
         --mdc-icon-size: 14px;
         flex: none;
       }
+      /* Files of an archived message: listed, but not downloadable. */
+      .attachment.archived {
+        color: var(--secondary-text-color);
+        cursor: default;
+      }
+      .attachment.archived .attachment-name {
+        text-decoration: none;
+      }
     `,
   ];
 }
