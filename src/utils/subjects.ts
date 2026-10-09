@@ -36,8 +36,12 @@ const MINOR_WORDS = new Set(["z", "i", "w", "o", "dla", "na", "ze"]);
 /** A short (≤4 chars) abbreviation for a subject name. Known subjects use
  * the usual school short forms; "Język X" becomes the language alone (so
  * three languages no longer all read "Jęz"); other multi-word names use
- * their initials; anything else is cut to 3 letters. */
+ * their initials; anything else is cut to 3 letters. Lessons the integration
+ * merged ("Edukacja wczesnoszkolna + Wspomaganie") show the first one and
+ * a "+". */
 export function abbreviate(name: string): string {
+  const [first, ...others] = name.split(" + ");
+  if (others.length) return `${abbreviate(first)}+`;
   const clean = name.replace(/\(.*\)/, "").trim();
   const key = clean.toLowerCase();
   if (SUBJECT_ABBREVIATIONS[key]) return SUBJECT_ABBREVIATIONS[key];

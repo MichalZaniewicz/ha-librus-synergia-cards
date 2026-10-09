@@ -281,11 +281,15 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
                           : i.name
                 )
                 .join(" / ") + (planNote ? ` (${planNote})` : "");
-              // Parallel groups (e.g. split language classes) share one slot.
+              // Parallel groups (e.g. split language classes) share one slot -
+              // as separate events, or as one "A + B" event when the
+              // integration merges lessons held at the same time.
+              const [firstName, ...otherNames] = info.name.split(" + ");
+              const parallel = slot.length > 1 || otherNames.length > 0;
               return html`<div
                 class="cell on ${current ? "current" : ""} ${next ? "next" : ""} ${cancelled ? "off" : ""} ${substitution && !cancelled ? "sub" : ""} ${extra && !cancelled ? "extra" : ""}"
                 title=${tip}
-              >${abbreviate(info.name)}${slot.length > 1 ? "+" : ""}</div>`;
+              >${abbreviate(firstName)}${parallel ? "+" : ""}</div>`;
             })}
           `)}
         </div>
