@@ -72,7 +72,7 @@ export class LibrusAttendanceSubjectCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge bad"><ha-icon icon="mdi:book-remove-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.attendance_subject.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.attendance_subject.title")}</div>
             <div class="subtitle">${t(hass, "card.attendance_subject.subtitle")}</div>
           </div>
         </div>

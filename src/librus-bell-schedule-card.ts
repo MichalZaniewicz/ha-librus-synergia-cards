@@ -194,7 +194,7 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
                 <span class="ptime">${p.start}<span class="dash">–</span>${p.end}</span>
                 ${slot
                   ? html`<span class="psubj"
-                      ><span class="lesson-name">${slot.info.name}</span>${lessonTag(hass, slot.info)}${slot.room
+                      ><span class="lesson-name">${slot.info.name}</span>${lessonTag(hass, slot.info)}${slot.room && !this._config?.hide_room
                         ? html` <span class="proom">${slot.room}</span>`
                         : nothing}</span
                     >`

@@ -93,7 +93,7 @@ export class LibrusFreeDaysCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:beach"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.free_days.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.free_days.title")}</div>
             <div class="subtitle">${next.summary}</div>
           </div>
         </div>
@@ -105,7 +105,7 @@ export class LibrusFreeDaysCard extends LibrusBaseCard {
           ? html`
               <hr />
               <div class="chips">
-                ${rest.slice(0, 4).map(
+                ${rest.slice(0, this._config?.max_items ?? 4).map(
                   (ev) => html`<span class="chip">${ev.summary} <span class="n">${formatShortDate(ev.start, hass.language)}</span></span>`
                 )}
               </div>

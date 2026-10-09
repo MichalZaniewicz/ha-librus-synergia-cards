@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t, type TranslationKey } from "./utils/localize";
+import { applyListOptions } from "./utils/list-options";
 import { fetchFullMessage, type FullMessage, downloadAttachment } from "./utils/services";
 import { librusCardEditor } from "./utils/card-editor";
 
@@ -255,7 +256,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
           ? html`
               <hr />
               <div class="scroll-list">
-                ${recent.slice(0, max).map(
+                ${applyListOptions(recent, { sort: this._config.sort, max_items: max }).map(
                   (m) => html`
                     <div class="list-item clickable" @click=${() => this._onMessageClick(m)}>
                       <span class="dot ${m.unread && !m.receiver ? "good" : "neutral"}"></span>

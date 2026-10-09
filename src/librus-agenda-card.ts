@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
 import { formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
+import { applyListOptions } from "./utils/list-options";
 import { librusCardEditor } from "./utils/card-editor";
 
 const DEFAULT_RANGE_DAYS = 14;
@@ -86,7 +87,7 @@ export class LibrusAgendaCard extends LibrusBaseCard {
     }
 
     const groups = new Map<string, LibrusCalendarEvent[]>();
-    for (const ev of this._events) {
+    for (const ev of applyListOptions(this._events, { max_items: this._config.max_items })) {
       const day = ev.start.slice(0, 10);
       if (!groups.has(day)) groups.set(day, []);
       groups.get(day)!.push(ev);

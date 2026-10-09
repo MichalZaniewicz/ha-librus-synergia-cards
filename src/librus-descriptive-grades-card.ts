@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { applyListOptions } from "./utils/list-options";
 import { descriptiveGradeEntries } from "./utils/grade-filters";
 
 @customElement("librus-descriptive-grades-card")
@@ -54,12 +55,12 @@ export class LibrusDescriptiveGradesCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:text-box-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.descriptive_grades.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.descriptive_grades.title")}</div>
             <div class="subtitle">${t(hass, "card.descriptive_grades.subtitle")}</div>
           </div>
         </div>
         <div class="scroll-list">
-          ${grades.map(
+          ${applyListOptions(grades, this._config).map(
             (g) => html`
               <div class="list-item">
                 <div class="grade-chip">${g.value}</div>

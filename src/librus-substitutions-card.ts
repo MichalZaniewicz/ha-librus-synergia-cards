@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { applyListOptions } from "./utils/list-options";
 import { fetchFullMessage, type FullMessage } from "./utils/services";
 
 interface RecentMessage {
@@ -126,7 +127,7 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
     return html`
       <div class="section-title">${title}</div>
       <div class="scroll-list">
-        ${items.map(
+        ${applyListOptions(items, { max_items: this._config?.max_items }).map(
           (m) => html`
             <div class="list-item clickable" @click=${() => this._onClick(m)}>
               <span class="dot ${m.unread ? "good" : "neutral"}"></span>
@@ -171,7 +172,7 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:bell-alert-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.substitutions.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.substitutions.title")}</div>
             <div class="subtitle">${t(hass, "card.substitutions.subtitle")}</div>
           </div>
         </div>

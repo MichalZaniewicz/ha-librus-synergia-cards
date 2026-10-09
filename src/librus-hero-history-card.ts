@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate, daysBetween } from "./utils/format";
 import { t } from "./utils/localize";
+import { applyListOptions } from "./utils/list-options";
 import { CATALOG, readHeroHistory, type HeroMode } from "./utils/hero-archetypes";
 
 /**
@@ -76,7 +77,7 @@ export class LibrusHeroHistoryCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="scroll-list">
-          ${rows.map(
+          ${applyListOptions(rows, { max_items: this._config.max_items }).map(
             (r) => html`
               <div class="list-item">
                 <div class="type-icon"><ha-icon icon=${r.catalog?.icon ?? "mdi:help-circle"}></ha-icon></div>

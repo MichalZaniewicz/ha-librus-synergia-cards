@@ -88,7 +88,7 @@ export class LibrusLuckyNumberCard extends LibrusBaseCard {
             <ha-icon icon=${isYours ? "mdi:party-popper" : "mdi:dice-5-outline"}></ha-icon>
           </div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.lucky_number.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.lucky_number.title")}</div>
             <div class="subtitle">${subtitle}</div>
           </div>
         </div>

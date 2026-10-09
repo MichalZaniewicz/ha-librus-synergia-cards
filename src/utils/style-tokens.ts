@@ -114,6 +114,20 @@ export const librusSharedStyles = css`
   :host(.hide-header) .header {
     display: none;
   }
+  :host(.hide-icon) .header .icon-badge {
+    display: none;
+  }
+  :host(.hide-subtitle) .subtitle {
+    display: none;
+  }
+  :host(.hide-legend) .legend,
+  :host(.hide-legend) .heatmap-legend {
+    display: none;
+  }
+  :host(.hide-comments) .quote,
+  :host(.hide-comments) .comment {
+    display: none;
+  }
   :host(.compact) ha-card {
     padding: 10px 12px;
     gap: 8px;
@@ -401,7 +415,7 @@ export const librusSharedStyles = css`
     display: flex;
     flex-direction: column;
     gap: 9px;
-    max-height: 320px;
+    max-height: var(--lc-list-height, 320px);
     overflow-y: auto;
     /* A gutter before the scrollbar, and a slim, theme-aware thumb instead
        of the browser's default boxy grey scrollbar (which clashes with

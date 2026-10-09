@@ -122,7 +122,7 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:calendar-blank-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.attendance_heatmap.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.attendance_heatmap.title")}</div>
             <div class="subtitle">${t(hass, "card.attendance_heatmap.subtitle")}</div>
           </div>
         </div>

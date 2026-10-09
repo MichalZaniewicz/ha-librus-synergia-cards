@@ -97,7 +97,7 @@ export class LibrusAttendanceWeekdayCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:chart-bar-stacked"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.attendance_weekday.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.attendance_weekday.title")}</div>
             <div class="subtitle">${t(hass, "card.attendance_weekday.subtitle")}</div>
           </div>
         </div>

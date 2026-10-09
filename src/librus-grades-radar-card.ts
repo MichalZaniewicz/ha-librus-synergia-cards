@@ -66,7 +66,7 @@ export class LibrusGradesRadarCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:chart-timeline-variant"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.grades_radar.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.grades_radar.title")}</div>
             <div class="subtitle">${t(hass, "card.grades_radar.subtitle")}</div>
           </div>
         </div>

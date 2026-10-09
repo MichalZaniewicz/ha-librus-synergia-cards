@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { applyListOptions } from "./utils/list-options";
 
 interface RecentNote {
   date: string | null;
@@ -60,12 +61,12 @@ export class LibrusBehaviourNoticesCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:alert-circle-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.behaviour_notices.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.behaviour_notices.title")}</div>
             <div class="subtitle">${count}</div>
           </div>
         </div>
         <div class="scroll-list">
-          ${recent.map(
+          ${applyListOptions(recent, this._config).map(
             (n) => html`
               <div class="list-item">
                 <span class="dot ${DOT_CLASS[n.sentiment ?? "neutral"]}"></span>

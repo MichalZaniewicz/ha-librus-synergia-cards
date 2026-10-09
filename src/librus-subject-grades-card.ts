@@ -75,7 +75,7 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:notebook-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${match.subject}</div>
+            <div class="title">${this._config?.title ?? match.subject}</div>
             <div class="subtitle">
               ${UNAVAILABLE.has(state.state) && typeof pointsPct === "number"
                 ? t(hass, "card.grades.points_percentage", {

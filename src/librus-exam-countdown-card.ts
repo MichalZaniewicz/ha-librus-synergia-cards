@@ -183,7 +183,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
           ? html`
               <hr />
               <div class="chips">
-                ${rest.slice(0, 4).map(
+                ${rest.slice(0, this._config?.max_items ?? 4).map(
                   (e) => html`<span class="chip">${e.text} <span class="n">${formatShortDate(e.date, hass.language)}</span></span>`
                 )}
               </div>

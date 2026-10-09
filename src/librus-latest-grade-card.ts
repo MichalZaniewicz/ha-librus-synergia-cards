@@ -75,7 +75,7 @@ export class LibrusLatestGradeCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:star-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.latest_grade.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.latest_grade.title")}</div>
             <div class="subtitle">${latest.subject} &middot; ${formatShortDate(latest.date, hass.language)}</div>
           </div>
           <div class="grade-badge">${latest.grade}</div>

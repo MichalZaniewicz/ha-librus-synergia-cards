@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
+import { applyListOptions } from "./utils/list-options";
 
 /**
  * Homeroom + subject teachers, both already-fetched data with nowhere
@@ -77,7 +78,7 @@ export class LibrusTeachersCard extends LibrusBaseCard {
                 </div>
               `
             : nothing}
-          ${subjectRows.map(
+          ${applyListOptions(subjectRows, { max_items: this._config?.max_items }).map(
             ([subject, teachers]) => html`
               <div class="list-item">
                 <span class="dot neutral"></span>

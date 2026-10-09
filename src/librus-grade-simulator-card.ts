@@ -82,7 +82,7 @@ export class LibrusGradeSimulatorCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:calculator-variant-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${match.subject}</div>
+            <div class="title">${this._config?.title ?? match.subject}</div>
             <div class="subtitle">
               ${t(hass, exact ? "card.grade_simulator.subtitle_exact" : "card.grade_simulator.subtitle")}
             </div>

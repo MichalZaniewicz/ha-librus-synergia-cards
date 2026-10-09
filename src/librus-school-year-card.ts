@@ -91,7 +91,7 @@ export class LibrusSchoolYearCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:party-popper"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.school_year.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.school_year.title")}</div>
             <div class="subtitle">${formatShortDate(yearEndIso, hass.language)}</div>
           </div>
         </div>

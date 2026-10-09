@@ -42,7 +42,12 @@ import { t, type TranslationKey } from "./localize";
 type EditorField =
   | { kind: "subject" }
   | { kind: "names" }
-  | { kind: "text"; key: "title" | "exam_keywords" | "category_filter" | "icon"; label: TranslationKey }
+  | { kind: "action" }
+  | {
+      kind: "text";
+      key: "title" | "exam_keywords" | "category_filter" | "icon" | "accent_color";
+      label: TranslationKey;
+    }
   | {
       kind: "boolean";
       key:
@@ -50,6 +55,10 @@ type EditorField =
         | "show_descriptive"
         | "hide_teacher"
         | "hide_header"
+        | "hide_icon"
+        | "hide_subtitle"
+        | "hide_legend"
+        | "hide_comments"
         | "compact"
         | "hide_outage_warning"
         | "hide_room"
@@ -60,7 +69,7 @@ type EditorField =
     }
   | {
       kind: "number";
-      key: "max_items" | "days_ahead" | "days" | "target";
+      key: "max_items" | "days_ahead" | "days" | "target" | "list_height";
       label: TranslationKey;
       min: number;
       max: number;
@@ -75,16 +84,40 @@ type EditorField =
 
 /**
  * Rendered for EVERY card, appended after its own type-specific fields -
- * these three options are honored generically by `LibrusBaseCard`
- * (icon override, `.hide-header`/`.compact` host classes), so every card
- * gets them for free without an `EDITOR_FIELDS` entry.
+ * these options are honored generically by `LibrusBaseCard` (icon
+ * override, accent color, `.hide-*`/`.compact` host classes), so every
+ * card gets them for free without an `EDITOR_FIELDS` entry.
  */
 const COMMON_FIELDS: EditorField[] = [
   { kind: "text", key: "icon", label: "editor.icon" },
+  { kind: "text", key: "accent_color", label: "editor.accent_color" },
   { kind: "boolean", key: "hide_header", label: "editor.hide_header" },
+  { kind: "boolean", key: "hide_icon", label: "editor.hide_icon" },
+  { kind: "boolean", key: "hide_subtitle", label: "editor.hide_subtitle" },
   { kind: "boolean", key: "compact", label: "editor.compact" },
   { kind: "boolean", key: "hide_outage_warning", label: "editor.hide_outage_warning" },
 ];
+
+/** Tiles and the student card have no title line, so no `title` field for them. */
+const NO_TITLE_CARDS = new Set([
+  "custom:librus-announcements-tile-card",
+  "custom:librus-attendance-tile-card",
+  "custom:librus-behaviour-notices-tile-card",
+  "custom:librus-free-days-tile-card",
+  "custom:librus-last-update-tile-card",
+  "custom:librus-messages-tile-card",
+  "custom:librus-next-lesson-tile-card",
+  "custom:librus-student-card",
+]);
+
+/** Cards that run a `tap_action` (utils/actions.ts) - they get HA's action picker. */
+const TAP_ACTION_CARDS = new Set(
+  [
+    "announcements-tile", "attendance-tile", "behaviour-notices-tile", "bell-schedule",
+    "exam-countdown", "free-days-tile", "grade-goal", "lucky-number", "messages-tile",
+    "next-lesson-tile", "rank", "school-year", "streak", "student", "today", "week-summary",
+  ].map((name) => `custom:librus-${name}-card`)
+);
 
 const MAILBOX_OPTIONS: { value: string; label: TranslationKey }[] = [
   { value: "inbox", label: "mailbox.inbox" },
@@ -216,6 +249,50 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   ],
 };
 
+const card = (name: string): string => `custom:librus-${name}-card`;
+
+/** Append `field` to each card's fields (after its own), skipping a key it already has. */
+function addField(names: string[], field: EditorField): void {
+  for (const name of names) {
+    const fields = (EDITOR_FIELDS[card(name)] ??= []);
+    const key = "key" in field ? field.key : undefined;
+    if (!fields.some((f) => "key" in f && f.key === key)) fields.push(field);
+  }
+}
+
+// Lists without a cap of their own.
+addField(
+  ["agenda", "behaviour-notices", "homework-assignments", "teachers", "substitutions", "descriptive-grades", "hero-history"],
+  MAX_ITEMS_FIELD(50)
+);
+// "Later" chips under the next exam / free day (4 by default).
+addField(["exam-countdown", "free-days"], {
+  kind: "number",
+  key: "max_items",
+  label: "editor.more_items",
+  min: 0,
+  max: 20,
+});
+addField(["announcements", "messages", "recent-activity", "behaviour-notices", "descriptive-grades"], SORT_FIELD);
+addField(["grade-log", "subject-grades", "descriptive-grades", "latest-grade", "behaviour-grade"], {
+  kind: "boolean",
+  key: "hide_comments",
+  label: "editor.hide_comments",
+});
+addField(["bell-schedule", "today-lessons", "tomorrow"], { kind: "boolean", key: "hide_room", label: "editor.hide_room" });
+addField(
+  ["attendance", "attendance-heatmap", "attendance-subject", "attendance-weekday", "grades-radar", "subject-attendance"],
+  { kind: "boolean", key: "hide_legend", label: "editor.hide_legend" }
+);
+addField(
+  [
+    "agenda", "announcements", "behaviour-notices", "descriptive-grades", "grade-log", "grades", "hero-history",
+    "homework-assignments", "homework-checklist", "lesson-topics", "messages", "recent-activity",
+    "subject-grades", "substitutions", "teachers", "tomorrow",
+  ],
+  { kind: "number", key: "list_height", label: "editor.list_height", min: 120, max: 1200 }
+);
+
 export function librusCardEditor(): LovelaceCardEditor {
   return document.createElement("librus-card-editor") as unknown as LovelaceCardEditor;
 }
@@ -231,6 +308,25 @@ export class LibrusCardEditor extends LitElement {
 
   private get _fields(): EditorField[] {
     return (this._config && EDITOR_FIELDS[this._config.type]) || [];
+  }
+
+  /** True when the card has a title line but no title field of its own - the
+   * title field is then shown first, before the card's own fields. */
+  private get _addsTitle(): boolean {
+    const type = this._config?.type ?? "";
+    return !NO_TITLE_CARDS.has(type) && !this._fields.some((f) => "key" in f && f.key === "title");
+  }
+
+  /** COMMON_FIELDS (minus the header ones for tiles, which have no header) and the
+   * action picker for cards that run a tap action. */
+  private get _commonFields(): EditorField[] {
+    const type = this._config?.type ?? "";
+    const headerKeys = new Set(["hide_header", "hide_icon", "hide_subtitle"]);
+    const fields = NO_TITLE_CARDS.has(type)
+      ? COMMON_FIELDS.filter((f) => !("key" in f && headerKeys.has(f.key)))
+      : [...COMMON_FIELDS];
+    if (TAP_ACTION_CARDS.has(type)) fields.push({ kind: "action" });
+    return fields;
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -305,9 +401,10 @@ export class LibrusCardEditor extends LitElement {
               </ha-select>
             `
           : nothing}
+        ${this._addsTitle ? this._renderField(TITLE_FIELD) : nothing}
         ${fields.map((field) => this._renderField(field))}
         <hr class="sep" />
-        ${COMMON_FIELDS.map((field) => this._renderField(field))}
+        ${this._commonFields.map((field) => this._renderField(field))}
       </div>
     `;
   }
@@ -316,6 +413,19 @@ export class LibrusCardEditor extends LitElement {
     if (field.kind === "subject") return nothing; // rendered above
     const hass = this.hass!;
     const config = this._config!;
+    if (field.kind === "action") {
+      // HA's own action picker (navigate / more-info / url / perform action).
+      return html`
+        <ha-selector
+          .hass=${hass}
+          .selector=${{ ui_action: {} }}
+          .label=${t(hass, "editor.tap_action")}
+          .value=${config.tap_action}
+          @value-changed=${(ev: CustomEvent<{ value?: unknown }>) =>
+            this._patch({ tap_action: ev.detail.value || undefined })}
+        ></ha-selector>
+      `;
+    }
     if (field.kind === "names") {
       return html`${findLibrusDeviceIds(hass).map((id) => {
         const device = hass.devices?.[id];
@@ -432,7 +542,10 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ names: Object.keys(names).length ? names : undefined });
   }
 
-  private _onText(key: "title" | "exam_keywords" | "category_filter" | "icon", value: string): void {
+  private _onText(
+    key: "title" | "exam_keywords" | "category_filter" | "icon" | "accent_color",
+    value: string
+  ): void {
     this._patch({ [key]: value.trim() || undefined });
   }
 

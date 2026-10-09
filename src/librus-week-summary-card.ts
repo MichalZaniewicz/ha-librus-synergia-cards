@@ -63,7 +63,7 @@ export class LibrusWeekSummaryCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:calendar-check-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.week_summary.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.week_summary.title")}</div>
           </div>
         </div>
         <div class="stats">

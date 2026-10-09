@@ -82,7 +82,7 @@ export class LibrusGradeDistributionCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:chart-bar"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.grade_distribution.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.grade_distribution.title")}</div>
             <div class="subtitle">${t(hass, "card.grade_distribution.subtitle", { count: total })}</div>
           </div>
         </div>

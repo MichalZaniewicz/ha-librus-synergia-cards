@@ -95,7 +95,7 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:calendar-clock"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.today_lessons.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.today_lessons.title")}</div>
             <div class="subtitle">${t(hass, "card.today_lessons.subtitle")}</div>
           </div>
         </div>
@@ -104,6 +104,7 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
             const info = lessonInfo(ev);
             const now_ = !info.cancelled && isHappeningNow(ev, now);
             const done = hasEnded(ev, now);
+            const meta = lessonMeta(ev, info, this._config?.hide_room);
             return html`
               <div class="tl-item ${now_ ? "now" : ""} ${done ? "done" : ""} ${info.cancelled ? "lesson-cancelled" : ""}">
                 <span class="tl-time">${formatTime(ev.start)}</span>
@@ -113,7 +114,7 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
                     <span class="lesson-name">${info.name}</span>${lessonTag(hass, info)}
                     ${now_ ? html`<span class="pill-now">${t(hass, "label.now")}</span>` : nothing}
                   </div>
-                  ${lessonMeta(ev, info) ? html`<div class="meta">${lessonMeta(ev, info)}</div>` : nothing}
+                  ${meta ? html`<div class="meta">${meta}</div>` : nothing}
                 </div>
               </div>
             `;

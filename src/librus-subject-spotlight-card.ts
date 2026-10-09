@@ -68,7 +68,7 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:podium-gold"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.subject_spotlight.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.subject_spotlight.title")}</div>
             <div class="subtitle">${t(hass, "card.subject_spotlight.subtitle")}</div>
           </div>
         </div>

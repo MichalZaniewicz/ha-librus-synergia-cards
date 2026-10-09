@@ -107,9 +107,14 @@ export function lessonInfo(event: LibrusCalendarEvent): LessonInfo {
   };
 }
 
-/** "sala 12 · Anna Nowak · Zastępstwo za: Chemia" - one meta line under a lesson. */
-export function lessonMeta(event: LibrusCalendarEvent, info: LessonInfo = lessonInfo(event)): string {
-  return [event.location, info.teacher, ...info.details.filter((d) => !ROOM_RE.test(d))]
+/** "sala 12 · Anna Nowak · Zastępstwo za: Chemia" - one meta line under a lesson
+ * (without the room when `hideRoom`). */
+export function lessonMeta(
+  event: LibrusCalendarEvent,
+  info: LessonInfo = lessonInfo(event),
+  hideRoom = false
+): string {
+  return [hideRoom ? undefined : event.location, info.teacher, ...info.details.filter((d) => !ROOM_RE.test(d))]
     .filter(Boolean)
     .join(" · ");
 }

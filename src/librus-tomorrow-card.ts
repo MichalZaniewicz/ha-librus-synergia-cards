@@ -213,7 +213,9 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
                       <span class="lt">${formatTime(ev.start)}</span>
                       <div class="body">
                         <div class="row1"><span><span class="lesson-name">${info.name}</span>${lessonTag(hass, info)}</span></div>
-                        ${lessonMeta(ev, info) ? html`<div class="item-text">${lessonMeta(ev, info)}</div>` : nothing}
+                        ${lessonMeta(ev, info, this._config?.hide_room)
+                          ? html`<div class="item-text">${lessonMeta(ev, info, this._config?.hide_room)}</div>`
+                          : nothing}
                       </div>
                     </div>
                   `;

@@ -53,6 +53,18 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   hide_header?: boolean;
   /** Shrinks padding and drops subtitles for a denser dashboard. Universal - see `LibrusBaseCard`. */
   compact?: boolean;
+  /** Hides the header's icon badge. Universal. */
+  hide_icon?: boolean;
+  /** Hides the line under the title. Universal. */
+  hide_subtitle?: boolean;
+  /** Any CSS color ("#e91e63", "teal") replacing the indigo accent. Universal. */
+  accent_color?: string;
+  /** Height limit of the scrolling lists, in px (320 by default). */
+  list_height?: number;
+  /** Hides the colour legend under the attendance charts and the grade radar. */
+  hide_legend?: boolean;
+  /** Hides teachers' comments under grades and notes. */
+  hide_comments?: boolean;
   /** Hides the "Librus not responding" strip under the header. Universal - see `LibrusBaseCard`. */
   hide_outage_warning?: boolean;
   /** First-lesson card: device_id -> display name. */

@@ -65,7 +65,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:school-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.grades.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.grades.title")}</div>
             <div class="subtitle">${t(hass, "card.grades.subtitle")}</div>
           </div>
         </div>
@@ -145,7 +145,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
         display: flex;
         flex-direction: column;
         gap: 8px;
-        max-height: 220px;
+        max-height: var(--lc-list-height, 220px);
         overflow-y: auto;
         padding-right: 8px;
         scrollbar-width: thin;

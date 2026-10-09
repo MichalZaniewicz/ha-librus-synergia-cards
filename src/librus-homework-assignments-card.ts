@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { applyListOptions } from "./utils/list-options";
 import {
   downloadHomeworkFile,
   homeworkFileStyles,
@@ -68,12 +69,12 @@ export class LibrusHomeworkAssignmentsCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:notebook-edit-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.homework_assignments.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.homework_assignments.title")}</div>
             <div class="subtitle">${entity.state}</div>
           </div>
         </div>
         <div class="scroll-list">
-          ${recent.map(
+          ${applyListOptions(recent, { max_items: this._config?.max_items }).map(
             (a) => html`
               <div class="list-item">
                 <span class="dot neutral"></span>

@@ -57,7 +57,7 @@ export class LibrusSchoolCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:school"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${school.state}</div>
+            <div class="title">${this._config?.title ?? school.state}</div>
             <div class="subtitle">${[town, street].filter(Boolean).join(", ")}</div>
           </div>
         </div>

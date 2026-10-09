@@ -106,12 +106,43 @@ export abstract class LibrusBaseCard extends LitElement {
     return (this as unknown as { _config?: LibrusCardConfig })._config;
   }
 
-  /** Call at the top of render(): toggles the `.dark`/`.compact`/`.hide-header` host classes used by style-tokens.ts. */
+  /** Call at the top of render(): toggles the `.dark`/`.compact`/`.hide-*` host classes used by
+   * style-tokens.ts, and sets the accent color / list height custom properties. */
   protected _syncTheme(): void {
-    this.classList.toggle("dark", Boolean(this.hass?.themes?.darkMode));
+    const dark = Boolean(this.hass?.themes?.darkMode);
+    this.classList.toggle("dark", dark);
     const config = this._cardConfig;
     this.classList.toggle("compact", Boolean(config?.compact));
     this.classList.toggle("hide-header", Boolean(config?.hide_header));
+    this.classList.toggle("hide-icon", Boolean(config?.hide_icon));
+    this.classList.toggle("hide-subtitle", Boolean(config?.hide_subtitle));
+    this.classList.toggle("hide-legend", Boolean(config?.hide_legend));
+    this.classList.toggle("hide-comments", Boolean(config?.hide_comments));
+    this._syncAccent(config?.accent_color, dark);
+    const height = config?.list_height;
+    if (height && height > 0) this.style.setProperty("--lc-list-height", `${height}px`);
+    else this.style.removeProperty("--lc-list-height");
+  }
+
+  /**
+   * `accent_color`: inline custom properties on the host win over the
+   * `:host`/`:host(.dark)` token rules, so the brand accent and the tints
+   * derived from it follow the chosen color in both themes. An invalid
+   * color is ignored.
+   */
+  private _syncAccent(color: string | undefined, dark: boolean): void {
+    const props = ["--lc-brand", "--lc-brand-strong", "--lc-brand-bg", "--lc-ring-track", "--lc-chip-bg"];
+    const value = color?.trim();
+    if (!value || (typeof CSS !== "undefined" && !CSS.supports("color", value))) {
+      for (const prop of props) this.style.removeProperty(prop);
+      return;
+    }
+    const mix = (pct: number, other: string) => `color-mix(in srgb, ${value} ${pct}%, ${other})`;
+    this.style.setProperty("--lc-brand", value);
+    this.style.setProperty("--lc-brand-strong", dark ? mix(70, "white") : mix(75, "black"));
+    this.style.setProperty("--lc-brand-bg", mix(dark ? 18 : 14, "transparent"));
+    this.style.setProperty("--lc-ring-track", mix(dark ? 24 : 16, "transparent"));
+    this.style.setProperty("--lc-chip-bg", mix(6, "transparent"));
   }
 
   /**

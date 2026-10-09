@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { applyListOptions } from "./utils/list-options";
 import { librusCardEditor } from "./utils/card-editor";
 
 interface FeedItem {
@@ -144,7 +145,7 @@ export class LibrusRecentActivityCard extends LibrusBaseCard {
     }
 
     items.sort((a, b) => comparableTimestamp(b.date).localeCompare(comparableTimestamp(a.date)));
-    const shown = items.slice(0, this._config.max_items ?? DEFAULT_MAX);
+    const shown = applyListOptions(items, this._config, DEFAULT_MAX);
 
     if (shown.length === 0) return this._message("mdi:bell-outline", t(hass, "card.recent_activity.empty"));
 

@@ -69,7 +69,7 @@ export class LibrusBehaviourGradeCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge good"><ha-icon icon="mdi:medal-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.behaviour_grade.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.behaviour_grade.title")}</div>
             <div class="subtitle">${latest.category ?? t(hass, "card.behaviour_grade.subtitle")}</div>
           </div>
           ${badge ? html`<div class="grade-badge">${badge}</div>` : nothing}

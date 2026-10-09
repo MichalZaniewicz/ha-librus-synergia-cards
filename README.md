@@ -157,30 +157,37 @@ card supports:
 | Student | all except First lesson | Only shown when more than one child's e-dziennik is configured |
 | Names | First lesson | The name shown for each child (default: the first name from the device name) |
 | `hide_room` / `only_tomorrow` | First lesson | Hide the classroom; show only the next school day (e.g. for an evening dashboard) |
-| `title` | most cards with a header (26 of them - the editor shows the field wherever it applies), e.g. Grade log, Agenda, Messages, What was taught, School trips, Report card forecast, Hero | Header title override |
-| `max_items` | Grade log, Subject grades, Recent activity, Announcements, Messages, Homework checklist, School trips | Row cap (School trips: default 4) |
+| `title` | every card with a header (all except the tiles and the Student card) | Header title override |
+| `max_items` | Grade log, Subject grades, Recent activity, Announcements, Messages, Homework checklist, School trips, Agenda, Behaviour notices, Homework assignments, Teachers, Substitutions, Descriptive grades, Hero History | Row cap (School trips: default 4; no cap by default where there was none) |
+| `max_items` | Next exam, Free days | How many later exams / free days to list under the next one (default 4, `0` hides them) |
+| `list_height` | the cards with a scrolling list (Grade log, Agenda, Messages, Announcements, Grades, ...) | Height limit of the list in px (default 320; Grades 220) |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days` | Grade trend | How much history to chart (default 60) |
 | `days` | Grade log, Subject grades | Only include grades from the last N days (unset = no limit) |
 | `days` | What was taught | Number of school days shown (default 3, 1-10) |
 | `category_filter` | Grade log, Subject grades | Comma-separated category keywords - keeps a grade if its category matches any, e.g. `sprawdzian, kartkówka` |
-| `sort` | Grade log, Subject grades | `newest` (default) or `oldest` first |
+| `sort` | Grade log, Subject grades, Announcements, Messages, Recent activity, Behaviour notices, Descriptive grades | `newest` (default) or `oldest` first |
 | `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator | Pick one subject (Grade trend / Grade goal default to the overall average) |
 | `target` | Grade goal | Target average, e.g. `4.5` |
 | `mode` | Hero, Hero History | `archetype` or `hero` - which set of names and descriptions to use |
 | `mailbox` | Messages | The mailbox shown first: `inbox` / `substitutions` / `alerts` / `justifications` / `outbox` / `archive` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
 | `hide_teacher` | Grade log, Descriptive grades | Don't show who gave each grade - off by default |
+| `hide_comments` | Grade log, Subject grades, Descriptive grades, Latest grade, Behaviour grade | Don't show teachers' comments - off by default |
+| `hide_room` | Today's lessons, Today's schedule, Tomorrow | Don't show the classroom - off by default |
+| `hide_legend` | Attendance, Attendance heatmap, Absences by subject, Absences by weekday, Attendance by subject, Grade profile (radar) | Hide the colour legend under the chart - off by default |
 | `show_descriptive` | Grade log | Also list descriptive grades (a skill-based subject, e.g. music in grades 1-3), with the skill shown where other grades show their category - off by default |
 | `summary_only` / `hide_generate` | Weekly AI summary | Show only the headline, warning and to-dos (no section tabs); hide the Generate now button |
 | `exam_keywords` | Next exam | Comma-separated Agenda-category keywords that count as an exam (default `sprawdzian`), e.g. `sprawdzian, praca klasowa, egzamin` |
 | `icon` | every card | Override the header icon, e.g. `mdi:star` |
+| `accent_color` | every card | Any CSS color (`#e91e63`, `teal`, `rgb(0 150 136)`) instead of the indigo accent - rings, bars, chips and the icon badge follow it. The exact color is used in both themes, so pick one that reads on a dark background too. An invalid value is ignored |
 | `hide_header` | every card | Hide the header row entirely |
+| `hide_icon` / `hide_subtitle` | every card with a header | Hide just the icon badge, or just the line under the title |
 | `compact` | every card | Tighter padding, smaller icon badge, subtitle hidden - for a denser dashboard |
 | `hide_outage_warning` | every card | Hide the "Librus not responding" strip. By default a card with a header shows it under the header while the integration's *Connection status* sensor is `stale` (Librus isn't answering and the last data is shown), with the time of that data |
-| `tap_action` | the glanceable cards: the tiles (except Last update), Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Streaks, Rank | Standard Lovelace action config (YAML) - `navigate`, `more-info`, `url`, `perform-action`, `none` |
+| `tap_action` | the glanceable cards: the tiles (except Last update), Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Streaks, Rank | Standard Lovelace action - `navigate`, `more-info`, `url`, `perform-action`, `none`. Set it in the editor (Home Assistant's own action picker) or in YAML |
 
-`tap_action` is set in YAML (no visual-editor field yet), e.g.:
+In YAML, e.g.:
 
 ```yaml
 type: custom:librus-messages-tile-card
@@ -227,10 +234,16 @@ and empty state, with a light/dark toggle and a language switcher.
    If a student picker is all the card needs, that's it (no `EDITOR_FIELDS` entry required); for
    extra controls add one, keyed by the card's `custom:` type - a `text` field (`title`,
    `exam_keywords`, `category_filter`), a `number` (`max_items`, `days_ahead`, `days`, `target`), a
-   `boolean` (`show_saturday`, `show_descriptive`, `hide_teacher`), a `subject` picker, or a `select` (`mailbox`, `sort`, `mode`). The editor
-   renders the student picker automatically whenever more than one Librus device exists, and always
-   appends the universal `icon` / `hide_header` / `compact` / `hide_outage_warning` fields - those are honored generically by
-   `LibrusBaseCard` (see `utils/base-card.ts`), so a new card gets them for free.
+   `boolean` (`show_saturday`, `show_descriptive`, `hide_teacher`, ...), a `subject` picker, or a `select` (`mailbox`, `sort`, `mode`).
+   Options several cards share (`max_items`, `sort`, `hide_comments`, `hide_room`, `hide_legend`,
+   `list_height`) are added with `addField([...cards], field)` below `EDITOR_FIELDS`. The editor
+   renders the student picker automatically whenever more than one Librus device exists, adds a `title`
+   field to every card with a title line, the action picker to cards listed in `TAP_ACTION_CARDS`, and
+   always appends the universal `icon` / `accent_color` / `hide_header` / `hide_icon` / `hide_subtitle` /
+   `compact` / `hide_outage_warning` fields - those are honored generically by `LibrusBaseCard` (see
+   `utils/base-card.ts`), so a new card gets them for free. A new card's title should read
+   `${this._config.title ?? t(hass, "...")}`; a list should go through `applyListOptions`
+   (`utils/list-options.ts`) when it takes `sort` / `max_items`.
 4. Every user-facing string goes through `t(hass, key)` from
    [`src/utils/localize.ts`](src/utils/localize.ts) - add the key to
    [`src/translations/en.ts`](src/translations/en.ts) first (the canonical key list) and

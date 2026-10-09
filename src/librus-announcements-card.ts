@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { applyListOptions } from "./utils/list-options";
 import { librusCardEditor } from "./utils/card-editor";
 
 interface RecentAnnouncement {
@@ -64,7 +65,7 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
       return this._message("mdi:bullhorn-outline", t(hass, "card.announcements.empty"));
     }
 
-    const shown = recent.slice(0, this._config.max_items ?? 10);
+    const shown = applyListOptions(recent, this._config, 10);
 
     return html`
       <ha-card>

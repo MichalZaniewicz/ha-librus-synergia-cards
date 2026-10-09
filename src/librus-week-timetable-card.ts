@@ -213,7 +213,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:calendar-week-outline"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.week_timetable.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.week_timetable.title")}</div>
             <div class="subtitle">
               ${breakNow
                 ? t(hass, "card.week_timetable.break_now", {

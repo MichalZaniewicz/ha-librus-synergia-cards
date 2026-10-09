@@ -123,7 +123,7 @@ export class LibrusStreakCard extends LibrusBaseCard {
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:fire"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${t(hass, "card.streak.title")}</div>
+            <div class="title">${this._config?.title ?? t(hass, "card.streak.title")}</div>
           </div>
         </div>
         <div class="stats">
