@@ -7,6 +7,7 @@ import "./librus-exam-prep-card";
 import "./librus-school-documents-card";
 import "./librus-justifications-card";
 import "./librus-catch-up-card";
+import "./librus-month-calendar-card";
 import "./librus-subject-grades-card";
 import "./librus-grade-trend-card";
 import "./librus-grade-goal-card";
@@ -114,6 +115,12 @@ window.customCards.push(
     type: "librus-justifications-card",
     name: "Librus - Usprawiedliwienia",
     description: "Dni do usprawiedliwienia i wysłane usprawiedliwienia z decyzją szkoły.",
+    preview: true,
+  },
+  {
+    type: "librus-month-calendar-card",
+    name: "Librus - Kalendarz miesiąca",
+    description: "Miesiąc w siatce: sprawdziany, kartkówki, wycieczki, zebrania, terminy zadań i dni wolne.",
     preview: true,
   },
   {
@@ -474,7 +481,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 65 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 66 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

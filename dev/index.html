@@ -822,8 +822,13 @@
       "calendar.agenda": [
         { start: iso(agendaStart), end: iso(new Date(agendaStart.getTime() + 86400000)), allDay: true, summary: "[Zebranie z Rodzicami] Zebranie z rodzicami. Organizacja roku szkolnego 2026/2027.", description: null },
         { start: iso(new Date(today.getTime() + 9 * 86400000)), end: iso(new Date(today.getTime() + 10 * 86400000)), allDay: true, summary: "[Sprawdzian] Matematyka: Ułamki dziesiętne, dział 2.", description: null },
+        { start: iso(new Date(today.getTime() + 3 * 86400000)), end: iso(new Date(today.getTime() + 4 * 86400000)), allDay: true, summary: "[Kartkówka] Biologia: Mięśnie", description: null },
+        { start: iso(new Date(today.getTime() + 6 * 86400000)), end: iso(new Date(today.getTime() + 7 * 86400000)), allDay: true, summary: "[Wycieczka] Centrum Nauki, 8:00-15:00", description: null },
+        { start: iso(new Date(today.getTime() - 2 * 86400000)), end: iso(new Date(today.getTime() - 1 * 86400000)), allDay: true, summary: "[Sprawdzian] Historia: Powstanie listopadowe", description: null },
+        { start: iso(new Date(today.getTime() + 9 * 86400000)), end: iso(new Date(today.getTime() + 10 * 86400000)), allDay: true, summary: "[Inne] Konkurs matematyczny - zgłoszenia", description: null },
       ],
       "calendar.free_days": [
+        { start: iso(new Date(today.getTime() + 5 * 86400000)), end: iso(new Date(today.getTime() + 6 * 86400000)), allDay: true, summary: "Dzień Edukacji Narodowej" },
         { start: iso(new Date(today.getTime() + 83 * 86400000)), end: iso(new Date(today.getTime() + 92 * 86400000)), allDay: true, summary: "Zimowa przerwa świąteczna" },
         { start: iso(new Date(today.getTime() + 150 * 86400000)), end: iso(new Date(today.getTime() + 151 * 86400000)), allDay: true, summary: "Dzień wolny od zajęć dydaktycznych" },
       ],
@@ -987,6 +992,7 @@
       "librus-school-documents-card",
       "librus-justifications-card",
       "librus-catch-up-card",
+      "librus-month-calendar-card",
       { tag: "librus-subject-grades-card", config: { type: "custom:librus-subject-grades-card", subject_id: 1 } },
       "librus-grade-trend-card",
       { tag: "librus-grade-trend-card", config: { type: "custom:librus-grade-trend-card", subject_id: 1 } },
