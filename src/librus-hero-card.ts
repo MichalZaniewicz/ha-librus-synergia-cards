@@ -105,7 +105,7 @@ export class LibrusHeroCard extends LibrusBaseCard {
           ? behaviourGrade.state
           : null,
       recentNoteSentiments: recentNotes.map((n) => n.sentiment),
-      achievementCount: readAchievementCount(deviceId),
+      achievementCount: readAchievementCount(deviceId, map.rank ? hass.states[map.rank]?.attributes : undefined),
     });
 
     if (!result) {

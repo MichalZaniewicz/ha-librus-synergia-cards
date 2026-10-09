@@ -9,6 +9,7 @@ import { t, type TranslationKey } from "./utils/localize";
 import { applyListOptions } from "./utils/list-options";
 import { fetchFullMessage, type FullMessage, downloadAttachment } from "./utils/services";
 import { librusCardEditor } from "./utils/card-editor";
+import { activateOnKey } from "./utils/render-helpers";
 
 interface RecentMessage {
   id: string;
@@ -259,7 +260,10 @@ export class LibrusMessagesCard extends LibrusBaseCard {
                     ? "muted"
                     : ""}"
                   role=${pickable ? "button" : nothing}
+                  tabindex=${pickable ? "0" : nothing}
+                  aria-pressed=${pickable ? (key === mailbox ? "true" : "false") : nothing}
                   @click=${pickable ? () => this._pickMailbox(key) : nothing}
+                  @keydown=${pickable ? activateOnKey(() => this._pickMailbox(key)) : nothing}
                   >${t(hass, label)}${NO_COUNT.has(key)
                     ? nothing
                     : html` <span class="n">${breakdown[key] ?? 0}</span>`}</span

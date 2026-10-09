@@ -14,7 +14,7 @@ const KINDS: Kind[] = ["test", "quiz", "trip", "meeting", "homework", "other"];
 // Agenda categories are each school's own names, so they're matched by text.
 const KIND_RE: [Kind, RegExp][] = [
   ["quiz", /kartk|quiz/i],
-  ["test", /sprawdzian|praca klasowa|test|egzamin|diagnoz/i],
+  ["test", /sprawdzian|praca klasowa|test|egzamin|diagnoz/i],
   ["trip", /wycieczk|wyjści/i],
   ["meeting", /zebrani|konsultacj|wywiadówk/i],
 ];
@@ -56,10 +56,9 @@ function coveredDays(ev: LibrusCalendarEvent): string[] {
 @customElement("librus-month-calendar-card")
 export class LibrusMonthCalendarCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
-  @state() private _month = (() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1);
-  })();
+  /** The month picked with the arrows; unset = follow today's month (also
+   * across midnight into a new month on a dashboard left open). */
+  @state() private _month?: Date;
   @state() private _selected?: string;
   @state() private _agenda: LibrusCalendarEvent[] = [];
   @state() private _free: LibrusCalendarEvent[] = [];
@@ -93,13 +92,20 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     clearInterval(this._refreshTimer);
   }
 
+  private get _shownMonth(): Date {
+    if (this._month) return this._month;
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  }
+
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
     const resolved = this._resolveEntities();
     if ("error" in resolved) return;
     const { agenda, free_days: freeDays } = resolved.map;
-    const start = new Date(this._month);
-    const end = new Date(this._month.getFullYear(), this._month.getMonth() + 1, 1);
+    const shown = this._shownMonth;
+    const start = new Date(shown);
+    const end = new Date(shown.getFullYear(), shown.getMonth() + 1, 1);
     const cacheKey = `${agenda}:${freeDays}:${isoDate(start)}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
@@ -112,7 +118,8 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
   }
 
   private _shift(months: number): void {
-    this._month = new Date(this._month.getFullYear(), this._month.getMonth() + months, 1);
+    const shown = this._shownMonth;
+    this._month = new Date(shown.getFullYear(), shown.getMonth() + months, 1);
     this._selected = undefined;
     void this._fetch();
   }
@@ -124,11 +131,13 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const add = (day: string, entry: DayEntry) => entries.set(day, [...(entries.get(day) ?? []), entry]);
     for (const ev of this._agenda) {
       const { category, text } = parseCategory(ev.summary);
-      add(ev.start.slice(0, 10), {
+      const entry: DayEntry = {
         kind: kindOf(category, text),
         title: text,
         detail: [category, ev.description].filter(Boolean).join(" · ") || undefined,
-      });
+      };
+      // A multi-day all-day entry (e.g. a trip) gets a dot on every day it covers.
+      for (const day of ev.allDay ? coveredDays(ev) : [ev.start.slice(0, 10)]) add(day, entry);
     }
     for (const hw of homework) {
       const due = (hw.due_date ?? "").slice(0, 10);
@@ -158,10 +167,11 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const homework = (homeworkEntity?.attributes.recent as HomeworkItem[] | undefined) ?? [];
     const { entries, free } = this._index(homework);
 
-    const year = this._month.getFullYear();
-    const month = this._month.getMonth();
+    const shownMonth = this._shownMonth;
+    const year = shownMonth.getFullYear();
+    const month = shownMonth.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const lead = (this._month.getDay() + 6) % 7;
+    const lead = (shownMonth.getDay() + 6) % 7;
     const todayIso = isoDate(new Date());
     const monthPrefix = `${year}-${String(month + 1).padStart(2, "0")}`;
     const inMonth = [...entries.keys()].filter((d) => d.startsWith(monthPrefix)).sort();
@@ -169,13 +179,15 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
       this._selected ??
       (todayIso.startsWith(monthPrefix) ? todayIso : (inMonth.find((d) => d >= todayIso) ?? inMonth[0]));
 
+    // A multi-day entry sits on several days as the same object - count it once.
+    const monthEntries = new Set(inMonth.flatMap((day) => entries.get(day) ?? []));
     const counts = new Map<Kind, number>();
-    for (const day of inMonth) for (const e of entries.get(day) ?? []) counts.set(e.kind, (counts.get(e.kind) ?? 0) + 1);
+    for (const e of monthEntries) counts.set(e.kind, (counts.get(e.kind) ?? 0) + 1);
     const summary = (["test", "quiz", "trip"] as Kind[])
       .filter((k) => counts.get(k))
       .map((k) => `${t(hass, `card.month.kind_${k}` as TranslationKey)} ${counts.get(k)}`)
       .join(" · ");
-    const title = this._month.toLocaleDateString(hass.language, { month: "long", year: "numeric" });
+    const title = shownMonth.toLocaleDateString(hass.language, { month: "long", year: "numeric" });
 
     const cells: TemplateResult[] = [];
     for (let i = 0; i < lead; i++) cells.push(html`<span class="day other"></span>`);
@@ -189,6 +201,8 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
           ? "sel"
           : ""}"
         @click=${() => (this._selected = iso)}
+        aria-pressed=${iso === selected ? "true" : "false"}
+        aria-current=${iso === todayIso ? "date" : nothing}
         aria-label=${date.toLocaleDateString(hass.language, { day: "numeric", month: "long" })}
       >
         <span class="n">${d}</span>
@@ -338,6 +352,9 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
         border-radius: 50%;
         display: inline-block;
         flex: none;
+        /* The shared .dot's margin-top (tuned for .list-item) would push
+           the day-cell and legend dots down; only .ev .dot keeps it. */
+        margin-top: 0;
       }
       .k-test {
         background: var(--lc-bad);

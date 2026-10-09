@@ -100,6 +100,15 @@ export async function downloadSchoolFile(
   );
 }
 
+/** A download through one of the integration's HTTP views answered with an
+ * error status - 404 when the integration is too old to have that view. */
+export class DownloadHttpError extends Error {
+  constructor(public readonly status: number) {
+    super(`HTTP ${status}`);
+    this.name = "DownloadHttpError";
+  }
+}
+
 async function downloadFile(hass: LibrusHass, path: string, fallbackName: string): Promise<void> {
   const withAuth = hass as unknown as {
     fetchWithAuth?: (path: string, init?: RequestInit) => Promise<Response>;
@@ -108,7 +117,7 @@ async function downloadFile(hass: LibrusHass, path: string, fallbackName: string
   const response = withAuth.fetchWithAuth
     ? await withAuth.fetchWithAuth(path)
     : await fetch(path, { headers: { Authorization: `Bearer ${withAuth.auth?.data?.access_token ?? ""}` } });
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) throw new DownloadHttpError(response.status);
   const blob = await response.blob();
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");

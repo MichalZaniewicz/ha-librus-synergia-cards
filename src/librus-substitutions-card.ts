@@ -11,6 +11,7 @@ import { applyListOptions } from "./utils/list-options";
 import { fetchFullMessage, type FullMessage } from "./utils/services";
 import { fetchCalendarEvents, isoDate, lessonInfo, type LibrusCalendarEvent } from "./utils/calendar";
 import type { TranslationKey } from "./utils/localize";
+import { activateOnKey } from "./utils/render-helpers";
 
 type ChangeKind = "substitution" | "cancelled" | "room" | "moved";
 const KINDS: { kind: ChangeKind; icon: string; label: TranslationKey; chip: TranslationKey }[] = [
@@ -116,7 +117,13 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
     return Math.max(1, Math.min(30, Number(this._config?.days_ahead) || 7));
   }
 
+  /** `hide_past: true`, or the older `show_past: false` still in someone's YAML. */
+  private get _hidePast(): boolean {
+    return Boolean(this._config?.hide_past) || this._config?.show_past === false;
+  }
+
   /** Changed lessons from the timetable calendar: the last PAST_DAYS days
+   * (only when they're shown - fewer on-demand Librus fetches otherwise)
    * and the next `days_ahead` days. */
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
@@ -126,7 +133,7 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
     if (!entityId) return;
     const start = new Date();
     start.setHours(0, 0, 0, 0);
-    start.setDate(start.getDate() - PAST_DAYS);
+    if (!this._hidePast) start.setDate(start.getDate() - PAST_DAYS);
     const end = new Date();
     end.setHours(0, 0, 0, 0);
     end.setDate(end.getDate() + this._daysAhead + 1);
@@ -274,18 +281,18 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
 
     const now = Date.now();
     const upcoming = this._changes.filter((c) => new Date(c.event.end).getTime() > now);
-    const past = this._changes.filter((c) => new Date(c.event.end).getTime() <= now).slice(-PAST_SHOWN).reverse();
-    const shown = (this._filter === "all" ? upcoming : upcoming.filter((c) => c.kind === this._filter)).slice(
-      0,
-      this._config.max_items ?? 30
-    );
-    const shownPast =
-      this._config.show_past === false
-        ? []
-        : this._filter === "all"
-          ? past
-          : past.filter((c) => c.kind === this._filter);
     const counts = new Map(KINDS.map((k) => [k.kind, upcoming.filter((c) => c.kind === k.kind).length]));
+    // A picked kind whose chip has since disappeared (no upcoming change of
+    // that kind any more) falls back to "all" instead of hiding everything.
+    const filter = this._filter !== "all" && (counts.get(this._filter) ?? 0) > 0 ? this._filter : "all";
+    const matches = (c: LessonChange) => filter === "all" || c.kind === filter;
+    const shown = upcoming.filter(matches).slice(0, this._config.max_items ?? 30);
+    const shownPast = this._hidePast
+      ? []
+      : this._changes
+          .filter((c) => new Date(c.event.end).getTime() <= now && matches(c))
+          .slice(-PAST_SHOWN)
+          .reverse();
     const next = upcoming[0];
     const subtitle = next
       ? t(hass, "card.changes.next", { subject: next.subject, when: this._when(next.event) })
@@ -302,14 +309,23 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
         </div>
         ${upcoming.length
           ? html`<div class="chips">
-              <span class="chip pickable ${this._filter === "all" ? "hot" : ""}" role="button" @click=${() => (this._filter = "all")}
+              <span
+                class="chip pickable ${filter === "all" ? "hot" : ""}"
+                role="button"
+                tabindex="0"
+                aria-pressed=${filter === "all" ? "true" : "false"}
+                @click=${() => (this._filter = "all")}
+                @keydown=${activateOnKey(() => (this._filter = "all"))}
                 >${t(hass, "card.changes.chip_all")} <span class="n">${upcoming.length}</span></span
               >
               ${KINDS.filter((k) => (counts.get(k.kind) ?? 0) > 0).map(
                 (k) => html`<span
-                  class="chip pickable ${this._filter === k.kind ? "hot" : ""}"
+                  class="chip pickable ${filter === k.kind ? "hot" : ""}"
                   role="button"
+                  tabindex="0"
+                  aria-pressed=${filter === k.kind ? "true" : "false"}
                   @click=${() => (this._filter = k.kind)}
+                  @keydown=${activateOnKey(() => (this._filter = k.kind))}
                   >${t(hass, k.chip)} <span class="n">${counts.get(k.kind)}</span></span
                 >`
               )}

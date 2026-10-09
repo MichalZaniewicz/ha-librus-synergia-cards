@@ -343,13 +343,28 @@ export function readHeroHistory(deviceId: string): HeroHistoryEntry[] {
 }
 
 /**
- * Read-only peek at `librus-achievements-card`'s own localStorage list
- * (`librus-achievements:<deviceId>`) - a deliberate, soft, read-only
- * coupling: if that card was never added to this dashboard the key simply
- * doesn't exist and this returns 0, which just means "Kolekcjoner" never
- * wins here rather than failing. Never written to from this card.
+ * How many achievements the student has. The integration's Rank sensor
+ * (0.12.5+) is the source of truth: the sum of `badges[].earned` (every
+ * earned tier), else the length of its `achievements` list. Without either
+ * attribute (an older integration), falls back to a read-only peek at
+ * `librus-achievements-card`'s own localStorage list
+ * (`librus-achievements:<deviceId>`) - a deliberate, soft coupling: if that
+ * card was never added to this dashboard the key simply doesn't exist and
+ * this returns 0, which just means "Kolekcjoner" never wins here rather
+ * than failing. Never written to from this card. (The Achievements card
+ * stops writing that list once the Rank sensor has `badges`, so the
+ * sensor has to come first.)
  */
-export function readAchievementCount(deviceId: string): number {
+export function readAchievementCount(deviceId: string, rankAttributes?: Record<string, unknown>): number {
+  const badges = rankAttributes?.badges;
+  if (Array.isArray(badges) && badges.length) {
+    return badges.reduce(
+      (n: number, b: { earned?: unknown }) => n + (Array.isArray(b?.earned) ? b.earned.length : 0),
+      0
+    );
+  }
+  const achievements = rankAttributes?.achievements;
+  if (Array.isArray(achievements) && achievements.length) return achievements.length;
   try {
     const raw = window.localStorage.getItem(`librus-achievements:${deviceId}`);
     if (!raw) return 0;

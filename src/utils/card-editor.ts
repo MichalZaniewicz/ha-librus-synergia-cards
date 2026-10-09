@@ -66,7 +66,7 @@ type EditorField =
         | "only_tomorrow"
         | "summary_only"
         | "hide_generate"
-        | "show_past";
+        | "hide_past";
       label: TranslationKey;
     }
   | {
@@ -182,7 +182,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-substitutions-card": [
     TITLE_FIELD,
     { kind: "number", key: "days_ahead", label: "editor.days_ahead", min: 1, max: 30 },
-    { kind: "boolean", key: "show_past", label: "editor.show_past" },
+    { kind: "boolean", key: "hide_past", label: "editor.hide_past" },
     MAX_ITEMS_FIELD(30),
   ],
   "custom:librus-grade-log-card": [

@@ -7,7 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { formatShortDate } from "./utils/format";
-import { downloadSchoolFile } from "./utils/services";
+import { downloadSchoolFile, DownloadHttpError } from "./utils/services";
 
 /** One document in the School documents sensor's `recent` attribute. */
 interface SchoolDocument {
@@ -23,14 +23,18 @@ const NEW_DAYS = 7;
 /**
  * Forms and regulations the school shares with parents. A tap downloads the
  * document through Home Assistant (integration 0.12.5+) - its Synergia link
- * only works in a browser logged in to Synergia; with an older integration
- * the card falls back to opening that link.
+ * only works in a browser logged in to Synergia. An older integration has no
+ * download view (HTTP 404): the card then opens that link instead, and from
+ * then on renders the rows as plain links so the tab opens straight from
+ * the tap (a `window.open` after an await can be stopped by popup blockers).
  */
 @customElement("librus-school-documents-card")
 export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   /** Per-document download state. */
   @state() private _fileState: Record<string, "loading" | "error"> = {};
+  /** Set once the integration answered 404: no download view, link to Synergia instead. */
+  @state() private _noDownloadView = false;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -105,9 +109,18 @@ export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
                 : nothing}
               <ha-icon
                 class="open"
-                icon=${this._fileState[doc.id] === "loading" ? "mdi:progress-download" : "mdi:download"}
+                icon=${this._noDownloadView && doc.url
+                  ? "mdi:open-in-new"
+                  : this._fileState[doc.id] === "loading"
+                    ? "mdi:progress-download"
+                    : "mdi:download"}
               ></ha-icon>
             `;
+            if (this._noDownloadView && doc.url) {
+              return html`<a class="doc" href=${doc.url} target="_blank" rel="noopener noreferrer">
+                ${body}
+              </a>`;
+            }
             return html`<button
               class="doc"
               type="button"
@@ -130,10 +143,13 @@ export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
       const next = { ...this._fileState };
       delete next[doc.id];
       this._fileState = next;
-    } catch {
-      // An integration older than 0.12.5 has no download path: open the
-      // Synergia page instead (works where the browser is logged in).
-      if (doc.url) {
+    } catch (err) {
+      // Only an integration older than 0.12.5 (no download view -> 404)
+      // falls back to the Synergia page; any other failure is a real error.
+      if (err instanceof DownloadHttpError && err.status === 404 && doc.url) {
+        this._noDownloadView = true;
+        // Usually still allowed right after the tap; if a popup blocker
+        // stops it, the row is a plain link now and the next tap opens it.
         window.open(doc.url, "_blank", "noopener,noreferrer");
         const next = { ...this._fileState };
         delete next[doc.id];
@@ -168,8 +184,10 @@ export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
         border-radius: 10px;
         color: inherit;
         text-decoration: none;
-        /* A button now (the download goes through Home Assistant). */
+        /* A button (the download goes through Home Assistant), or a link
+           with an integration older than 0.12.5. */
         width: calc(100% + 12px);
+        box-sizing: border-box;
         background: none;
         border: 0;
         font: inherit;

@@ -24,7 +24,9 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   max_items?: number;
   /** Forward-looking window, in days (Agenda). */
   days_ahead?: number;
-  /** Timetable changes card: also list the last few changes (default on). */
+  /** Timetable changes card: hide the last few changes (shown by default). */
+  hide_past?: boolean;
+  /** Older spelling of `hide_past` (`show_past: false`), still honoured from YAML. */
   show_past?: boolean;
   /** History window, in days (grade trend). */
   days?: number;

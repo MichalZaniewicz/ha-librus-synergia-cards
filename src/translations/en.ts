@@ -264,7 +264,7 @@ export const en = {
   "card.changes.chip_cancelled": "Cancelled",
   "card.changes.chip_room": "Rooms",
   "card.changes.chip_moved": "Moved",
-  "editor.show_past": "Show recent changes",
+  "editor.hide_past": "Hide recent changes",
   "mailbox.inbox": "Inbox",
   "mailbox.notes": "Notes",
   "mailbox.alerts": "Alerts",

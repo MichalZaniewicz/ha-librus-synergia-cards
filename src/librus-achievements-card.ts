@@ -326,7 +326,8 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
           ? html`<div class="strip">
               ${earned.map((b) => {
                 const tier = b.tiers ? b.earned.length - 1 : undefined;
-                return html`<span class="strip-ic" title=${this._badgeName(hass, b, tier)}
+                const name = this._badgeName(hass, b, tier);
+                return html`<span class="strip-ic" role="img" title=${name} aria-label=${name}
                   ><ha-icon icon=${b.icon}></ha-icon
                 ></span>`;
               })}

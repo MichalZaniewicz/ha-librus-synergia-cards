@@ -45,6 +45,40 @@ export abstract class LibrusBaseCard extends LitElement {
   // fetch (a `_fetch(force)` method keyed on a `_fetchedFor` cache string).
   private _fetchGeneration = 0;
 
+  // Memoizes _dataStamp(true)'s list of Last update sensors, keyed on the
+  // `hass.entities` reference like the caches above.
+  private _stampIds?: { entities: unknown; ids: string[] };
+
+  /**
+   * Changes after every successful Librus refresh of this card's student:
+   * the state of its Last update sensor. Part of the calendar cards' cache
+   * keys - the integration's calendars answer with nothing until its first
+   * refresh after a restart, and a card that fetched then kept showing "no
+   * lessons" until the page was reloaded (found live). Only the card's own
+   * device, so with several students a card doesn't refetch on every other
+   * student's refresh; `allDevices` (the First lesson card, which shows
+   * every student) joins every student's sensor instead. Empty with an
+   * integration older than 0.12.0, which has no Last update sensor - then
+   * nothing changes.
+   */
+  protected _dataStamp(allDevices = false): string {
+    const hass = this.hass;
+    if (!hass) return "";
+    if (!allDevices) {
+      const resolved = this._resolveEntities();
+      if ("error" in resolved) return "";
+      const id = resolved.map["last_update"];
+      return id ? (hass.states[id]?.state ?? "") : "";
+    }
+    if (this._stampIds?.entities !== hass.entities) {
+      const ids = Object.values(hass.entities ?? {})
+        .filter((e) => e.platform === LIBRUS_PLATFORM && e.translation_key === "last_update")
+        .map((e) => e.entity_id);
+      this._stampIds = { entities: hass.entities, ids };
+    }
+    return this._stampIds.ids.map((id) => hass.states[id]?.state ?? "").join(",");
+  }
+
   /**
    * Call at the START of an on-demand async fetch (after `_fetchedFor` has
    * already been updated to the new cache key), and keep the returned
@@ -62,28 +96,6 @@ export abstract class LibrusBaseCard extends LitElement {
    * fetch's result (rather than letting whichever resolves last win) closes
    * that gap.
    */
-  private _stampIds?: { entities: unknown; ids: string[] };
-
-  /**
-   * Changes after every successful Librus refresh (any student): the state of
-   * each Last update sensor. Part of the calendar cards' cache keys - the
-   * integration's calendars answer with nothing until its first refresh after
-   * a restart, and a card that fetched then kept showing "no lessons" until
-   * the page was reloaded (found live). Empty with an integration older than
-   * 0.12.0, which has no Last update sensor - then nothing changes.
-   */
-  protected _dataStamp(): string {
-    const hass = this.hass;
-    if (!hass) return "";
-    if (this._stampIds?.entities !== hass.entities) {
-      const ids = Object.values(hass.entities ?? {})
-        .filter((e) => e.platform === LIBRUS_PLATFORM && e.translation_key === "last_update")
-        .map((e) => e.entity_id);
-      this._stampIds = { entities: hass.entities, ids };
-    }
-    return this._stampIds.ids.map((id) => hass.states[id]?.state ?? "").join(",");
-  }
-
   protected _beginFetch(): number {
     return ++this._fetchGeneration;
   }

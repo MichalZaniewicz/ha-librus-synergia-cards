@@ -320,3 +320,14 @@ export function lessonTag(hass: LibrusHass, info: LessonInfo): TemplateResult | 
   }
   return tags.length ? html`${tags}` : nothing;
 }
+
+/** `@keydown` handler for a `role="button"` element with `tabindex="0"`:
+ * Enter and Space act like a click. */
+export function activateOnKey(activate: () => void): (ev: KeyboardEvent) => void {
+  return (ev) => {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      activate();
+    }
+  };
+}

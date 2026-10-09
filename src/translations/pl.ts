@@ -265,7 +265,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.changes.chip_cancelled": "Odwołane",
   "card.changes.chip_room": "Sale",
   "card.changes.chip_moved": "Przeniesione",
-  "editor.show_past": "Pokaż ostatnie zmiany",
+  "editor.hide_past": "Ukryj ostatnie zmiany",
   "mailbox.inbox": "Odebrane",
   "mailbox.notes": "Uwagi",
   "mailbox.alerts": "Alerty",
