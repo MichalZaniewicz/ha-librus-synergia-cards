@@ -1,7 +1,9 @@
 import { html, css, nothing, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
-import type { LibrusCardConfig } from "./utils/types";
+import type { HassEntity } from "home-assistant-js-websocket";
+import type { LibrusCardConfig, LibrusHass } from "./utils/types";
+import type { SubjectEntity } from "./utils/entities";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
@@ -60,6 +62,67 @@ function comparableTimestamp(date: string): string {
   return date.length <= 10 ? `${date}T00:00:00` : date;
 }
 
+/** Every grade, notice, announcement and message as one list, newest first. */
+function buildFeed(
+  hass: LibrusHass,
+  subjects: SubjectEntity[],
+  notesEntity: HassEntity | undefined,
+  announcementsEntity: HassEntity | undefined,
+  messagesEntity: HassEntity | undefined
+): FeedItem[] {
+  const items: FeedItem[] = [];
+  for (const s of subjects) {
+    const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
+    for (const g of grades) {
+      if (!g.date) continue;
+      items.push({
+        date: g.date,
+        icon: "mdi:notebook-outline",
+        title: `${g.value} · ${s.subject}`,
+        text: g.category ?? "",
+      });
+    }
+  }
+
+  for (const n of (notesEntity?.attributes.recent as RecentNote[] | undefined) ?? []) {
+    if (!n.date) continue;
+    items.push({
+      date: n.date,
+      icon: "mdi:alert-circle-outline",
+      title: n.category ?? "",
+      text: n.text,
+    });
+  }
+
+  // `notices` (integration 0.12.5+) is the whole notice board; older
+  // versions only have `recent` (the unread ones).
+  const announcements =
+    (announcementsEntity?.attributes.notices as RecentAnnouncement[] | undefined) ??
+    (announcementsEntity?.attributes.recent as RecentAnnouncement[] | undefined) ??
+    [];
+  for (const a of announcements) {
+    if (!a.creation_date) continue;
+    items.push({
+      date: a.creation_date,
+      icon: "mdi:bullhorn-outline",
+      title: a.subject,
+      text: "",
+    });
+  }
+
+  for (const m of (messagesEntity?.attributes.recent as RecentMessage[] | undefined) ?? []) {
+    if (!m.date) continue;
+    items.push({
+      date: m.date,
+      icon: "mdi:email-outline",
+      title: `${m.sender} · ${m.topic}`,
+      text: m.content,
+    });
+  }
+
+  return items.sort((a, b) => comparableTimestamp(b.date).localeCompare(comparableTimestamp(a.date)));
+}
+
 /**
  * One chronological feed merging the most recent grades, behaviour
  * notices, announcements and messages - every other card here only shows
@@ -96,55 +159,16 @@ export class LibrusRecentActivityCard extends LibrusBaseCard {
     const { deviceId, map } = resolved;
     const hass = this.hass;
 
-    const items: FeedItem[] = [];
-
-    for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
-      const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
-      for (const g of grades) {
-        if (!g.date) continue;
-        items.push({
-          date: g.date,
-          icon: "mdi:notebook-outline",
-          title: `${g.value} · ${s.subject}`,
-          text: g.category ?? "",
-        });
-      }
-    }
-
+    const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average");
     const notesEntity = map.behaviour_notices ? hass.states[map.behaviour_notices] : undefined;
-    for (const n of (notesEntity?.attributes.recent as RecentNote[] | undefined) ?? []) {
-      if (!n.date) continue;
-      items.push({
-        date: n.date,
-        icon: "mdi:alert-circle-outline",
-        title: n.category ?? "",
-        text: n.text,
-      });
-    }
-
     const announcementsEntity = map.unread_announcements ? hass.states[map.unread_announcements] : undefined;
-    for (const a of (announcementsEntity?.attributes.recent as RecentAnnouncement[] | undefined) ?? []) {
-      if (!a.creation_date) continue;
-      items.push({
-        date: a.creation_date,
-        icon: "mdi:bullhorn-outline",
-        title: a.subject,
-        text: "",
-      });
-    }
-
     const messagesEntity = map.unread_messages ? hass.states[map.unread_messages] : undefined;
-    for (const m of (messagesEntity?.attributes.recent as RecentMessage[] | undefined) ?? []) {
-      if (!m.date) continue;
-      items.push({
-        date: m.date,
-        icon: "mdi:email-outline",
-        title: `${m.sender} · ${m.topic}`,
-        text: m.content,
-      });
-    }
-
-    items.sort((a, b) => comparableTimestamp(b.date).localeCompare(comparableTimestamp(a.date)));
+    // Rebuilt only when one of these entities actually changed.
+    const items = this._memo(
+      "feed",
+      [...subjects.map((s) => hass.states[s.entityId]), notesEntity, announcementsEntity, messagesEntity],
+      () => buildFeed(hass, subjects, notesEntity, announcementsEntity, messagesEntity)
+    );
     const shown = applyListOptions(items, this._config, DEFAULT_MAX);
 
     if (shown.length === 0) return this._message("mdi:bell-outline", t(hass, "card.recent_activity.empty"));

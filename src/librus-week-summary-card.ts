@@ -9,7 +9,7 @@ import { isoDate } from "./utils/calendar";
 import { UNAVAILABLE } from "./utils/entities";
 import { formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
-import { tapActionHandler } from "./utils/actions";
+import { tapAction } from "./utils/actions";
 
 @customElement("librus-week-summary-card")
 export class LibrusWeekSummaryCard extends LibrusBaseCard {
@@ -51,15 +51,51 @@ export class LibrusWeekSummaryCard extends LibrusBaseCard {
     // through UTC first and can land on the wrong calendar date depending
     // on the viewer's timezone.
     const weekAgoIso = isoDate(weekAgo);
-    const newGrades = this._resolveAllByTranslationKey(deviceId, "subject_average").filter((s) => {
-      const date = hass.states[s.entityId]?.attributes.latest_grade_date as string | undefined;
-      return date && date >= weekAgoIso;
-    }).length;
+    const recentDate = (date: unknown): boolean => typeof date === "string" && date.slice(0, 10) >= weekAgoIso;
+
+    // Grades given in the last 7 days (each grade, not each subject with a
+    // new one); an integration without the `grades` list only says which
+    // subjects got a grade, so that's counted there.
+    let newGrades = 0;
+    for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
+      const attrs = hass.states[s.entityId]?.attributes;
+      const grades = attrs?.grades as { date?: string | null }[] | undefined;
+      if (Array.isArray(grades)) newGrades += grades.filter((g) => recentDate(g.date)).length;
+      else if (recentDate(attrs?.latest_grade_date)) newGrades += 1;
+    }
+
+    // Days with an absence in the last 7 days, from the per-day map; an older
+    // integration without it only has the school-year total of unexcused
+    // absences, shown under that name.
+    const byDate = attendance?.attributes.by_date as Record<string, string> | undefined;
+    const absence =
+      attendance && !UNAVAILABLE.has(attendance.state)
+        ? byDate
+          ? (() => {
+              const week = Object.entries(byDate).filter(([date, status]) => recentDate(date) && status !== "good");
+              // Red only for a day with an absence still to excuse.
+              return { value: week.length, bad: week.some(([, status]) => status === "bad"), label: t(hass, "stat.absence_days") };
+            })()
+          : (() => {
+              const value = (attendance.attributes.unexcused_count as number | undefined) ?? Number(attendance.state);
+              return { value, bad: value > 0, label: t(hass, "stat.unexcused") };
+            })()
+        : undefined;
+
+    // Notes from the last 7 days (the sensor's recent list); without it, the
+    // total under the sensor's own name.
+    const recentNotes = notices?.attributes.recent as { date?: string | null }[] | undefined;
+    const notes =
+      notices && !UNAVAILABLE.has(notices.state)
+        ? Array.isArray(recentNotes)
+          ? { value: recentNotes.filter((n) => recentDate(n.date)).length, label: t(hass, "stat.new_notes") }
+          : { value: Number(notices.state) || 0, label: t(hass, "card.behaviour_notices.title") }
+        : undefined;
 
     const agendaMessage = agenda?.attributes.message as string | undefined;
 
     return html`
-      <ha-card @click=${tapActionHandler(this, this._config.tap_action, map.overall_average)}>
+      <ha-card ${tapAction(this, this._config.tap_action, map.overall_average)}>
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:calendar-check-outline"></ha-icon></div>
           <div class="title-block">
@@ -71,22 +107,14 @@ export class LibrusWeekSummaryCard extends LibrusBaseCard {
             <div class="stat-value">${newGrades}</div>
             <div class="stat-label">${t(hass, "stat.new_grades")}</div>
           </div>
-          ${attendance && !UNAVAILABLE.has(attendance.state)
-            ? (() => {
-                // BUG FIX (2026-09-07, found live): this used to show the
-                // blended total (excused + unexcused) - an absence the
-                // parent had ALREADY gotten excused looked identical to
-                // one still needing attention. `unexcused_count` (requires
-                // ha-librus-synergia 0.4.19+) isolates the part that
-                // actually does; falls back to the old blended state for
-                // an older backend.
-                const unexcused = attendance.attributes.unexcused_count as number | undefined;
-                const value = unexcused ?? Number(attendance.state);
-                return html`<div class="stat ${value > 0 ? "bad" : ""}"><div class="stat-value">${value}</div><div class="stat-label">${t(hass, "stat.absences")}</div></div>`;
-              })()
+          ${absence
+            ? html`<div class="stat ${absence.bad ? "bad" : ""}">
+                <div class="stat-value">${absence.value}</div>
+                <div class="stat-label">${absence.label}</div>
+              </div>`
             : nothing}
-          ${notices && !UNAVAILABLE.has(notices.state)
-            ? html`<div class="stat"><div class="stat-value">${notices.state}</div><div class="stat-label">${t(hass, "card.behaviour_notices.title")}</div></div>`
+          ${notes
+            ? html`<div class="stat"><div class="stat-value">${notes.value}</div><div class="stat-label">${notes.label}</div></div>`
             : nothing}
         </div>
         ${agendaMessage

@@ -15,6 +15,7 @@
     "lit": "^3.2.1"
   },
   "devDependencies": {
+    "@lit-labs/rollup-plugin-minify-html-literals": "^0.2.0",
     "@rollup/plugin-node-resolve": "^15.3.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.1",

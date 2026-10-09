@@ -70,7 +70,7 @@ export class LibrusDescriptiveGradesCard extends LibrusBaseCard {
                     ${g.date ? html`<time>${formatShortDate(g.date, hass.language)}</time>` : nothing}
                   </div>
                   ${g.teacher && !this._config?.hide_teacher ? html`<div class="item-text">${g.teacher}</div>` : nothing}
-                  ${g.comments.length ? html`<div class="quote">${g.comments.join(" · ")}</div>` : nothing}
+                  ${g.comments.length ? html`<div class="quote comment">${g.comments.join(" · ")}</div>` : nothing}
                 </div>
               </div>
             `

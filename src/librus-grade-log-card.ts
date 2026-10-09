@@ -53,23 +53,32 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
     const { deviceId, map } = resolved;
     const hass = this.hass;
 
-    const flat: FlatGrade[] = [];
-    for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
-      const attributes = hass.states[s.entityId]?.attributes;
-      const grades = [
-        ...((attributes?.grades as GradeLogEntry[] | undefined) ?? []),
-        ...pointGradeEntries(attributes),
-        ...textGradeEntries(attributes),
-      ];
-      for (const g of grades) flat.push({ ...g, subject: s.subject });
-    }
-    if (this._config.show_descriptive && map.descriptive_grades) {
-      flat.push(...descriptiveGradeEntries(hass.states[map.descriptive_grades]?.attributes));
-    }
+    const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average");
+    const descriptive =
+      this._config.show_descriptive && map.descriptive_grades ? hass.states[map.descriptive_grades] : undefined;
+    // Flattened and sorted again only when a grade sensor or the options changed.
+    const config = this._config;
+    const { flat, filtered } = this._memo(
+      "grades",
+      // The day too: the `days` filter counts back from today.
+      [config, new Date().toDateString(), descriptive, ...subjects.map((s) => hass.states[s.entityId])],
+      () => {
+        const flat: FlatGrade[] = [];
+        for (const s of subjects) {
+          const attributes = hass.states[s.entityId]?.attributes;
+          const grades = [
+            ...((attributes?.grades as GradeLogEntry[] | undefined) ?? []),
+            ...pointGradeEntries(attributes),
+            ...textGradeEntries(attributes),
+          ];
+          for (const g of grades) flat.push({ ...g, subject: s.subject });
+        }
+        if (descriptive) flat.push(...descriptiveGradeEntries(descriptive.attributes));
+        return { flat, filtered: filterAndSortGrades(flat, config) };
+      }
+    );
 
     if (flat.length === 0) return this._message("mdi:notebook-multiple", t(hass, "card.grades.empty"));
-
-    const filtered = filterAndSortGrades(flat, this._config);
     if (filtered.length === 0) {
       return this._message("mdi:notebook-multiple", t(hass, "card.grade_log.empty_filtered"));
     }
@@ -100,7 +109,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
                     ${g.date ? html`<time>${formatShortDate(g.date, hass.language)}</time>` : nothing}
                   </div>
                   ${g.teacher && !this._config?.hide_teacher ? html`<div class="item-text">${g.teacher}</div>` : nothing}
-                  ${g.comments.length ? html`<div class="quote">${g.comments.join(" · ")}</div>` : nothing}
+                  ${g.comments.length ? html`<div class="quote ${g.text ? "" : "comment"}">${g.comments.join(" · ")}</div>` : nothing}
                 </div>
               </div>
             `

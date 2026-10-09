@@ -4,9 +4,9 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, lessonInfo, lessonMeta, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, isoDate, lessonInfo, lessonMeta, nextSchoolDay, type LibrusCalendarEvent } from "./utils/calendar";
 import { lessonTag } from "./utils/render-helpers";
-import { formatTime } from "./utils/format";
+import { formatTime, formatDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 
@@ -20,19 +20,6 @@ interface UpcomingExam {
   category: string | null;
 }
 
-/** Local-timezone "YYYY-MM-DD" (not via toISOString, which goes through UTC). */
-function isoDate(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-/** Next Mon-Fri after `from` (skips the weekend; does not know about holidays). */
-function nextSchoolDay(from: Date): Date {
-  const d = new Date(from);
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 1);
-  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
-  return d;
-}
 
 /**
  * The next school day at a glance - its lessons, plus any homework due or
@@ -46,7 +33,6 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _lessons: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -67,13 +53,9 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 30 * 60_000);
+    this._every(30 * 60_000, () => void this._fetch(this._forceRefresh()));
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-  }
 
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
@@ -158,7 +140,7 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
               ${this._config.title ?? t(hass, isLiterallyTomorrow ? "card.tomorrow.title" : "card.tomorrow.title_next_school_day")}
             </div>
             <div class="subtitle">
-              ${target.toLocaleDateString(hass.language, { weekday: "long", day: "numeric", month: "long" })}
+              ${formatDate(target, hass.language, { weekday: "long", day: "numeric", month: "long" })}
             </div>
           </div>
         </div>

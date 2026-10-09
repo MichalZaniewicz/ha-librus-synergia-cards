@@ -8,7 +8,8 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate, daysBetween } from "./utils/format";
 import { t } from "./utils/localize";
 import { applyListOptions } from "./utils/list-options";
-import { CATALOG, readHeroHistory, type HeroMode } from "./utils/hero-archetypes";
+import { CATALOG, HERO_HISTORY_EVENT, readHeroHistory, type HeroMode } from "./utils/hero-archetypes";
+import { isoDate } from "./utils/calendar";
 
 /**
  * A timeline of `librus-hero-card`'s own past results, read from the same
@@ -22,6 +23,22 @@ import { CATALOG, readHeroHistory, type HeroMode } from "./utils/hero-archetypes
 @customElement("librus-hero-history-card")
 export class LibrusHeroHistoryCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  // Bumped when the Hero card on this page records a new result.
+  @state() private _historyVersion = 0;
+
+  private _onHistoryChanged = (): void => {
+    this._historyVersion += 1;
+  };
+
+  public connectedCallback(): void {
+    super.connectedCallback();
+    window.addEventListener(HERO_HISTORY_EVENT, this._onHistoryChanged);
+  }
+
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.removeEventListener(HERO_HISTORY_EVENT, this._onHistoryChanged);
+  }
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -50,7 +67,8 @@ export class LibrusHeroHistoryCard extends LibrusBaseCard {
     const hass = this.hass;
     const mode: HeroMode = this._config.mode === "hero" ? "hero" : "archetype";
 
-    const history = readHeroHistory(deviceId);
+    // Read from storage once per student and per new entry, not per render.
+    const history = this._memo("history", [deviceId, this._historyVersion], () => readHeroHistory(deviceId));
     if (history.length === 0) {
       return this._message("mdi:history", t(hass, "card.hero_history.empty"));
     }
@@ -84,7 +102,7 @@ export class LibrusHeroHistoryCard extends LibrusBaseCard {
                 <div class="body">
                   <div class="row1">
                     <span>${r.catalog ? t(hass, r.catalog.nameKey[mode]) : r.entry.id}</span>
-                    <time>${formatShortDate(r.entry.when, hass.language)}</time>
+                    <time>${formatShortDate(isoDate(new Date(r.entry.when)), hass.language)}</time>
                   </div>
                   <div class="item-text">
                     ${r.isCurrent

@@ -82,8 +82,10 @@ export class LibrusLatestGradeCard extends LibrusBaseCard {
         </div>
         ${latest.comments.length
           ? html`
-              <hr />
-              ${latest.comments.map((c) => html`<div class="quote">${c}</div>`)}
+              <div class="comment">
+                <hr />
+                ${latest.comments.map((c) => html`<div class="quote">${c}</div>`)}
+              </div>
             `
           : nothing}
       </ha-card>

@@ -135,13 +135,11 @@ export const pl: Record<keyof typeof en, string> = {
   "card.grade_category_distribution.title": "Oceny wg kategorii",
   "card.grade_category_distribution.subtitle": "Sprawdziany, kartkówki, odpowiedzi…",
   "card.grade_category_distribution.empty": "Brak ocen z przypisaną kategorią",
-  "unit.grades": "ocen",
   "card.grade_category_distribution.uncategorized": "Bez kategorii",
 
   "card.subject_time.title": "Podział czasu lekcji",
   "card.subject_time.subtitle": "Lekcje w tygodniu, wg przedmiotu",
   "card.subject_time.empty": "Brak lekcji w tym tygodniu",
-  "unit.lessons_per_week": "lekcji/tydz.",
 
   "card.attendance_weekday.title": "Nieobecności wg dnia tygodnia",
   "card.attendance_weekday.subtitle": "Ten rok szkolny",
@@ -251,7 +249,6 @@ export const pl: Record<keyof typeof en, string> = {
   "card.messages.attachment_archived": "Librus nie pozwala tu pobrać plików z wiadomości w archiwum - otwórz wiadomość w Synergii",
 
   "card.substitutions.title": "Zmiany w planie",
-  "card.substitutions.subtitle": "Wiadomości specjalne",
   "card.substitutions.empty": "Bez zmian w planie",
   "card.changes.next": "Najbliższa: {subject}, {when}",
   "card.changes.none": "Bez zmian w najbliższych {n} dniach",
@@ -290,7 +287,6 @@ export const pl: Record<keyof typeof en, string> = {
   "card.today_lessons.empty": "Brak lekcji dzisiaj",
   "label.now": "teraz",
 
-  "card.next_lesson.title": "Najbliższa lekcja",
   "card.next_lesson.empty": "Koniec lekcji na dziś",
   "label.in_minutes": "za {minutes} min",
   "label.in_hours": "za {hours} godz.",
@@ -317,6 +313,8 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.free_days.title": "Dni wolne",
   "card.free_days.empty": "Brak nadchodzących dni wolnych",
+  "card.free_days.ongoing": "Trwa",
+  "card.free_days.until": "do {date}",
   "label.days_until": "dni do",
 
   "card.school_year.title": "Koniec roku szkolnego",
@@ -335,7 +333,6 @@ export const pl: Record<keyof typeof en, string> = {
   "card.week_timetable.break_now": "Przerwa — następna lekcja za {minutes} min",
   "card.week_timetable.empty": "Brak lekcji w tym tygodniu",
 
-  "card.school.title": "Szkoła",
   "label.head_teacher": "Dyrektor",
   "label.class": "Klasa",
   "label.student_number": "Nr w dzienniku",
@@ -357,6 +354,8 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.week_summary.title": "Tydzień w skrócie",
   "stat.new_grades": "Nowe oceny",
+  "stat.absence_days": "Dni z nieobecnością",
+  "stat.new_notes": "Nowe uwagi",
 
   "card.ai_summary.title": "Podsumowanie tygodnia",
   "card.ai_summary.setup": "Podsumowanie AI jest wyłączone",
@@ -388,7 +387,6 @@ export const pl: Record<keyof typeof en, string> = {
   "card.lucky_number.yours_for_date": "To Twój numerek na {date}!",
   "card.lucky_number.empty": "Nie opublikowano jeszcze numerka (np. w trakcie przerwy szkolnej)",
 
-  "card.student.title": "Karta ucznia",
   "stat.overall_rating": "ocena ogólna",
   "stat.attendance_score": "Frekwencja",
   "stat.behaviour_score": "Zachowanie",

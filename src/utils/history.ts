@@ -32,7 +32,10 @@ export async function fetchNumericHistory(
   const path =
     `history/period/${encodeURIComponent(start.toISOString())}` +
     `?filter_entity_id=${encodeURIComponent(entityId)}` +
-    `&end_time=${encodeURIComponent(end.toISOString())}`;
+    `&end_time=${encodeURIComponent(end.toISOString())}` +
+    // Only state + time per point: no attributes (a subject sensor carries
+    // its whole grade list) and no repeated entity_id/last_updated.
+    "&minimal_response&no_attributes";
   const raw = (await hass.callApi("GET", path)) as RawHistoryEntry[][] | undefined;
   const series = raw?.[0] ?? [];
 

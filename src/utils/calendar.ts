@@ -1,4 +1,5 @@
 import type { LibrusHass } from "./types";
+import { registryIndex } from "./entities";
 
 export interface LibrusCalendarEvent {
   start: string; // "YYYY-MM-DD" for all-day, full ISO datetime otherwise
@@ -31,6 +32,10 @@ function normalize(raw: string | RawCalendarDateTime): { value: string; allDay: 
   return { value: raw.dateTime ?? "", allDay: false };
 }
 
+/** How long an identical calendar request is shared, in ms. */
+const SHARED_FOR_MS = 30_000;
+const requests = new Map<string, { at: number; promise: Promise<LibrusCalendarEvent[]> }>();
+
 /**
  * Fetches events for one calendar entity over [start, end) via Home
  * Assistant's REST API - the same endpoint HA's own calendar dashboard
@@ -40,6 +45,13 @@ function normalize(raw: string | RawCalendarDateTime): { value: string; allDay: 
  * a Google-Calendar-style `{date}`/`{dateTime}` object across versions -
  * both are normalized here defensively so the rest of this repo never has
  * to care which one a given HA version actually sends.
+ *
+ * Several cards on one dashboard ask for the same range at the same moment
+ * (after every Librus refresh, the Today, Week and Bell schedule cards all
+ * want this week's lessons): an identical request made within 30 s - and
+ * for the same Librus refresh, by the calendar's Last update sensor - is
+ * answered from the one already sent. A failed one isn't kept. Every caller
+ * gets its own copy of the list, so sorting it in place is fine.
  */
 export async function fetchCalendarEvents(
   hass: LibrusHass,
@@ -50,6 +62,30 @@ export async function fetchCalendarEvents(
   const path = `calendars/${entityId}?start=${encodeURIComponent(
     start.toISOString()
   )}&end=${encodeURIComponent(end.toISOString())}`;
+  const key = `${path}|${refreshStamp(hass, entityId)}`;
+  const now = Date.now();
+  let entry = requests.get(key);
+  if (!entry || now - entry.at > SHARED_FOR_MS) {
+    for (const [k, v] of requests) if (now - v.at > SHARED_FOR_MS) requests.delete(k);
+    const created = { at: now, promise: loadCalendarEvents(hass, path) };
+    entry = created;
+    requests.set(key, created);
+    created.promise.catch(() => {
+      if (requests.get(key) === created) requests.delete(key);
+    });
+  }
+  const events = await entry.promise;
+  return events.map((e) => ({ ...e }));
+}
+
+/** The state of the Last update sensor of the calendar's own device ("" without one). */
+function refreshStamp(hass: LibrusHass, entityId: string): string {
+  const deviceId = hass.entities?.[entityId]?.device_id;
+  const stampId = deviceId ? registryIndex(hass).keyMaps.get(deviceId)?.last_update : undefined;
+  return stampId ? (hass.states[stampId]?.state ?? "") : "";
+}
+
+async function loadCalendarEvents(hass: LibrusHass, path: string): Promise<LibrusCalendarEvent[]> {
   const raw = (await hass.callApi("GET", path)) as RawCalendarEvent[] | undefined;
   if (!Array.isArray(raw)) return [];
   return raw.map((item) => {
@@ -128,6 +164,39 @@ export function isHappeningNow(event: LibrusCalendarEvent, now: Date): boolean {
   return t >= start && t < end;
 }
 
+/** Local "YYYY-MM-DD" of an event's first day. */
+function firstDayOf(event: LibrusCalendarEvent): string {
+  return event.allDay ? event.start.slice(0, 10) : isoDate(new Date(event.start));
+}
+
+/** Local "YYYY-MM-DD" of an event's last day - an all-day event's `end` is
+ * the day AFTER it (exclusive), a timed one ends inside its last day. */
+export function lastDayOf(event: LibrusCalendarEvent): string {
+  if (event.allDay) {
+    const d = new Date(`${event.end.slice(0, 10)}T00:00:00`);
+    d.setDate(d.getDate() - 1);
+    const last = isoDate(d);
+    return last < event.start.slice(0, 10) ? event.start.slice(0, 10) : last;
+  }
+  return isoDate(new Date(new Date(event.end).getTime() - 1));
+}
+
+/**
+ * Splits free-day events (sorted by start) into the one going on today, if
+ * any, and the ones that haven't started yet. A break that began before
+ * today still comes back from the calendar (it overlaps the range), and
+ * counting down to its start gave a negative number of days.
+ */
+export function splitOngoing(
+  events: LibrusCalendarEvent[],
+  now: Date
+): { ongoing?: LibrusCalendarEvent; upcoming: LibrusCalendarEvent[] } {
+  const today = isoDate(now);
+  const ongoing = events.find((e) => firstDayOf(e) <= today && lastDayOf(e) >= today);
+  const upcoming = events.filter((e) => firstDayOf(e) > today);
+  return { ongoing, upcoming };
+}
+
 /** True if the event has already ended relative to `now`. */
 export function hasEnded(event: LibrusCalendarEvent, now: Date): boolean {
   const end = event.allDay ? new Date(`${event.end}T23:59:59`) : new Date(event.end);
@@ -143,6 +212,20 @@ export function hasEnded(event: LibrusCalendarEvent, now: Date): boolean {
  */
 export function isoDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Local "HH:MM" (24 h) of `d` - for comparing against bell-schedule times. */
+export function hm(d: Date): string {
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+/** Next Mon-Fri after `from`, at local midnight (skips the weekend; does not know about holidays). */
+export function nextSchoolDay(from: Date): Date {
+  const d = new Date(from);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 1);
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+  return d;
 }
 
 /** ISO weekday of `d` in LOCAL time (1=Monday..7=Sunday). */

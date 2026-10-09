@@ -4,14 +4,12 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig, LibrusHass } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, isoDate, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, isoDate, lessonInfo, nextSchoolDay, type LibrusCalendarEvent } from "./utils/calendar";
 import { findLibrusDeviceIds, mapByTranslationKey } from "./utils/entities";
-import { formatTime } from "./utils/format";
+import { formatTime, formatDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 
-/** The integration appends these to a lesson's summary (calendar.py). */
-const STATUS_RE = /\s*\((odwołane|zastępstwo)\)\s*$/i;
 const AVATAR_COLORS = [
   "var(--lc-chart-1)",
   "var(--lc-chart-2)",
@@ -48,15 +46,6 @@ interface Student {
   next: DaySummary;
 }
 
-/** Next Mon-Fri after `from` (skips the weekend; does not know about holidays). */
-function nextSchoolDay(from: Date): Date {
-  const d = new Date(from);
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 1);
-  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
-  return d;
-}
-
 /** Event times can arrive in different ISO forms; compare real instants. */
 const ms = (iso: string): number => new Date(iso).getTime();
 
@@ -65,15 +54,19 @@ function summarize(events: LibrusCalendarEvent[] | undefined, day: string, now: 
   const lessons = events
     .filter((e) => !e.allDay && e.start.slice(0, 10) === day)
     .sort((a, b) => ms(a.start) - ms(b.start));
-  const held = lessons.filter((e) => !/\(odwołane\)\s*$/i.test(e.summary));
+  // The same summary/description parsing every timetable card uses - it
+  // also knows "(zmiana sali)" / "(przeniesiona)", which this card used to
+  // show as part of the subject.
+  const held = lessons.filter((e) => !lessonInfo(e).cancelled);
   const first = held[0];
   if (!first) return { skipped: 0, free: true, started: false, unknown: false };
+  const info = lessonInfo(first);
   return {
     lesson: {
       start: first.start,
-      subject: first.summary.replace(STATUS_RE, ""),
+      subject: info.name,
       room: first.location || undefined,
-      substitution: /\(zastępstwo\)\s*$/i.test(first.summary),
+      substitution: info.substitution,
     },
     skipped: lessons.filter((e) => ms(e.start) < ms(first.start) && !held.includes(e)).length,
     free: false,
@@ -99,10 +92,9 @@ export function studentName(hass: LibrusHass, deviceId: string, override?: strin
 @customElement("librus-first-lesson-card")
 export class LibrusFirstLessonCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  protected _watchAllDevices = true;
   @state() private _events = new Map<string, LibrusCalendarEvent[] | undefined>();
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
-  private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -122,26 +114,25 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 30 * 60_000);
+    this._every(30 * 60_000, () => void this._fetch(this._forceRefresh()));
     // Re-render once a minute so a started first lesson fades out on time.
-    this._tickTimer = setInterval(() => this.requestUpdate(), 60_000);
+    this._every(60_000, () => this.requestUpdate());
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-    clearInterval(this._tickTimer);
-  }
 
+  /** The students to show, in order - from the shared registry index, worked
+   * out again only when the registry, the devices or the config change. */
   private _deviceIds(): string[] {
-    const all = findLibrusDeviceIds(this.hass!);
-    const wanted = this._config?.devices;
-    if (wanted?.length) return wanted.filter((id) => all.includes(id));
-    return [...all].sort((a, b) =>
-      studentName(this.hass!, a, this._config?.names?.[a]).localeCompare(
-        studentName(this.hass!, b, this._config?.names?.[b])
-      )
-    );
+    const hass = this.hass!;
+    const config = this._config;
+    return this._memo("ids", [hass.entities, hass.devices, config], () => {
+      const all = findLibrusDeviceIds(hass);
+      const wanted = config?.devices;
+      if (wanted?.length) return wanted.filter((id) => all.includes(id));
+      return [...all].sort((a, b) =>
+        studentName(hass, a, config?.names?.[a]).localeCompare(studentName(hass, b, config?.names?.[b]))
+      );
+    });
   }
 
   private async _fetch(force = false): Promise<void> {
@@ -223,7 +214,7 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
 
     const nextLabel = nextIsTomorrow
       ? t(hass, "card.first_lesson.tomorrow")
-      : next.toLocaleDateString(hass.language, { weekday: "short" });
+      : formatDate(next, hass.language, { weekday: "short" });
     let subtitle: TemplateResult | string = "";
     if (earliest) {
       const key = focusToday
@@ -232,7 +223,7 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
           ? "card.first_lesson.earliest_tomorrow"
           : "card.first_lesson.earliest_on";
       const [before, after] = t(hass, key, {
-        day: next.toLocaleDateString(hass.language, { weekday: "long" }),
+        day: formatDate(next, hass.language, { weekday: "long" }),
         who: "\u0000",
       }).split("\u0000");
       subtitle = html`${before}<b>${earliest.name} ${formatTime(earliest[focusKey].lesson!.start)}</b>${after ?? ""}`;

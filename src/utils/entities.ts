@@ -28,15 +28,82 @@ export class LibrusConfigError extends Error {
   }
 }
 
-/** All device_ids that own at least one librus_synergia entity. */
-export function findLibrusDeviceIds(hass: LibrusHass): string[] {
-  const ids = new Set<string>();
-  for (const entity of Object.values(hass.entities ?? {})) {
-    if (entity.platform === LIBRUS_PLATFORM && entity.device_id) {
-      ids.add(entity.device_id);
+/**
+ * Everything the cards look up in the entity registry, built in ONE pass
+ * and shared by every card, the editor and the update checks. Keyed on the
+ * `hass.entities` object: the frontend hands out a new `hass` on every
+ * state change anywhere, but only a new `hass.entities` when the registry
+ * itself changes (a rename, a reload, a device added) - so with dozens of
+ * cards on a dashboard the registry is scanned once per registry change,
+ * not once per card per render. Treat the returned lists/maps as read-only.
+ */
+export interface RegistryIndex {
+  /** Devices owning at least one librus_synergia entity, in registry order. */
+  deviceIds: string[];
+  /** device_id -> translation_key -> entity_id (the last one per key). */
+  keyMaps: Map<string, Record<string, string>>;
+  /** device_id -> translation_key -> every entity_id with it (subject sensors share one key). */
+  idsByKey: Map<string, Map<string, string[]>>;
+  /** device_id -> every librus_synergia entity_id of that device. */
+  entityIds: Map<string, string[]>;
+  /** Every librus_synergia entity_id. */
+  allEntityIds: string[];
+}
+
+const EMPTY_INDEX: RegistryIndex = {
+  deviceIds: [],
+  keyMaps: new Map(),
+  idsByKey: new Map(),
+  entityIds: new Map(),
+  allEntityIds: [],
+};
+const INDEXES = new WeakMap<object, RegistryIndex>();
+
+export function registryIndex(hass: LibrusHass): RegistryIndex {
+  const registry = hass.entities;
+  if (!registry) return EMPTY_INDEX;
+  let index = INDEXES.get(registry);
+  if (index) return index;
+  index = { deviceIds: [], keyMaps: new Map(), idsByKey: new Map(), entityIds: new Map(), allEntityIds: [] };
+  for (const entity of Object.values(registry)) {
+    if (entity.platform !== LIBRUS_PLATFORM) continue;
+    index.allEntityIds.push(entity.entity_id);
+    const deviceId = entity.device_id;
+    if (!deviceId) continue;
+    let ids = index.entityIds.get(deviceId);
+    let keyMap = index.keyMaps.get(deviceId);
+    let byKey = index.idsByKey.get(deviceId);
+    if (!ids || !keyMap || !byKey) {
+      ids = [];
+      keyMap = {};
+      byKey = new Map();
+      index.entityIds.set(deviceId, ids);
+      index.keyMaps.set(deviceId, keyMap);
+      index.idsByKey.set(deviceId, byKey);
+      index.deviceIds.push(deviceId);
+    }
+    ids.push(entity.entity_id);
+    const key = entity.translation_key;
+    if (key) {
+      keyMap[key] = entity.entity_id;
+      const list = byKey.get(key);
+      if (list) list.push(entity.entity_id);
+      else byKey.set(key, [entity.entity_id]);
     }
   }
-  return [...ids];
+  INDEXES.set(registry, index);
+  return index;
+}
+
+/** All device_ids that own at least one librus_synergia entity. */
+export function findLibrusDeviceIds(hass: LibrusHass): string[] {
+  return registryIndex(hass).deviceIds;
+}
+
+/** The display name of a device (the user's rename wins), else its id. */
+export function deviceName(hass: LibrusHass, deviceId: string): string {
+  const device = hass.devices?.[deviceId];
+  return device?.name_by_user || device?.name || deviceId;
 }
 
 /**
@@ -67,20 +134,11 @@ export function resolveLibrusDevice(hass: LibrusHass, configuredDeviceId?: strin
  * as a stable, language-independent lookup - unlike entity_id, which is
  * derived from the user's localized friendly name. Assumes at most one
  * entity per key, which holds for every key except `subject_average` (see
- * `mapAllByTranslationKey` below).
+ * `mapAllByTranslationKey` below). The returned map is shared - don't
+ * modify it.
  */
 export function mapByTranslationKey(hass: LibrusHass, deviceId: string): Record<string, string> {
-  const map: Record<string, string> = {};
-  for (const entity of Object.values(hass.entities ?? {})) {
-    if (
-      entity.device_id === deviceId &&
-      entity.platform === LIBRUS_PLATFORM &&
-      entity.translation_key
-    ) {
-      map[entity.translation_key] = entity.entity_id;
-    }
-  }
-  return map;
+  return registryIndex(hass).keyMaps.get(deviceId) ?? {};
 }
 
 /**
@@ -108,23 +166,17 @@ export function mapAllByTranslationKey(
   deviceId: string,
   translationKey: string
 ): SubjectEntity[] {
-  const result: SubjectEntity[] = [];
-  for (const entity of Object.values(hass.entities ?? {})) {
-    if (
-      entity.device_id === deviceId &&
-      entity.platform === LIBRUS_PLATFORM &&
-      entity.translation_key === translationKey
-    ) {
-      const state = hass.states[entity.entity_id];
-      const attrs = state?.attributes as { subject?: string; subject_id?: number } | undefined;
-      result.push({
-        entityId: entity.entity_id,
-        subject: attrs?.subject || entity.entity_id,
-        subjectId: attrs?.subject_id,
-      });
-    }
-  }
-  return result.sort((a, b) => a.subject.localeCompare(b.subject));
+  // Entity ids come from the shared registry index; the subject name and id
+  // are read from the CURRENT states on every call - a sensor that was
+  // still loading (no `subject` yet) or a renamed subject shows its real
+  // name as soon as the state has it, not only after a registry change.
+  const ids = registryIndex(hass).idsByKey.get(deviceId)?.get(translationKey) ?? [];
+  return ids
+    .map((entityId) => {
+      const attrs = hass.states[entityId]?.attributes as { subject?: string; subject_id?: number } | undefined;
+      return { entityId, subject: attrs?.subject || entityId, subjectId: attrs?.subject_id };
+    })
+    .sort((a, b) => a.subject.localeCompare(b.subject));
 }
 
 /** Class register number ("nr w dzienniku"): the Class sensor's

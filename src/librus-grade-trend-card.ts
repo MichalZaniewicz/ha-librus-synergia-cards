@@ -25,7 +25,6 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _points: HistoryPoint[] = [];
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -50,13 +49,10 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 30 * 60_000);
+    // Only notices a new day - a changed average changes the cache key itself.
+    this._every(30 * 60_000, () => void this._fetch());
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-  }
 
   private _resolveEntityId(): string | undefined {
     if (!this.hass || !this._config) return undefined;
@@ -77,7 +73,9 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
     const end = new Date();
     const start = new Date(end.getTime() - this._historyDays * 86_400_000);
     const range = `${entityId}:${end.toDateString()}:${this._historyDays}`;
-    const cacheKey = `${range}:${this._dataStamp()}`;
+    // The history only grows when this sensor's value changes, so its
+    // last_changed is the key - not every Librus refresh.
+    const cacheKey = `${range}:${this.hass.states[entityId]?.last_changed ?? ""}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 

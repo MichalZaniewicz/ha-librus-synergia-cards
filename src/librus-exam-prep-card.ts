@@ -6,7 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
-import { formatShortDate } from "./utils/format";
+import { daysBetween, formatShortDate, formatDate } from "./utils/format";
 
 /** A topic to revise (Next exam sensor, integration 0.12.1+). */
 interface Topic {
@@ -30,6 +30,13 @@ interface Exam {
   topics_since?: string | null;
   missed_topics?: number;
   more_topics?: number;
+}
+
+/** Days from today to the test - worked out from its date (newer integrations
+ * drop the per-test `days_until`, which went stale between Librus refreshes). */
+function daysUntilExam(exam: Exam): number {
+  const day = new Date(`${exam.date.slice(0, 10)}T00:00:00`);
+  return Number.isNaN(day.getTime()) ? (exam.days_until ?? 0) : daysBetween(new Date(), day);
 }
 
 /**
@@ -77,7 +84,10 @@ export class LibrusExamPrepCard extends LibrusBaseCard {
       return this._message(icon, title, t(hass, "card.exam_prep.requires"));
     }
     const horizon = this._config.days_ahead ?? 14;
-    const exams = all.filter((e) => (e.days_until ?? 0) <= horizon);
+    const exams = all.filter((e) => {
+      const days = daysUntilExam(e);
+      return days >= 0 && days <= horizon;
+    });
     if (exams.length === 0) {
       return this._message(icon, title, t(hass, "card.exam_prep.empty", { days: horizon }));
     }
@@ -108,7 +118,7 @@ export class LibrusExamPrepCard extends LibrusBaseCard {
     const open = this._open[key] ?? index === 0;
     const day = new Date(`${exam.date.slice(0, 10)}T00:00:00`);
     const topics = exam.topics ?? [];
-    const days = exam.days_until ?? 0;
+    const days = daysUntilExam(exam);
     const since = exam.topics_since
       ? t(hass, "card.exam_prep.since", { date: formatShortDate(exam.topics_since, hass.language) })
       : t(hass, "card.exam_prep.since_start");
@@ -124,7 +134,7 @@ export class LibrusExamPrepCard extends LibrusBaseCard {
         <button class="top" @click=${() => this._toggle(key, open)} aria-expanded=${open ? "true" : "false"}>
           <div class="date">
             <b>${day.getDate()}</b>
-            <span>${day.toLocaleDateString(hass.language, { month: "short" })}</span>
+            <span>${formatDate(day, hass.language, { month: "short" })}</span>
           </div>
           <div class="body">
             <div class="row1">

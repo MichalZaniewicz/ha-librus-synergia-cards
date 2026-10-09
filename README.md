@@ -78,14 +78,14 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Announcements | `custom:librus-announcements-card` | The school notice board - unread notices in bold with a green dot, read ones dimmed (needs `ha-librus-synergia` 0.12.5+; older versions show unread ones only). Click one to expand its full content; no read-marking side effect, unlike Wiadomości |
 | Announcements tile | `custom:librus-announcements-tile-card` | Compact single-row tile - unread count + latest subject |
 | Homework assignments | `custom:librus-homework-assignments-card` | Real "zadania domowe" with due dates - distinct from the general agenda feed. Files a teacher attached are listed under each homework; a tap downloads one (needs a newer integration) |
-| Homework checklist | `custom:librus-homework-checklist-card` | The same list with a tick-box per item; ticked items drop to the bottom. With `ha-librus-synergia` 0.11.0+ the ticks go to its Homework to-do list, so every device sees the same; on older versions they stay in this browser. Files a teacher attached are listed under the homework; a tap downloads one without ticking the homework off (needs a newer integration) |
+| Homework checklist | `custom:librus-homework-checklist-card` | The same list with a tick-box per item: homework still due first (soonest first), then overdue (most recent first); ticked items drop to the bottom. With `ha-librus-synergia` 0.11.0+ the ticks go to its Homework to-do list, so every device sees the same; on older versions they stay in this browser. Files a teacher attached are listed under the homework; a tap downloads one without ticking the homework off (needs a newer integration) |
 | What's new | `custom:librus-recent-activity-card` | One chronological feed merging the most recent grades, notices, announcements and messages |
 | Today's lessons | `custom:librus-today-lessons-card` | A timeline of today's timetable, highlighting the current lesson. Marks cancelled lessons, substitutions (with what they replace), room changes ("room 12 → 21") and moved lessons |
 | Next lesson | `custom:librus-next-lesson-tile-card` | A single-row tile with the next (or current) lesson, for denser dashboards |
 | Agenda | `custom:librus-agenda-card` | Upcoming terminarz events, grouped by date |
 | Next exam | `custom:librus-exam-countdown-card` | A countdown to the next test/exam - uses the integration's `next_exam` sensor when present, otherwise scans the Agenda feed for "[Sprawdzian]"-tagged items |
-| Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few |
-| Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break |
+| Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few. During a break it says it's on and until when |
+| Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break, or the break that's on now and its last day |
 | Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted; substitutions, room changes and moved lessons are outlined (details in the tooltip) |
 | Today's schedule | `custom:librus-bell-schedule-card` | The day's period grid (bell times) with each period's subject and room from the timetable, current period highlighted, past ones dimmed; once the day's lessons are over it shows the next school day - needs the integration's `bell_schedule` attribute |
 | Lesson time split | `custom:librus-subject-time-card` | A ranked horizontal bar chart of how the week's lesson slots split across subjects, from the timetable |
@@ -94,7 +94,7 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Today | `custom:librus-today-card` | Lucky number, unread messages/announcements and the next lesson in one card |
 | Tomorrow | `custom:librus-tomorrow-card` | The next school day (skips the weekend): its lessons, plus any homework due or exam that day |
 | First lesson | `custom:librus-first-lesson-card` | **Every child at once**: when and with what each one starts today and on the next school day, who has to leave first, a cancelled first lesson or a substitution. Made for families with several kids |
-| Week in review | `custom:librus-week-summary-card` | New grades, absences, notices and the next agenda item this week |
+| Week in review | `custom:librus-week-summary-card` | What the last 7 days brought: new grades (each grade), days with an absence, new behaviour notes - and the next agenda item. With an older integration that has no per-day attendance it shows the school-year count of unexcused absences instead, under that name |
 | Lucky number | `custom:librus-lucky-number-card` | The latest "szczęśliwy numerek" in large type - labeled "For {date}" instead of "Today" when Librus has published the next school day's number ahead of time (requires `ha-librus-synergia` 0.4.15+) |
 | Student card | `custom:librus-student-card` | A playful trading-card style summary computed from attendance/behaviour/grades/activity |
 | Streaks | `custom:librus-streak-card` | Three "passy": days without an absence, days without a negative behaviour note, consecutive good grades in a row (requires `ha-librus-synergia` 0.6.0+ for the two new ones - falls back to the old attendance-only computation on an older backend) |
@@ -174,7 +174,7 @@ card supports:
 | `mailbox` | Messages | The mailbox shown first: `inbox` / `substitutions` / `alerts` / `justifications` / `outbox` / `archive` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
 | `hide_teacher` | Grade log, Descriptive grades | Don't show who gave each grade - off by default |
-| `hide_comments` | Grade log, Subject grades, Descriptive grades, Latest grade, Behaviour grade | Don't show teachers' comments - off by default |
+| `hide_comments` | Grade log, Subject grades, Descriptive grades, Latest grade, Behaviour grade | Don't show teachers' comments - off by default. A text grade's own text and the behaviour grade's description stay |
 | `hide_room` | Today's lessons, Today's schedule, Tomorrow | Don't show the classroom - off by default |
 | `hide_legend` | Attendance, Attendance heatmap, Absences by subject, Absences by weekday, Attendance by subject, Grade profile (radar) | Hide the colour legend under the chart - off by default |
 | `show_descriptive` | Grade log | Also list descriptive grades (a skill-based subject, e.g. music in grades 1-3), with the skill shown where other grades show their category - off by default |
@@ -186,7 +186,7 @@ card supports:
 | `hide_icon` / `hide_subtitle` | every card with a header | Hide just the icon badge, or just the line under the title |
 | `compact` | every card | Tighter padding, smaller icon badge, subtitle hidden - for a denser dashboard |
 | `hide_outage_warning` | every card | Hide the "Librus not responding" strip. By default a card with a header shows it under the header while the integration's *Connection status* sensor is `stale` (Librus isn't answering and the last data is shown), with the time of that data |
-| `tap_action` | the glanceable cards: the tiles (except Last update), Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Streaks, Rank | Standard Lovelace action - `navigate`, `more-info`, `url`, `perform-action`, `none`. Set it in the editor (Home Assistant's own action picker) or in YAML |
+| `tap_action` | the glanceable cards: the tiles (except Last update), Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Streaks, Rank | Standard Lovelace action - `navigate`, `more-info`, `url`, `perform-action`, `none`. Set it in the editor (Home Assistant's own action picker) or in YAML. A card with an action can also be reached with Tab and run with Enter or Space |
 
 In YAML, e.g.:
 
@@ -245,6 +245,10 @@ and empty state, with a light/dark toggle and a language switcher.
    `utils/base-card.ts`), so a new card gets them for free. A new card's title should read
    `${this._config.title ?? t(hass, "...")}`; a list should go through `applyListOptions`
    (`utils/list-options.ts`) when it takes `sort` / `max_items`.
+   A card that fetches a calendar or history keys the fetch on `_dataStamp()` and sets `preview: false`
+   in its `customCards` entry; timers go through `this._every(ms, fn)` from `connectedCallback()`
+   (stopped on disconnect, paused while the tab is hidden), and a periodic refetch calls
+   `this._fetch(this._forceRefresh())`. A card showing every student sets `_watchAllDevices = true`.
 4. Every user-facing string goes through `t(hass, key)` from
    [`src/utils/localize.ts`](src/utils/localize.ts) - add the key to
    [`src/translations/en.ts`](src/translations/en.ts) first (the canonical key list) and
@@ -273,7 +277,13 @@ Home Assistant's REST API (`GET /api/calendars/<entity_id>?start=...&end=...`) r
 sensor state - `src/utils/calendar.ts` normalizes both response shapes HA has shipped for
 `start`/`end` (a bare ISO string, and a Google-Calendar-style `{date}`/`{dateTime}` object)
 defensively, since which one a given HA version sends wasn't verified against every version this
-repo might run on.
+repo might run on. Identical requests from several cards within 30 seconds (and for the same Librus
+refresh) share one call.
+
+The cards only re-render when something they show can have changed: a state of their own
+student's Librus entities, the registry, language or theme, a timer (clocks, countdowns) or, at
+most once a minute, any other update. Periodic refreshes pause while the browser tab is hidden and
+catch up when it's shown again.
 
 The Achievements card reads the Rank sensor's `badges` attribute (integration 0.12.5+): every
 badge with its tiers, the date each tier was earned and the progress towards the next one. With an

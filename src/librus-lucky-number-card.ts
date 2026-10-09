@@ -8,7 +8,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
-import { tapActionHandler, isActionable } from "./utils/actions";
+import { tapAction, isActionable } from "./utils/actions";
 
 @customElement("librus-lucky-number-card")
 export class LibrusLuckyNumberCard extends LibrusBaseCard {
@@ -81,7 +81,7 @@ export class LibrusLuckyNumberCard extends LibrusBaseCard {
         class=${[isActionable(this._config.tap_action) ? "" : "static", isYours ? "yours" : ""]
           .filter(Boolean)
           .join(" ")}
-        @click=${tapActionHandler(this, this._config.tap_action, map.lucky_number)}
+        ${tapAction(this, this._config.tap_action, map.lucky_number)}
       >
         <div class="header">
           <div class="icon-badge ${isYours ? "good" : "amber"}">

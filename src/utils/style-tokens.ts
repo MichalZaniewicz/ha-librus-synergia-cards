@@ -124,7 +124,6 @@ export const librusSharedStyles = css`
   :host(.hide-legend) .heatmap-legend {
     display: none;
   }
-  :host(.hide-comments) .quote,
   :host(.hide-comments) .comment {
     display: none;
   }

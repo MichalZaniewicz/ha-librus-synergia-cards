@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import {
   fetchCalendarEvents,
+  hm,
   isHappeningNow,
   hasEnded,
   mondayOfSchoolWeek,
@@ -36,9 +37,6 @@ interface BellPeriod {
   end: string;
 }
 
-function hm(d: Date): string {
-  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
-}
 
 /** One entry of the Changes to the usual timetable sensor's `changes`. */
 interface PlanChange {
@@ -66,8 +64,6 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _events: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
-  private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -92,18 +88,13 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 30 * 60_000);
+    this._every(30 * 60_000, () => void this._fetch(this._forceRefresh()));
     // Only re-renders (no refetch) - moves the "current lesson" highlight
     // along as one lesson ends and the next begins, without waiting for
     // the next full calendar refresh.
-    this._tickTimer = setInterval(() => this.requestUpdate(), 30_000);
+    this._every(30_000, () => this.requestUpdate());
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-    clearInterval(this._tickTimer);
-  }
 
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;

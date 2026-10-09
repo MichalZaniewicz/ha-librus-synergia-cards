@@ -8,12 +8,11 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
 import { minutesUntil } from "./utils/format";
 import { t, formatCountdown } from "./utils/localize";
-import { tapActionHandler } from "./utils/actions";
+import { tapAction } from "./utils/actions";
 
 @customElement("librus-today-card")
 export class LibrusTodayCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
-  private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -34,13 +33,9 @@ export class LibrusTodayCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._tickTimer = setInterval(() => this.requestUpdate(), 60_000);
+    this._every(60_000, () => this.requestUpdate());
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._tickTimer);
-  }
 
   protected render(): TemplateResult | typeof nothing {
     if (!this._config || !this.hass) return nothing;
@@ -62,7 +57,7 @@ export class LibrusTodayCard extends LibrusBaseCard {
     const isNow = timetable?.state === "on";
 
     return html`
-      <ha-card @click=${tapActionHandler(this, this._config.tap_action, map.timetable)}>
+      <ha-card ${tapAction(this, this._config.tap_action, map.timetable)}>
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:white-balance-sunny"></ha-icon></div>
           <div class="title-block">

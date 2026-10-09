@@ -4,14 +4,14 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, isoDate, type LibrusCalendarEvent } from "./utils/calendar";
+import { UNAVAILABLE } from "./utils/entities";
 import { daysBetween, formatShortDate, parseCategory } from "./utils/format";
 import { t } from "./utils/localize";
-import { tapActionHandler } from "./utils/actions";
+import { tapAction } from "./utils/actions";
 import { librusCardEditor } from "./utils/card-editor";
 
 const RANGE_DAYS = 90;
-const BAD_STATES = new Set(["unknown", "unavailable", ""]);
 // Agenda events are prefixed "[Category] ..." server-side (HomeWorks/
 // Categories, e.g. "Sprawdzian"/"Wycieczka"/"Apel"/"Konkurs"/"Diagnoza").
 // That category list is fetched per-school, not a fixed enum this client
@@ -58,7 +58,6 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _events: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -79,22 +78,18 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 15 * 60_000);
+    this._every(15 * 60_000, () => void this._fetch(this._forceRefresh()));
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-  }
 
   private _sensorExams(): ExamRef[] | undefined {
     if (!this.hass) return undefined;
     const resolved = this._resolveEntities();
     if ("error" in resolved) return undefined;
     const entity = resolved.map.next_exam ? this.hass.states[resolved.map.next_exam] : undefined;
-    if (!entity || BAD_STATES.has(entity.state)) return undefined;
+    if (!entity || UNAVAILABLE.has(entity.state)) return undefined;
 
-    const todayIso = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD, local
+    const todayIso = isoDate(new Date());
     const list = (entity.attributes.upcoming as SensorExam[] | undefined) ?? [];
     const refs = list
       .filter((e) => e.date >= todayIso)
@@ -104,8 +99,10 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
         text: [e.subject, e.content].filter(Boolean).join(" — ") || e.category || "",
       }));
     // Sensor present but `upcoming` empty/older integration - still honour
-    // its own state (the next exam's date) with the subject attribute.
-    if (refs.length === 0) {
+    // its own state (the next exam's date) with the subject attribute, but
+    // only while that date hasn't passed: a state left over from an exam
+    // that already took place showed a negative countdown.
+    if (refs.length === 0 && entity.state.slice(0, 10) >= todayIso) {
       return [{ date: entity.state, text: (entity.attributes.subject as string | undefined) ?? "" }];
     }
     return refs;
@@ -171,7 +168,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
     const days = daysBetween(new Date(), new Date(`${next.date.slice(0, 10)}T00:00:00`));
 
     return html`
-      <ha-card @click=${tapActionHandler(this, this._config.tap_action, resolved.map.next_exam || resolved.map.agenda)}>
+      <ha-card ${tapAction(this, this._config.tap_action, resolved.map.next_exam || resolved.map.agenda)}>
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:clipboard-text-outline"></ha-icon></div>
           <div class="title-block">

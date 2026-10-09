@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { abbreviate } from "./utils/subjects";
+import { formatNumber } from "./utils/format";
 
 interface SubjectAttendance {
   total: number;
@@ -89,7 +90,7 @@ export class LibrusSubjectAttendanceCard extends LibrusBaseCard {
     const lowest = counted[0];
     const risk = counted.filter((r) => r.level === "bad").length;
     const pct = (v: number) =>
-      `${v.toLocaleString(hass.language, { maximumFractionDigits: 1 })}%`;
+      `${formatNumber(v, hass.language, { maximumFractionDigits: 1 })}%`;
 
     return html`
       <ha-card>

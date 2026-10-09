@@ -271,6 +271,13 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
 
 const card = (name: string): string => `custom:librus-${name}-card`;
 
+/**
+ * Value of an "Auto" choice in a picker (stored as "unset"). Not the empty
+ * string: the MD3 `ha-select` treats "" as nothing selected, so "Auto" was
+ * shown as an empty field and picking it again did nothing.
+ */
+const AUTO = "__auto";
+
 /** Append `field` to each card's fields (after its own), skipping a key it already has. */
 function addField(names: string[], field: EditorField): void {
   for (const name of names) {
@@ -409,9 +416,9 @@ export class LibrusCardEditor extends LitElement {
           ? html`
               <ha-select
                 label=${t(hass, "editor.subject")}
-                .value=${config.subject_id !== undefined ? String(config.subject_id) : ""}
+                .value=${config.subject_id !== undefined ? String(config.subject_id) : AUTO}
                 .options=${[
-                  { value: "", label: t(hass, "editor.subject_auto") },
+                  { value: AUTO, label: t(hass, "editor.subject_auto") },
                   ...subjects
                     .filter((s) => s.subjectId !== undefined)
                     .map((s) => ({ value: String(s.subjectId), label: s.subject })),
@@ -424,7 +431,7 @@ export class LibrusCardEditor extends LitElement {
                   this._pickSubject(e);
                 }}
               >
-                <ha-list-item .value=${""}>${t(hass, "editor.subject_auto")}</ha-list-item>
+                <ha-list-item .value=${AUTO}>${t(hass, "editor.subject_auto")}</ha-list-item>
                 ${subjects.map((s) =>
                   s.subjectId !== undefined
                     ? html`<ha-list-item .value=${String(s.subjectId)}>${s.subject}</ha-list-item>`
@@ -657,7 +664,7 @@ export class LibrusCardEditor extends LitElement {
 
   private _pickSubject(ev: Event): void {
     const raw = LibrusCardEditor._selectValue(ev);
-    const next = raw === "" ? undefined : Number(raw);
+    const next = raw === "" || raw === AUTO ? undefined : Number(raw);
     if (next === this._config?.subject_id) return;
     this._patch({ subject_id: Number.isNaN(next as number) ? undefined : next });
   }

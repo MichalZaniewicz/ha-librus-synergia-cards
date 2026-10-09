@@ -324,10 +324,15 @@ export function recordHeroHistory(deviceId: string, resultId: string): void {
     if (last && last.id === resultId) return;
     history.push({ id: resultId, when: new Date().toISOString() });
     window.localStorage.setItem(key, JSON.stringify(history.slice(-HISTORY_MAX_STORED)));
+    // Tells a Hero history card on the same page to read the log again.
+    window.dispatchEvent(new CustomEvent(HERO_HISTORY_EVENT, { detail: { deviceId } }));
   } catch {
     /* private mode / storage disabled - history just doesn't grow this time */
   }
 }
+
+/** Fired on `window` after `recordHeroHistory` added an entry. */
+export const HERO_HISTORY_EVENT = "librus-hero-history-changed";
 
 /** Read-only for `librus-hero-history-card` - oldest first, same order
  * they were recorded in. */

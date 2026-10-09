@@ -6,7 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
-import { formatShortDate } from "./utils/format";
+import { daysBetween, formatShortDate, formatDate } from "./utils/format";
 
 /** One trip in the Next school trip sensor's attributes (integration 0.12.0+). */
 interface Trip {
@@ -60,8 +60,13 @@ export class LibrusSchoolTripsCard extends LibrusBaseCard {
       return this._message("mdi:bus-school", title, t(hass, "card.school_trips.empty"));
     }
     const next = upcoming[0];
-    const daysUntil = entity.attributes.days_until as number | null | undefined;
     const start = next.date_from ? new Date(`${next.date_from.slice(0, 10)}T00:00:00`) : null;
+    // From the trip's own date when there is one - the sensor's `days_until`
+    // only changes when the sensor does.
+    const daysUntil =
+      start && !Number.isNaN(start.getTime())
+        ? daysBetween(new Date(), start)
+        : (entity.attributes.days_until as number | null | undefined);
     const max = this._config.max_items ?? 4;
 
     return html`
@@ -77,14 +82,14 @@ export class LibrusSchoolTripsCard extends LibrusBaseCard {
           ${start
             ? html`<div class="date">
                 <b>${start.getDate()}</b>
-                <span>${start.toLocaleDateString(hass.language, { month: "short" })}</span>
+                <span>${formatDate(start, hass.language, { month: "short" })}</span>
               </div>`
             : nothing}
           <div class="hero-text">
             <div class="dest">${next.destination}</div>
             ${start
               ? html`<div class="meta">
-                  ${start.toLocaleDateString(hass.language, { weekday: "long" })}${next.date_to &&
+                  ${formatDate(start, hass.language, { weekday: "long" })}${next.date_to &&
                   next.date_to.slice(0, 10) !== next.date_from?.slice(0, 10)
                     ? html` – ${formatShortDate(next.date_to, hass.language)}`
                     : nothing}

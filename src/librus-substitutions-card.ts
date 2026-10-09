@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor, migrateLegacyConfig } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { formatShortDate } from "./utils/format";
+import { formatShortDate, formatDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { applyListOptions } from "./utils/list-options";
 import { fetchFullMessage, type FullMessage } from "./utils/services";
@@ -84,7 +84,6 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
   @state() private _changes: LessonChange[] = [];
   @state() private _filter: ChangeKind | "all" = "all";
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -106,13 +105,9 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 30 * 60_000);
+    this._every(30 * 60_000, () => void this._fetch(this._forceRefresh()));
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-  }
 
   private get _daysAhead(): number {
     return Math.max(1, Math.min(30, Number(this._config?.days_ahead) || 7));
@@ -161,8 +156,8 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
 
   private _when(event: LibrusCalendarEvent): string {
     const start = new Date(event.start);
-    const day = start.toLocaleDateString(this.hass?.language, { weekday: "short", day: "numeric", month: "numeric" });
-    const time = start.toLocaleTimeString(this.hass?.language, { hour: "2-digit", minute: "2-digit" });
+    const day = formatDate(start, this.hass?.language, { weekday: "short", day: "numeric", month: "numeric" });
+    const time = formatDate(start, this.hass?.language, { hour: "2-digit", minute: "2-digit" });
     return `${day} · ${time}`;
   }
 

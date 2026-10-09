@@ -8,7 +8,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
 import { daysBetween } from "./utils/format";
 import { t } from "./utils/localize";
-import { tapActionHandler, isActionable } from "./utils/actions";
+import { tapAction, isActionable } from "./utils/actions";
 
 interface StreakStat {
   key: string;
@@ -118,7 +118,7 @@ export class LibrusStreakCard extends LibrusBaseCard {
     return html`
       <ha-card
         class=${isActionable(this._config.tap_action) ? "" : "static"}
-        @click=${tapActionHandler(this, this._config.tap_action, map.attendance_streak ?? map.attendance)}
+        ${tapAction(this, this._config.tap_action, map.attendance_streak ?? map.attendance)}
       >
         <div class="header">
           <div class="icon-badge amber"><ha-icon icon="mdi:fire"></ha-icon></div>

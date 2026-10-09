@@ -7,7 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE, studentNumberOf } from "./utils/entities";
 import { t } from "./utils/localize";
-import { tapActionHandler } from "./utils/actions";
+import { tapAction } from "./utils/actions";
 
 interface Score {
   key: string;
@@ -110,7 +110,7 @@ export class LibrusStudentCard extends LibrusBaseCard {
     const overallScore = Math.round(scores.reduce((sum, s) => sum + s.value, 0) / scores.length);
 
     return html`
-      <ha-card class="tcard" @click=${tapActionHandler(this, this._config.tap_action, map.overall_average)}>
+      <ha-card class="tcard" ${tapAction(this, this._config.tap_action, map.overall_average)}>
         <div class="tcard-inner">
           <div class="tcard-head">
             <div>

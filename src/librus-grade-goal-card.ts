@@ -7,8 +7,9 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { progressRing } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
-import { tapActionHandler } from "./utils/actions";
+import { tapAction } from "./utils/actions";
 import { sixesToReach, subjectForecast } from "./utils/forecast";
+import { formatNumber } from "./utils/format";
 
 interface GradeLogEntry {
   value: string;
@@ -106,7 +107,7 @@ export class LibrusGradeGoalCard extends LibrusBaseCard {
         : undefined;
 
     return html`
-      <ha-card @click=${tapActionHandler(this, this._config.tap_action, entityId)}>
+      <ha-card ${tapAction(this, this._config.tap_action, entityId)}>
         <div class="header">
           <div class="icon-badge ${reached ? "good" : ""}">
             <ha-icon icon=${reached ? "mdi:flag-checkered" : "mdi:target"}></ha-icon>
@@ -146,7 +147,7 @@ export class LibrusGradeGoalCard extends LibrusBaseCard {
                 <div class="stat-value">
                   ${subjectMatch
                     ? reportForecast
-                    : reportForecast.toLocaleString(hass.language, { maximumFractionDigits: 2 })}
+                    : formatNumber(reportForecast, hass.language, { maximumFractionDigits: 2 })}
                 </div>
                 <div class="stat-label">
                   ${t(hass, subjectMatch ? "label.forecast" : "label.forecast_report_average")}

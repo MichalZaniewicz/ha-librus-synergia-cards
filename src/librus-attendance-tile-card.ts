@@ -6,7 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
-import { tapActionHandler } from "./utils/actions";
+import { tapAction } from "./utils/actions";
 
 /** Compact single-row tile - same pattern as librus-next-lesson-tile-card,
  * for denser dashboards that don't want the full Attendance card's
@@ -56,7 +56,7 @@ export class LibrusAttendanceTileCard extends LibrusBaseCard {
     const excused = entity.attributes.excused_count as number | undefined;
 
     return html`
-      <ha-card class="tile" @click=${tapActionHandler(this, this._config.tap_action, map.attendance)}>
+      <ha-card class="tile" ${tapAction(this, this._config.tap_action, map.attendance)}>
         <div class="icon-badge ${unexcused === 0 ? "good" : "bad"}">
           <ha-icon icon="mdi:calendar-remove"></ha-icon>
         </div>

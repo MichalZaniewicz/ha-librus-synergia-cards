@@ -5,12 +5,13 @@ import {
   resolveLibrusDevice,
   mapByTranslationKey,
   mapAllByTranslationKey,
+  registryIndex,
   LibrusConfigError,
-  LIBRUS_PLATFORM,
   type SubjectEntity,
 } from "./entities";
 import { t } from "./localize";
 import { formatShortDate, formatTime } from "./format";
+import { isoDate } from "./calendar";
 
 /**
  * Shared plumbing for every Librus card: dark-mode class sync, device
@@ -19,21 +20,36 @@ import { formatShortDate, formatTime } from "./format";
  */
 type ResolvedEntities = { deviceId: string; map: Record<string, string> } | { error: TemplateResult };
 
+/** A card with nothing else to re-render for still renders once a minute
+ * when a new `hass` arrives - day changes, "X min ago" texts and the like. */
+const HEARTBEAT_MS = 60_000;
+
+interface CardTimer {
+  fn: () => void;
+  handle: ReturnType<typeof setInterval>;
+  /** A tick was skipped while the page was hidden. */
+  missed: boolean;
+}
+
 export abstract class LibrusBaseCard extends LitElement {
   @property({ attribute: false }) public hass?: LibrusHass;
 
   protected _configuredDeviceId?: string;
+
+  /**
+   * Set by a card that shows every student at once (the First lesson card):
+   * it then re-renders on a change of ANY Librus entity, not only its own
+   * device's, and its periodic refresh looks at every student's Last
+   * update sensor.
+   */
+  protected _watchAllDevices = false;
 
   // Memoizes _resolveEntities()'s result, keyed on the specific `hass.entities`
   // object reference it was computed from. Home Assistant's frontend hands
   // every card a brand-new `hass` object on ANY state change anywhere in the
   // whole instance, but it only creates a new `hass.entities` (the registry)
   // when the registry itself actually changes (a rename, a reload, a device
-  // added/removed) - far rarer than state updates. Without this, every card
-  // re-ran a full linear scan of `hass.entities` (via resolveLibrusDevice's
-  // findLibrusDeviceIds + mapByTranslationKey) on every single render, most
-  // of which were triggered by an unrelated entity's state changing
-  // elsewhere in the user's HA instance.
+  // added/removed) - far rarer than state updates.
   private _resolvedCache?: {
     entities: LibrusHass["entities"];
     configuredDeviceId: string | undefined;
@@ -45,9 +61,154 @@ export abstract class LibrusBaseCard extends LitElement {
   // fetch (a `_fetch(force)` method keyed on a `_fetchedFor` cache string).
   private _fetchGeneration = 0;
 
-  // Memoizes _dataStamp(true)'s list of Last update sensors, keyed on the
-  // `hass.entities` reference like the caches above.
-  private _stampIds?: { entities: unknown; ids: string[] };
+  // What the last render saw of `hass`, and when it ran - see shouldUpdate().
+  private _lastHass?: {
+    entities: LibrusHass["entities"];
+    devices: LibrusHass["devices"];
+    states: LibrusHass["states"];
+    language: string;
+    locale: unknown;
+    themes: unknown;
+    darkMode: boolean;
+  };
+  private _lastRenderAt = 0;
+
+  private _timers: CardTimer[] = [];
+  private _memos = new Map<string, { deps: readonly unknown[]; value: unknown }>();
+  // The config + dark mode _syncTheme() last applied.
+  private _themedFor?: { config: unknown; dark: boolean };
+  // The `icon` option updated() last stamped on the header icon.
+  private _appliedIcon?: string;
+
+  /**
+   * Render only when something this card shows can have changed. Home
+   * Assistant hands every card a new `hass` on ANY state change in the
+   * whole instance (a light, a power meter ticking every second), and every
+   * card used to re-render for each of them. Now a `hass` change alone
+   * renders only when the registry, language, locale or dark mode changed,
+   * when one of this card's own Librus entities changed (every Librus
+   * entity with `_watchAllDevices`), or when the last render is more than a
+   * minute old. Config/@state changes and a timer's `requestUpdate()`
+   * always render.
+   */
+  protected shouldUpdate(changed: PropertyValues): boolean {
+    if (changed.size === 0) return true; // requestUpdate() from a timer
+    for (const key of changed.keys()) if (key !== "hass") return true;
+    const prev = this._lastHass;
+    const hass = this.hass;
+    if (!prev || !hass) return true;
+    if (
+      prev.entities !== hass.entities ||
+      prev.devices !== hass.devices ||
+      prev.language !== hass.language ||
+      prev.locale !== hass.locale ||
+      prev.themes !== hass.themes ||
+      prev.darkMode !== Boolean(hass.themes?.darkMode)
+    ) {
+      return true;
+    }
+    if (Date.now() - this._lastRenderAt >= HEARTBEAT_MS) return true;
+    if (prev.states === hass.states) return false;
+    for (const id of this._watchedEntityIds()) {
+      if (prev.states[id] !== hass.states[id]) return true;
+    }
+    return false;
+  }
+
+  protected willUpdate(changed: PropertyValues): void {
+    super.willUpdate(changed);
+    // A snapshot, not the object: a `hass` changed in place (as the dev
+    // harness does) must still compare as changed next time.
+    const hass = this.hass;
+    this._lastHass = hass && {
+      entities: hass.entities,
+      devices: hass.devices,
+      states: hass.states,
+      language: hass.language,
+      locale: hass.locale,
+      themes: hass.themes,
+      darkMode: Boolean(hass.themes?.darkMode),
+    };
+    this._lastRenderAt = Date.now();
+  }
+
+  /** The Librus entities whose state changes re-render this card. */
+  private _watchedEntityIds(): string[] {
+    const index = registryIndex(this.hass!);
+    if (this._watchAllDevices) return index.allEntityIds;
+    const resolved = this._resolveEntities();
+    if ("error" in resolved) return index.allEntityIds;
+    return index.entityIds.get(resolved.deviceId) ?? [];
+  }
+
+  public connectedCallback(): void {
+    super.connectedCallback();
+    document.addEventListener("visibilitychange", this._onVisibilityChange);
+  }
+
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    document.removeEventListener("visibilitychange", this._onVisibilityChange);
+    for (const timer of this._timers) clearInterval(timer.handle);
+    this._timers = [];
+  }
+
+  /**
+   * Runs `fn` every `ms` while the card is on the page - call from
+   * connectedCallback(); every timer is stopped on disconnect. While the
+   * browser tab is hidden the ticks are skipped (no refetches nor renders
+   * nobody sees) and one catch-up tick runs when it's shown again.
+   */
+  protected _every(ms: number, fn: () => void): void {
+    const timer: CardTimer = {
+      fn,
+      missed: false,
+      handle: setInterval(() => {
+        if (document.hidden) {
+          timer.missed = true;
+          return;
+        }
+        fn();
+      }, ms),
+    };
+    this._timers.push(timer);
+  }
+
+  private _onVisibilityChange = (): void => {
+    if (document.hidden) return;
+    for (const timer of this._timers) {
+      if (!timer.missed) continue;
+      timer.missed = false;
+      timer.fn();
+    }
+  };
+
+  /**
+   * Whether a periodic refresh must refetch even when nothing it knows of
+   * changed. With a Last update sensor (integration 0.12.0+) the cache keys
+   * already change after every Librus refresh, so the timer only needs to
+   * notice a new day - no forced refetch. Older integrations have no such
+   * signal, so their cards still refetch on every tick.
+   */
+  protected _forceRefresh(): boolean {
+    return this._stampIds().length === 0;
+  }
+
+  /** The Last update sensors this card's data stamp follows. */
+  private _stampIds(): string[] {
+    const hass = this.hass;
+    if (!hass) return [];
+    const index = registryIndex(hass);
+    const deviceIds = this._watchAllDevices ? index.deviceIds : [];
+    if (!this._watchAllDevices) {
+      const resolved = this._resolveEntities();
+      if ("error" in resolved) return [];
+      deviceIds.push(resolved.deviceId);
+    }
+    return this._memo("stampIds", [index, ...deviceIds], () =>
+      deviceIds.map((id) => index.keyMaps.get(id)?.last_update).filter((id): id is string => Boolean(id))
+    );
+  }
 
   /**
    * Changes after every successful Librus refresh of this card's student:
@@ -56,27 +217,40 @@ export abstract class LibrusBaseCard extends LitElement {
    * refresh after a restart, and a card that fetched then kept showing "no
    * lessons" until the page was reloaded (found live). Only the card's own
    * device, so with several students a card doesn't refetch on every other
-   * student's refresh; `allDevices` (the First lesson card, which shows
-   * every student) joins every student's sensor instead. Empty with an
-   * integration older than 0.12.0, which has no Last update sensor - then
-   * nothing changes.
+   * student's refresh; `allDevices` / `_watchAllDevices` (the First lesson
+   * card, which shows every student) joins every student's sensor instead.
+   * Empty with an integration older than 0.12.0, which has no Last update
+   * sensor - then nothing changes.
    */
   protected _dataStamp(allDevices = false): string {
     const hass = this.hass;
     if (!hass) return "";
-    if (!allDevices) {
-      const resolved = this._resolveEntities();
-      if ("error" in resolved) return "";
-      const id = resolved.map["last_update"];
-      return id ? (hass.states[id]?.state ?? "") : "";
+    if (allDevices && !this._watchAllDevices) {
+      const index = registryIndex(hass);
+      return index.deviceIds
+        .map((id) => index.keyMaps.get(id)?.last_update)
+        .map((id) => (id ? (hass.states[id]?.state ?? "") : ""))
+        .join(",");
     }
-    if (this._stampIds?.entities !== hass.entities) {
-      const ids = Object.values(hass.entities ?? {})
-        .filter((e) => e.platform === LIBRUS_PLATFORM && e.translation_key === "last_update")
-        .map((e) => e.entity_id);
-      this._stampIds = { entities: hass.entities, ids };
+    return this._stampIds()
+      .map((id) => hass.states[id]?.state ?? "")
+      .join(",");
+  }
+
+  /**
+   * Returns `compute()`'s value, recomputed only when one of `deps` (compared
+   * by identity) differs from the previous call for the same `slot`. Pass the
+   * state objects a derived list is built from - they stay the same object
+   * until that entity actually changes.
+   */
+  protected _memo<T>(slot: string, deps: readonly unknown[], compute: () => T): T {
+    const hit = this._memos.get(slot);
+    if (hit && hit.deps.length === deps.length && hit.deps.every((d, i) => d === deps[i])) {
+      return hit.value as T;
     }
-    return this._stampIds.ids.map((id) => hass.states[id]?.state ?? "").join(",");
+    const value = compute();
+    this._memos.set(slot, { deps, value });
+    return value;
   }
 
   /**
@@ -125,32 +299,19 @@ export abstract class LibrusBaseCard extends LitElement {
     return this._goodRange === range;
   }
 
-  // Memoizes _resolveAllByTranslationKey()'s results, same reasoning and
-  // same `hass.entities` reference-identity keying as `_resolvedCache`
-  // above (see its comment) - `mapAllByTranslationKey` is its own full
-  // linear registry scan, called directly and uncached by 17+ cards. A
-  // second Map layer keys by translationKey, in case a future card ever
-  // looks up more than one on the same instance.
-  private _subjectsCache?: {
-    entities: LibrusHass["entities"];
-    deviceId: string;
-    byKey: Map<string, SubjectEntity[]>;
-  };
-
-  /** Memoized `mapAllByTranslationKey()` - see `_subjectsCache`'s own comment. */
+  /**
+   * Every entity of this device with `translationKey` (the per-subject
+   * sensors), with each subject's name and id read from the current states.
+   * Only the entity ids are cached (in the shared registry index) - caching
+   * the names kept a subject that was still loading labelled with its
+   * entity id until the registry changed.
+   */
   protected _resolveAllByTranslationKey(deviceId: string, translationKey: string): SubjectEntity[] {
-    if (!this.hass) return [];
-    let cache = this._subjectsCache;
-    if (!cache || cache.entities !== this.hass.entities || cache.deviceId !== deviceId) {
-      cache = { entities: this.hass.entities, deviceId, byKey: new Map() };
-      this._subjectsCache = cache;
-    }
-    let result = cache.byKey.get(translationKey);
-    if (!result) {
-      result = mapAllByTranslationKey(this.hass, deviceId, translationKey);
-      cache.byKey.set(translationKey, result);
-    }
-    return result;
+    const hass = this.hass;
+    if (!hass) return [];
+    return this._memo(`all:${deviceId}:${translationKey}`, [hass.entities, hass.states], () =>
+      mapAllByTranslationKey(hass, deviceId, translationKey)
+    );
   }
 
   /**
@@ -168,11 +329,14 @@ export abstract class LibrusBaseCard extends LitElement {
   }
 
   /** Call at the top of render(): toggles the `.dark`/`.compact`/`.hide-*` host classes used by
-   * style-tokens.ts, and sets the accent color / list height custom properties. */
+   * style-tokens.ts, and sets the accent color / list height custom properties. Does the work
+   * only when the config or dark mode changed since the last call. */
   protected _syncTheme(): void {
     const dark = Boolean(this.hass?.themes?.darkMode);
-    this.classList.toggle("dark", dark);
     const config = this._cardConfig;
+    if (this._themedFor && this._themedFor.config === config && this._themedFor.dark === dark) return;
+    this._themedFor = { config, dark };
+    this.classList.toggle("dark", dark);
     this.classList.toggle("compact", Boolean(config?.compact));
     this.classList.toggle("hide-header", Boolean(config?.hide_header));
     this.classList.toggle("hide-icon", Boolean(config?.hide_icon));
@@ -211,17 +375,29 @@ export abstract class LibrusBaseCard extends LitElement {
    * each card's own template, so a CSS class can't swap the glyph the way
    * `.dark`/`.compact` work. Re-stamping the attribute here, after every
    * render, covers every card's `.icon-badge ha-icon` uniformly without
-   * per-card template changes. Harmless no-op for the couple of cards
-   * (e.g. librus-student-card) with no `.icon-badge` at all.
+   * per-card template changes. The card's own icon is kept in
+   * `data-orig-icon` and put back when the option is cleared. Harmless
+   * no-op for the couple of cards (e.g. librus-student-card) with no
+   * `.icon-badge` at all.
    */
   protected updated(changed: PropertyValues): void {
     super.updated(changed);
     this._syncOutageStrip();
-    const icon = this._cardConfig?.icon;
-    if (!icon) return;
     const target = this.renderRoot.querySelector(".icon-badge ha-icon");
-    if (target && target.getAttribute("icon") !== icon) {
-      target.setAttribute("icon", icon);
+    if (!target) return;
+    const icon = this._cardConfig?.icon;
+    const current = target.getAttribute("icon") ?? "";
+    if (icon) {
+      // Anything but the override applied last time is the card's own icon
+      // (just rendered by its template) - remember it.
+      if (!target.hasAttribute("data-orig-icon") || current !== this._appliedIcon) {
+        target.setAttribute("data-orig-icon", current);
+      }
+      if (current !== icon) target.setAttribute("icon", icon);
+      this._appliedIcon = icon;
+    } else if (target.hasAttribute("data-orig-icon")) {
+      target.setAttribute("icon", target.getAttribute("data-orig-icon") ?? "");
+      target.removeAttribute("data-orig-icon");
     }
   }
 
@@ -325,10 +501,6 @@ export function outageTime(iso: string | undefined, locale: string | undefined):
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "?";
   const time = formatTime(iso);
-  const today = new Date();
-  const sameDay =
-    d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
-  if (sameDay) return time;
-  const local = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  return `${formatShortDate(local, locale)} ${time}`;
+  if (isoDate(d) === isoDate(new Date())) return time;
+  return `${formatShortDate(isoDate(d), locale)} ${time}`;
 }

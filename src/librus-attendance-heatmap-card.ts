@@ -41,6 +41,8 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
     byDate: Record<string, DayStatus>;
     yearStartIso: string | undefined;
     todayIso: string;
+    /** The cell tooltips are translated. */
+    language: string;
     weeks: Date[];
     grid: TemplateResult;
   };
@@ -86,7 +88,7 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
     const cached = this._gridCache;
     let weeks: Date[];
     let grid: TemplateResult;
-    if (cached && cached.byDate === byDate && cached.yearStartIso === yearStartIso && cached.todayIso === todayIso) {
+    if (cached && cached.byDate === byDate && cached.yearStartIso === yearStartIso && cached.todayIso === todayIso && cached.language === hass.language) {
       ({ weeks, grid } = cached);
     } else {
       const todayMonday = mondayOfWeek(today);
@@ -114,7 +116,7 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
         `
       )}`;
 
-      this._gridCache = { byDate, yearStartIso, todayIso, weeks, grid };
+      this._gridCache = { byDate, yearStartIso, todayIso, language: hass.language, weeks, grid };
     }
 
     return html`

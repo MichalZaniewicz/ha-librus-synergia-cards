@@ -5,6 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
+import { isoDate } from "./utils/calendar";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import {
@@ -197,11 +198,20 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
       return this._message("mdi:notebook-edit-outline", t(hass, "card.homework_assignments.empty"));
     }
     const max = this._config.max_items ?? 12;
+    // Not done and still due (soonest first), then not done and overdue
+    // (most recent first), then done - in that same order. Sorted before
+    // the cut, so `max_items` keeps the homework that matters most.
+    const today = isoDate(new Date());
+    const rank = (it: (typeof shown)[number]): number =>
+      (this._done.has(it.key) ? 2 : 0) + (it.due_date && it.due_date.slice(0, 10) < today ? 1 : 0);
     const sorted = [...shown].sort((a, b) => {
-      const da = this._done.has(a.key) ? 1 : 0;
-      const db = this._done.has(b.key) ? 1 : 0;
-      if (da !== db) return da - db; // not-done first
-      return (a.due_date ?? "").localeCompare(b.due_date ?? "");
+      const ra = rank(a);
+      const rb = rank(b);
+      if (ra !== rb) return ra - rb;
+      // No due date sorts after the dated ones in its group.
+      const da = a.due_date ?? "9999";
+      const db = b.due_date ?? "9999";
+      return ra % 2 === 0 ? da.localeCompare(db) : db.localeCompare(da);
     });
     const doneCount = shown.filter((it) => this._done.has(it.key)).length;
 
@@ -248,8 +258,8 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
                     ? html`<div class="item-text">${it.text}</div>`
                     : nothing}
                   ${renderHomeworkFiles(hass, it.attachments, this._fileState, (ev, file) =>
-                    downloadHomeworkFile(ev, hass, deviceId, file, this._fileState, (next) => {
-                      this._fileState = next;
+                    downloadHomeworkFile(ev, hass, deviceId, file, (change) => {
+                      this._fileState = change(this._fileState);
                     })
                   )}
                 </div>

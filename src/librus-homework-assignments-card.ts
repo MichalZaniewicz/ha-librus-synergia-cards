@@ -87,8 +87,8 @@ export class LibrusHomeworkAssignmentsCard extends LibrusBaseCard {
                   </div>
                   <div class="item-text">${a.text}${a.teacher ? html` - ${a.teacher}` : nothing}</div>
                   ${renderHomeworkFiles(hass, a.attachments, this._fileState, (ev, file) =>
-                    downloadHomeworkFile(ev, hass, deviceId, file, this._fileState, (next) => {
-                      this._fileState = next;
+                    downloadHomeworkFile(ev, hass, deviceId, file, (change) => {
+                      this._fileState = change(this._fileState);
                     })
                   )}
                 </div>

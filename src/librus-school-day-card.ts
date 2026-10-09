@@ -14,7 +14,7 @@ import {
   type LessonInfo,
   type LibrusCalendarEvent,
 } from "./utils/calendar";
-import { formatTime } from "./utils/format";
+import { formatTime, formatDate } from "./utils/format";
 import { formatCountdown, t } from "./utils/localize";
 import { abbreviate } from "./utils/subjects";
 
@@ -62,8 +62,6 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
   @state() private _events: LibrusCalendarEvent[] = [];
   @state() private _loaded = false;
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
-  private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -84,16 +82,11 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 15 * 60_000);
+    this._every(15 * 60_000, () => void this._fetch(this._forceRefresh()));
     // Re-render (no refetch) so the highlight and countdowns move along.
-    this._tickTimer = setInterval(() => this.requestUpdate(), 30_000);
+    this._every(30_000, () => this.requestUpdate());
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-    clearInterval(this._tickTimer);
-  }
 
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
@@ -176,7 +169,7 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
     const dayDate = new Date(`${dayIso}T12:00:00`);
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const dateLabel = dayDate.toLocaleDateString(hass.language, {
+    const dateLabel = formatDate(dayDate, hass.language, {
       weekday: "short",
       day: "numeric",
       month: "short",

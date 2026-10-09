@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
 import { t, type TranslationKey } from "./utils/localize";
+import { formatDate, formatNumber } from "./utils/format";
 
 const EVENT_TYPE = "librus_synergia_achievement_unlocked";
 const STORAGE_PREFIX = "librus-achievements:";
@@ -165,13 +166,22 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
     const generation = ++this._subscribeGeneration;
 
     const entryIds = this.hass.devices[deviceId]?.config_entries ?? [];
-    const unsubscribe = await this.hass.connection.subscribeEvents<{ data: AchievementEventData }>((ev) => {
-      const data = ev.data;
-      if (entryIds.length && data.entry_id && !entryIds.includes(data.entry_id)) return;
-      if (this._unlocked.some((u) => u.id === data.id)) return;
-      this._unlocked = [...this._unlocked, { id: data.id, title: data.title, when: new Date().toISOString() }];
-      this._persist();
-    }, EVENT_TYPE);
+    let unsubscribe: () => void;
+    try {
+      unsubscribe = await this.hass.connection.subscribeEvents<{ data: AchievementEventData }>((ev) => {
+        const data = ev.data;
+        if (entryIds.length && data.entry_id && !entryIds.includes(data.entry_id)) return;
+        if (this._unlocked.some((u) => u.id === data.id)) return;
+        this._unlocked = [...this._unlocked, { id: data.id, title: data.title, when: new Date().toISOString() }];
+        this._persist();
+      }, EVENT_TYPE);
+    } catch {
+      // Home Assistant only lets administrators subscribe to an integration's
+      // own events - for anyone else this rejects. The card then simply shows
+      // what it already knows; `_subscribedDeviceId` stays set so it doesn't
+      // retry (and fail) on every render.
+      return;
+    }
 
     if (this._torndown || generation !== this._subscribeGeneration) {
       unsubscribe();
@@ -273,7 +283,7 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
 
   private _number(hass: LibrusHass, value: number, unit: string | null): string {
     return unit === "average"
-      ? value.toLocaleString(hass.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      ? formatNumber(value, hass.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       : String(Math.round(value));
   }
 
@@ -289,7 +299,7 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
     const day = new Date(`${iso.slice(0, 10)}T12:00:00`);
     return Number.isNaN(day.getTime())
       ? iso
-      : day.toLocaleDateString(hass.language, { day: "numeric", month: "short" });
+      : formatDate(day, hass.language, { day: "numeric", month: "short" });
   }
 
   /** Every earned badge, the three closest goals and the latest earned. */

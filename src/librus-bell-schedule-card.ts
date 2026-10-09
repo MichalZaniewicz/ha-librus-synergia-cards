@@ -4,11 +4,13 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, lessonInfo, type LessonInfo, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, hm, isoDate, lessonInfo, type LessonInfo, type LibrusCalendarEvent } from "./utils/calendar";
+import { UNAVAILABLE } from "./utils/entities";
 import { lessonTag } from "./utils/render-helpers";
+import { lessonMinutes } from "./utils/format";
 import { t, formatCountdown } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
-import { tapActionHandler } from "./utils/actions";
+import { tapAction } from "./utils/actions";
 
 interface BellPeriod {
   lesson_no: number;
@@ -16,14 +18,6 @@ interface BellPeriod {
   end: string;
 }
 
-const BAD_STATES = new Set(["unknown", "unavailable", ""]);
-
-function hm(d: Date): string {
-  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
-}
-function isoDate(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 
 /**
  * The day's period grid: bell times from the School sensor's
@@ -39,8 +33,6 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _events: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
-  private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -61,15 +53,10 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 15 * 60_000);
-    this._tickTimer = setInterval(() => this.requestUpdate(), 30_000);
+    this._every(15 * 60_000, () => void this._fetch(this._forceRefresh()));
+    this._every(30_000, () => this.requestUpdate());
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-    clearInterval(this._tickTimer);
-  }
 
   /** The day to show: the date of the next lesson (today or tomorrow), else today. */
   private _targetDay(): Date {
@@ -89,7 +76,7 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
     if ("error" in resolved) return undefined;
     const next = resolved.map.next_lesson ? this.hass.states[resolved.map.next_lesson] : undefined;
     const date = next?.attributes.date as string | undefined;
-    return date && !BAD_STATES.has(next?.state ?? "") ? date : undefined;
+    return date && !UNAVAILABLE.has(next?.state ?? "") ? date : undefined;
   }
 
   private async _fetch(force = false): Promise<void> {
@@ -163,21 +150,21 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
     const currentSensor = map.current_lesson ? hass.states[map.current_lesson] : undefined;
     const nextSensor = map.next_lesson ? hass.states[map.next_lesson] : undefined;
     const currentSubject =
-      currentSensor && !BAD_STATES.has(currentSensor.state) ? currentSensor.state : undefined;
-    const nextSubject = nextSensor && !BAD_STATES.has(nextSensor.state) ? nextSensor.state : undefined;
+      currentSensor && !UNAVAILABLE.has(currentSensor.state) ? currentSensor.state : undefined;
+    const nextSubject = nextSensor && !UNAVAILABLE.has(nextSensor.state) ? nextSensor.state : undefined;
 
     let subtitle: string;
     if (currentSubject) {
       subtitle = `${currentSubject} · ${t(hass, "label.now")}`;
     } else if (nextSubject) {
-      const mins = Number(nextSensor?.attributes.minutes_until);
-      subtitle = Number.isNaN(mins) ? nextSubject : `${nextSubject} · ${formatCountdown(hass, mins)}`;
+      const mins = lessonMinutes(nextSensor?.attributes, "start");
+      subtitle = mins === null ? nextSubject : `${nextSubject} · ${formatCountdown(hass, mins)}`;
     } else {
       subtitle = t(hass, "label.after_school");
     }
 
     return html`
-      <ha-card @click=${tapActionHandler(this, this._config.tap_action, map.school)}>
+      <ha-card ${tapAction(this, this._config.tap_action, map.school)}>
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:bell-outline"></ha-icon></div>
           <div class="title-block">

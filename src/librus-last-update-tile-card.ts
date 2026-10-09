@@ -27,7 +27,6 @@ const REFERENCE_KEYS = ["overall_average", "attendance", "school"];
 @customElement("librus-last-update-tile-card")
 export class LibrusLastUpdateTileCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
-  private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -48,13 +47,9 @@ export class LibrusLastUpdateTileCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._tickTimer = setInterval(() => this.requestUpdate(), 30_000);
+    this._every(30_000, () => this.requestUpdate());
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._tickTimer);
-  }
 
   protected render(): TemplateResult | typeof nothing {
     if (!this._config || !this.hass) return nothing;

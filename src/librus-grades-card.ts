@@ -9,6 +9,7 @@ import { progressRing } from "./utils/render-helpers";
 import { UNAVAILABLE } from "./utils/entities";
 import { t } from "./utils/localize";
 import { forecastTone, subjectForecast } from "./utils/forecast";
+import { formatNumber } from "./utils/format";
 
 @customElement("librus-grades-card")
 export class LibrusGradesCard extends LibrusBaseCard {
@@ -75,7 +76,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
               <div class="ring-row">
                 ${progressRing((overallValue / 6) * 100, "var(--lc-brand)", 68, 7)}
                 <div>
-                  <div class="ring-num">${overallValue.toLocaleString(hass.language, { maximumFractionDigits: 2 })}</div>
+                  <div class="ring-num">${formatNumber(overallValue, hass.language, { maximumFractionDigits: 2 })}</div>
                   <div class="ring-label">${t(hass, "card.grades.subtitle")}</div>
                 </div>
               </div>
@@ -90,7 +91,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
                       <div class="sub-row">
                         <span class="name" title=${s.subject}>${s.subject}</span>
                         <span class="bar"><span style="width:${Math.min(100, s.points)}%"></span></span>
-                        <span class="val">${s.points.toLocaleString(hass.language, { maximumFractionDigits: 1 })}%</span>
+                        <span class="val">${formatNumber(s.points, hass.language, { maximumFractionDigits: 1 })}%</span>
                       </div>
                     `;
                   }
@@ -104,7 +105,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
                           style="width:${Math.min(100, (value / maxSubject) * 100)}%"
                         ></span
                       ></span>
-                      <span class="val">${value.toLocaleString(hass.language, { maximumFractionDigits: 2 })}</span>
+                      <span class="val">${formatNumber(value, hass.language, { maximumFractionDigits: 2 })}</span>
                       ${forecast
                         ? html`<span
                             class="fc ${forecastTone(forecast)}"

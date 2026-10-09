@@ -7,7 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { minutesUntil, formatTime } from "./utils/format";
 import { t, formatCountdown } from "./utils/localize";
-import { tapActionHandler } from "./utils/actions";
+import { tapAction } from "./utils/actions";
 
 /**
  * Reads the `timetable` calendar entity's OWN state attributes rather than
@@ -19,7 +19,6 @@ import { tapActionHandler } from "./utils/actions";
 @customElement("librus-next-lesson-tile-card")
 export class LibrusNextLessonTileCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
-  private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -40,13 +39,9 @@ export class LibrusNextLessonTileCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._tickTimer = setInterval(() => this.requestUpdate(), 30_000);
+    this._every(30_000, () => this.requestUpdate());
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._tickTimer);
-  }
 
   protected render(): TemplateResult | typeof nothing {
     if (!this._config || !this.hass) return nothing;
@@ -73,7 +68,7 @@ export class LibrusNextLessonTileCard extends LibrusBaseCard {
     const description = entity.attributes.description as string | undefined;
 
     return html`
-      <ha-card class="tile" @click=${tapActionHandler(this, this._config.tap_action, map.timetable)}>
+      <ha-card class="tile" ${tapAction(this, this._config.tap_action, map.timetable)}>
         <div class="icon-badge ${isNow ? "good" : ""}"><ha-icon icon="mdi:clock-outline"></ha-icon></div>
         <div class="tile-body">
           <div class="subj">${message}</div>

@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, lastDayOf, splitOngoing, type LibrusCalendarEvent } from "./utils/calendar";
 import { daysBetween, formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 
@@ -16,7 +16,6 @@ export class LibrusFreeDaysCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _events: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -37,13 +36,9 @@ export class LibrusFreeDaysCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 60 * 60_000);
+    this._every(60 * 60_000, () => void this._fetch(this._forceRefresh()));
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-  }
 
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
@@ -84,13 +79,16 @@ export class LibrusFreeDaysCard extends LibrusBaseCard {
 
     void this._fetch();
 
-    if (this._events.length === 0) {
+    const today = new Date();
+    const { ongoing, upcoming } = splitOngoing(this._events, today);
+    if (!ongoing && upcoming.length === 0) {
       return this._message("mdi:beach", t(hass, "card.free_days.empty"));
     }
 
-    const today = new Date();
-    const [next, ...rest] = this._events;
-    const days = daysBetween(today, new Date(`${next.start}T00:00:00`));
+    // During a break: what's on now and its last day; otherwise a countdown
+    // to the next one. The chips list the breaks after the headline one.
+    const next = ongoing ?? upcoming[0];
+    const rest = ongoing ? upcoming : upcoming.slice(1);
 
     return html`
       <ha-card>
@@ -102,8 +100,15 @@ export class LibrusFreeDaysCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="countdown">
-          <span class="big">${days}</span>
-          <span class="unit">${t(hass, "label.days_until")}<br /><b>${next.summary}</b></span>
+          ${ongoing
+            ? html`<span class="big now">${t(hass, "card.free_days.ongoing")}</span>
+                <span class="unit"
+                  >${t(hass, "card.free_days.until", { date: formatShortDate(lastDayOf(ongoing), hass.language) })}<br /><b
+                    >${ongoing.summary}</b
+                  ></span
+                >`
+            : html`<span class="big">${daysBetween(today, new Date(`${next.start.slice(0, 10)}T00:00:00`))}</span>
+                <span class="unit">${t(hass, "label.days_until")}<br /><b>${next.summary}</b></span>`}
         </div>
         ${rest.length
           ? html`
@@ -134,6 +139,9 @@ export class LibrusFreeDaysCard extends LibrusBaseCard {
         color: var(--lc-brand);
         line-height: 1;
         font-variant-numeric: tabular-nums;
+      }
+      .countdown .big.now {
+        font-size: 1.4rem;
       }
       .countdown .unit {
         font-size: 0.76rem;

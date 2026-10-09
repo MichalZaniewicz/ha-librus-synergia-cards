@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { isoDate } from "./utils/calendar";
+import { formatDate } from "./utils/format";
 
 /** One row of the Lesson topics sensor's `recent` attribute (integration 0.12.0+). */
 interface TopicRow {
@@ -52,7 +53,7 @@ export class LibrusLessonTopicsCard extends LibrusBaseCard {
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
     const date = new Date(`${day}T00:00:00`);
-    const formatted = date.toLocaleDateString(hass.language, { weekday: "short", day: "numeric", month: "short" });
+    const formatted = formatDate(date, hass.language, { weekday: "short", day: "numeric", month: "short" });
     if (day === isoDate(today)) return `${t(hass, "card.lesson_topics.today")} · ${formatted}`;
     if (day === isoDate(yesterday)) return `${t(hass, "card.lesson_topics.yesterday")} · ${formatted}`;
     return formatted;

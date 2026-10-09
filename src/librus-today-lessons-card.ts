@@ -15,8 +15,6 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _events: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
-  private _tickTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -37,15 +35,10 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 5 * 60_000);
-    this._tickTimer = setInterval(() => this.requestUpdate(), 60_000);
+    this._every(5 * 60_000, () => void this._fetch(this._forceRefresh()));
+    this._every(60_000, () => this.requestUpdate());
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-    clearInterval(this._tickTimer);
-  }
 
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;

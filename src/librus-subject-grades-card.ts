@@ -3,7 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { formatShortDate } from "./utils/format";
+import { formatShortDate, formatNumber } from "./utils/format";
 import { t } from "./utils/localize";
 import type { LibrusCardConfig } from "./utils/types";
 import { librusCardEditor } from "./utils/card-editor";
@@ -79,7 +79,7 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
             <div class="subtitle">
               ${UNAVAILABLE.has(state.state) && typeof pointsPct === "number"
                 ? t(hass, "card.grades.points_percentage", {
-                    value: pointsPct.toLocaleString(hass.language, { maximumFractionDigits: 1 }),
+                    value: formatNumber(pointsPct, hass.language, { maximumFractionDigits: 1 }),
                   })
                 : state.state}
             </div>
@@ -101,7 +101,7 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
                       : nothing}</span>
                     ${g.date ? html`<time>${formatShortDate(g.date, hass.language)}</time>` : nothing}
                   </div>
-                  ${g.comments.length ? html`<div class="quote">${g.comments.join(" · ")}</div>` : nothing}
+                  ${g.comments.length ? html`<div class="quote ${g.text ? "" : "comment"}">${g.comments.join(" · ")}</div>` : nothing}
                 </div>
               </div>
             `

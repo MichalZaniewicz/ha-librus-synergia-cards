@@ -12,7 +12,10 @@ export interface HomeworkFile {
 export type FileState = Record<string, "loading" | "error">;
 
 /**
- * Download one homework file; `setState` gets the new per-file state map.
+ * Download one homework file. `update` applies a change to the card's
+ * CURRENT per-file state map (read at the time of the change, not when the
+ * click happened) - with a snapshot, two downloads running at once each
+ * wrote back their own stale copy and one file stayed "loading" for good.
  * Stops the click so a surrounding row (e.g. a checklist tick) isn't toggled.
  */
 export async function downloadHomeworkFile(
@@ -20,18 +23,19 @@ export async function downloadHomeworkFile(
   hass: LibrusHass,
   deviceId: string,
   file: HomeworkFile,
-  state: FileState,
-  setState: (next: FileState) => void
+  update: (change: (current: FileState) => FileState) => void
 ): Promise<void> {
   ev.stopPropagation();
-  setState({ ...state, [file.id]: "loading" });
+  update((current) => ({ ...current, [file.id]: "loading" }));
   try {
     await downloadHomeworkAttachment(hass, deviceId, file.id, file.filename ?? file.id);
-    const next = { ...state };
-    delete next[file.id];
-    setState(next);
+    update((current) => {
+      const next = { ...current };
+      delete next[file.id];
+      return next;
+    });
   } catch {
-    setState({ ...state, [file.id]: "error" });
+    update((current) => ({ ...current, [file.id]: "error" }));
   }
 }
 

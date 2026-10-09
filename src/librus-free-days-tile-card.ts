@@ -5,10 +5,10 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
-import { daysBetween } from "./utils/format";
+import { fetchCalendarEvents, lastDayOf, splitOngoing, type LibrusCalendarEvent } from "./utils/calendar";
+import { daysBetween, formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
-import { tapActionHandler } from "./utils/actions";
+import { tapAction } from "./utils/actions";
 
 const RANGE_DAYS = 240;
 
@@ -20,7 +20,6 @@ export class LibrusFreeDaysTileCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _events: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -41,13 +40,9 @@ export class LibrusFreeDaysTileCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 60 * 60_000);
+    this._every(60 * 60_000, () => void this._fetch(this._forceRefresh()));
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-  }
 
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
@@ -88,19 +83,27 @@ export class LibrusFreeDaysTileCard extends LibrusBaseCard {
 
     void this._fetch();
 
-    if (this._events.length === 0) {
+    const today = new Date();
+    const { ongoing, upcoming } = splitOngoing(this._events, today);
+    const next = ongoing ?? upcoming[0];
+    if (!next) {
       return this._message("mdi:beach", t(hass, "card.free_days.empty"));
     }
 
-    const [next] = this._events;
-    const days = daysBetween(new Date(), new Date(`${next.start}T00:00:00`));
+    // During a break: "On now" and its last day, not a negative countdown.
+    const headline = ongoing
+      ? t(hass, "card.free_days.ongoing")
+      : `${daysBetween(today, new Date(`${next.start.slice(0, 10)}T00:00:00`))} ${t(hass, "label.days").toLowerCase()}`;
+    const meta = ongoing
+      ? `${next.summary} · ${t(hass, "card.free_days.until", { date: formatShortDate(lastDayOf(next), hass.language) })}`
+      : next.summary;
 
     return html`
-      <ha-card class="tile" @click=${tapActionHandler(this, this._config.tap_action, resolved.map.free_days)}>
+      <ha-card class="tile" ${tapAction(this, this._config.tap_action, resolved.map.free_days)}>
         <div class="icon-badge amber"><ha-icon icon="mdi:beach"></ha-icon></div>
         <div class="tile-body">
-          <div class="subj">${days} ${t(hass, "label.days").toLowerCase()}</div>
-          <div class="meta">${next.summary}</div>
+          <div class="subj">${headline}</div>
+          <div class="meta">${meta}</div>
         </div>
       </ha-card>
     `;

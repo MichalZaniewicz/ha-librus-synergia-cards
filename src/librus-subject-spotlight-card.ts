@@ -8,6 +8,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
 import { t } from "./utils/localize";
 import { subjectForecast } from "./utils/forecast";
+import { formatNumber } from "./utils/format";
 
 /**
  * The strongest and weakest subject, side by side, computed client-side
@@ -61,7 +62,7 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
 
     const best = subjects.reduce((a, b) => (b.value > a.value ? b : a));
     const weakest = subjects.reduce((a, b) => (b.value < a.value ? b : a));
-    const fmt = (v: number) => v.toLocaleString(hass.language, { maximumFractionDigits: 2 });
+    const fmt = (v: number) => formatNumber(v, hass.language, { maximumFractionDigits: 2 });
 
     return html`
       <ha-card>

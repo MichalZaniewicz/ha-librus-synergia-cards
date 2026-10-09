@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, isoDate, type LibrusCalendarEvent } from "./utils/calendar";
-import { parseCategory } from "./utils/format";
+import { parseCategory, formatDate } from "./utils/format";
 import { t, type TranslationKey } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 
@@ -66,7 +66,6 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
   @state() private _agenda: LibrusCalendarEvent[] = [];
   @state() private _free: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
-  private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -87,13 +86,9 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._refreshTimer = setInterval(() => void this._fetch(true), 30 * 60_000);
+    this._every(30 * 60_000, () => void this._fetch(this._forceRefresh()));
   }
 
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    clearInterval(this._refreshTimer);
-  }
 
   private get _shownMonth(): Date {
     if (this._month) return this._month;
@@ -233,7 +228,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
       .filter((k) => counts.get(k))
       .map((k) => `${t(hass, `card.month.kind_${k}` as TranslationKey)} ${counts.get(k)}`)
       .join(" · ");
-    const title = shownMonth.toLocaleDateString(hass.language, { month: "long", year: "numeric" });
+    const title = formatDate(shownMonth, hass.language, { month: "long", year: "numeric" });
 
     const cells: TemplateResult[] = [];
     for (let i = 0; i < lead; i++) cells.push(html`<span class="day other"></span>`);
@@ -249,7 +244,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
         @click=${() => (this._selected = iso)}
         aria-pressed=${iso === selected ? "true" : "false"}
         aria-current=${iso === todayIso ? "date" : nothing}
-        aria-label=${date.toLocaleDateString(hass.language, { day: "numeric", month: "long" })}
+        aria-label=${formatDate(date, hass.language, { day: "numeric", month: "long" })}
       >
         <span class="n">${d}</span>
         <span class="dots">${dayEntries.slice(0, 4).map((e) => html`<i class="dot k-${e.kind}"></i>`)}</span>

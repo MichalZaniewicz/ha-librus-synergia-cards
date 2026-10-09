@@ -8,7 +8,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { progressRing } from "./utils/render-helpers";
 import { UNAVAILABLE } from "./utils/entities";
 import { t } from "./utils/localize";
-import { tapActionHandler } from "./utils/actions";
+import { tapAction } from "./utils/actions";
 
 // Mirrors ha-librus-synergia's own `sensor.py::_RANK_TIERS` (0.6.0+) -
 // the sensor exposes the resolved tier key + `average`/`points_to_next_tier`
@@ -102,7 +102,7 @@ export class LibrusRankCard extends LibrusBaseCard {
         : 100; // top tier (Diamond) - always a full ring
 
     return html`
-      <ha-card @click=${tapActionHandler(this, this._config.tap_action, map.rank)}>
+      <ha-card ${tapAction(this, this._config.tap_action, map.rank)}>
         <div class="header">
           <div class="icon-badge ${RANK_BADGE_CLASS[tier]}">
             <ha-icon icon=${RANK_ICON[tier]}></ha-icon>

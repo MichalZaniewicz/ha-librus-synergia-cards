@@ -38,6 +38,9 @@ export class LibrusHeroCard extends LibrusBaseCard {
   // localStorage write a lifecycle-hook side effect, not something render()
   // itself does, without recomputing the whole result a second time.
   private _pendingHistory?: { deviceId: string; resultId: string };
+  // The `deviceId:resultId` last written - localStorage is only touched
+  // when the result (or the student) actually changes.
+  private _recorded?: string;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -58,9 +61,12 @@ export class LibrusHeroCard extends LibrusBaseCard {
 
   protected updated(changed: PropertyValues): void {
     super.updated(changed);
-    if (this._pendingHistory) {
-      recordHeroHistory(this._pendingHistory.deviceId, this._pendingHistory.resultId);
-    }
+    const pending = this._pendingHistory;
+    if (!pending) return;
+    const key = `${pending.deviceId}:${pending.resultId}`;
+    if (key === this._recorded) return;
+    this._recorded = key;
+    recordHeroHistory(pending.deviceId, pending.resultId);
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -89,6 +95,7 @@ export class LibrusHeroCard extends LibrusBaseCard {
     const goodGradeStreak = map.good_grade_streak ? hass.states[map.good_grade_streak] : undefined;
     const behaviourGrade = map.behaviour_grade ? hass.states[map.behaviour_grade] : undefined;
     const behaviourNotices = map.behaviour_notices ? hass.states[map.behaviour_notices] : undefined;
+    const rank = map.rank ? hass.states[map.rank] : undefined;
     const recentNotes =
       (behaviourNotices?.attributes.recent as { sentiment: string | null }[] | undefined) ?? [];
 
@@ -105,7 +112,10 @@ export class LibrusHeroCard extends LibrusBaseCard {
           ? behaviourGrade.state
           : null,
       recentNoteSentiments: recentNotes.map((n) => n.sentiment),
-      achievementCount: readAchievementCount(deviceId, map.rank ? hass.states[map.rank]?.attributes : undefined),
+      // Read (with its localStorage fallback) again only when the Rank sensor changes.
+      achievementCount: this._memo("achievements", [deviceId, rank], () =>
+        readAchievementCount(deviceId, rank?.attributes)
+      ),
     });
 
     if (!result) {

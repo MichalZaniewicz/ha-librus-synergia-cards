@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
 import { t } from "./utils/localize";
+import { formatNumber } from "./utils/format";
 
 interface ForecastRow {
   subject: string;
@@ -78,7 +79,7 @@ export class LibrusReportCardCard extends LibrusBaseCard {
     const honours = average >= HONOURS;
     const barPct = Math.max(0, Math.min(100, ((average - BAR_FROM) / (HONOURS - BAR_FROM)) * 100));
     const fmt = (v: number) =>
-      v.toLocaleString(hass.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      formatNumber(v, hass.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const basis = sensor.attributes.basis === "school_year" ? "school_year" : "semester_1";
 
     return html`

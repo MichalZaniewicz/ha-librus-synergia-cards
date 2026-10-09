@@ -456,11 +456,13 @@
       },
     }, "Szkoła Podstawowa nr 1");
     addEntity("sensor.current_lesson", "current_lesson", {
-      lesson_no: 3, start: bellSchedule[2].start, end: bellSchedule[2].end, minutes_left: 20,
+      // ISO start/end like the integration; no minutes_left / minutes_until
+      // (newer integrations dropped them - the cards count from start/end).
+      lesson_no: 3, start: bellSlots[2].start.toISOString(), end: bellSlots[2].end.toISOString(), date: iso(today),
       teacher: "K. Nowak", classroom: "sala 15", is_substitution: false,
     }, "Biologia");
     addEntity("sensor.next_lesson", "next_lesson", {
-      lesson_no: 4, start: bellSchedule[3].start, end: bellSchedule[3].end, minutes_until: 40,
+      lesson_no: 4, start: bellSlots[3].start.toISOString(), end: bellSlots[3].end.toISOString(),
       date: iso(today), teacher: "A. Nowak", classroom: "sala 22", is_substitution: false,
     }, "Język polski");
     addEntity("sensor.next_exam", "next_exam", {
@@ -554,10 +556,13 @@
     addEntity("sensor.homework_assignments", "homework_assignments", {
       recent: [
         { id: 101, topic: "Matematyka", text: "Zadania 1-5, strona 42 - ułamki dziesiętne.", due_date: tomorrowIso, date: iso(today), teacher: "Jan Kowalski", category: "ćwiczenia", attachments: [{ id: "31", filename: "karta-pracy-ulamki.pdf" }] },
-        { id: 102, topic: "Język polski", text: "Wypracowanie: „Moje wakacje” (min. 150 słów).", due_date: iso(new Date(today.getTime() + 6 * 86400000)), date: iso(today), teacher: "Anna Nowak" },
         { id: 103, topic: "Biologia", text: "Notatka o fotosyntezie.", due_date: iso(new Date(today.getTime() + 4 * 86400000)), date: iso(today), teacher: "K. Nowak" },
+        { id: 102, topic: "Język polski", text: "Wypracowanie: „Moje wakacje” (min. 150 słów).", due_date: iso(new Date(today.getTime() + 6 * 86400000)), date: iso(today), teacher: "Anna Nowak" },
+        // Past due, newest first (the integration's order since 0.12.5).
+        { id: 104, topic: "Historia", text: "Oś czasu: rozbiory Polski.", due_date: iso(new Date(today.getTime() - 2 * 86400000)), date: iso(new Date(today.getTime() - 9 * 86400000)), teacher: "Agnieszka Kamińska" },
+        { id: 105, topic: "Geografia", text: "Mapa konturowa Europy.", due_date: iso(new Date(today.getTime() - 5 * 86400000)), date: iso(new Date(today.getTime() - 12 * 86400000)), teacher: "Ewa Wiśniewska" },
       ],
-    }, 3);
+    }, 5);
     // Homework to-do list (backend 0.10.1+): the checklist card keeps its
     // ticks here. 103 starts ticked, as if done on another device.
     window.__todoDone = new Set(["103"]);
@@ -834,6 +839,9 @@
         { start: iso(new Date(today.getTime() + 1 * 86400000)), end: iso(new Date(today.getTime() + 2 * 86400000)), allDay: true, summary: "[Test] Język angielski: Unit 2", description: null },
       ],
       "calendar.free_days": [
+        // A break that's going on right now - the cards show "On now · until ..."
+        // instead of counting down to a start that has passed.
+        { start: iso(new Date(today.getTime() - 2 * 86400000)), end: iso(new Date(today.getTime() + 3 * 86400000)), allDay: true, summary: "Przerwa jesienna" },
         { start: iso(new Date(today.getTime() + 5 * 86400000)), end: iso(new Date(today.getTime() + 6 * 86400000)), allDay: true, summary: "Dzień Edukacji Narodowej" },
         { start: iso(new Date(today.getTime() + 83 * 86400000)), end: iso(new Date(today.getTime() + 92 * 86400000)), allDay: true, summary: "Zimowa przerwa świąteczna" },
         { start: iso(new Date(today.getTime() + 150 * 86400000)), end: iso(new Date(today.getTime() + 151 * 86400000)), allDay: true, summary: "Dzień wolny od zajęć dydaktycznych" },
@@ -875,9 +883,12 @@
           const rangeStart = new Date(decodeURIComponent(startEnc)).getTime();
           const rangeEnd = new Date(decodeURIComponent(endEnc)).getTime();
           const all = calendarEventsByEntity[entityId] ?? [];
+          // Like Home Assistant: every event overlapping the range, so a
+          // break that began before it comes back too.
           return all.filter((ev) => {
             const evStart = new Date(ev.allDay ? `${ev.start}T00:00:00` : ev.start).getTime();
-            return evStart >= rangeStart && evStart < rangeEnd;
+            const evEnd = new Date(ev.allDay ? `${ev.end ?? ev.start}T00:00:00` : ev.end ?? ev.start).getTime();
+            return evStart < rangeEnd && Math.max(evEnd, evStart + 1) > rangeStart;
           });
         }
         const historyMatch = /^history\/period\/[^?]+\?filter_entity_id=([^&]+)/.exec(path);
@@ -908,7 +919,7 @@
       callWS: async (msg) => {
         if (msg.type === "todo/item/list") {
           return {
-            items: ["101", "102", "103"].map((uid) => ({
+            items: ["101", "102", "103", "104", "105"].map((uid) => ({
               uid,
               summary: uid,
               status: window.__todoDone.has(uid) ? "completed" : "needs_action",
@@ -1135,13 +1146,17 @@
         e.target.textContent = outage ? "Librus znowu działa" : "Symuluj awarię Librusa";
         const since = outage ? new Date(Date.now() - 260 * 60_000).toISOString() : new Date().toISOString();
         const next = new Date(Date.now() + 40 * 60_000).toISOString();
-        hass.states["sensor.status"] = {
-          ...hass.states["sensor.status"],
-          state: outage ? "stale" : "ok",
-          attributes: { ...hass.states["sensor.status"].attributes, data_source: outage ? "stale" : "live", last_success: since, failures: outage ? 3 : 0, next_attempt: outage ? next : null },
+        // A new states object with new state objects, like Home Assistant -
+        // the cards only re-render when one of their entities' objects changed.
+        hass.states = {
+          ...hass.states,
+          "sensor.status": {
+            ...hass.states["sensor.status"],
+            state: outage ? "stale" : "ok",
+            attributes: { ...hass.states["sensor.status"].attributes, data_source: outage ? "stale" : "live", last_success: since, failures: outage ? 3 : 0, next_attempt: outage ? next : null },
+          },
+          "sensor.last_update": { ...hass.states["sensor.last_update"], state: since },
         };
-        hass.states["sensor.last_update"] = { ...hass.states["sensor.last_update"], state: since };
-        hass.states = { ...hass.states };
         cardEls.forEach((el) => { el.hass = { ...el.hass, states: hass.states }; });
       });
       document.getElementById("lang").addEventListener("change", (e) => {

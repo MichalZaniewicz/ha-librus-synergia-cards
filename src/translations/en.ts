@@ -134,13 +134,11 @@ export const en = {
   "card.grade_category_distribution.title": "Grades by category",
   "card.grade_category_distribution.subtitle": "Tests, quizzes, answers…",
   "card.grade_category_distribution.empty": "No categorized grades yet",
-  "unit.grades": "grades",
   "card.grade_category_distribution.uncategorized": "Uncategorized",
 
   "card.subject_time.title": "Lesson time split",
   "card.subject_time.subtitle": "Lessons per week, by subject",
   "card.subject_time.empty": "No lessons found for this week",
-  "unit.lessons_per_week": "lessons/wk",
 
   "card.attendance_weekday.title": "Absences by weekday",
   "card.attendance_weekday.subtitle": "This school year",
@@ -250,7 +248,6 @@ export const en = {
   "card.messages.attachment_archived": "Librus doesn't let you download files from archived messages here - open the message in Synergia",
 
   "card.substitutions.title": "Timetable changes",
-  "card.substitutions.subtitle": "Zastępstwa, alerty i usprawiedliwienia",
   "card.substitutions.empty": "No changes to the timetable",
   "card.changes.next": "Next: {subject}, {when}",
   "card.changes.none": "No changes in the next {n} days",
@@ -289,7 +286,6 @@ export const en = {
   "card.today_lessons.empty": "No lessons today",
   "label.now": "now",
 
-  "card.next_lesson.title": "Next lesson",
   "card.next_lesson.empty": "No more lessons today",
   "label.in_minutes": "in {minutes} min",
   "label.in_hours": "in {hours}h",
@@ -316,6 +312,8 @@ export const en = {
 
   "card.free_days.title": "Free days",
   "card.free_days.empty": "No upcoming free days",
+  "card.free_days.ongoing": "On now",
+  "card.free_days.until": "until {date}",
   "label.days_until": "days until",
 
   "card.school_year.title": "End of school year",
@@ -334,7 +332,6 @@ export const en = {
   "card.week_timetable.break_now": "Break — next lesson in {minutes} min",
   "card.week_timetable.empty": "No lessons found for this week",
 
-  "card.school.title": "School",
   "label.head_teacher": "Head teacher",
   "label.class": "Class",
   "label.student_number": "Register no.",
@@ -356,6 +353,8 @@ export const en = {
 
   "card.week_summary.title": "Week in review",
   "stat.new_grades": "New grades",
+  "stat.absence_days": "Days absent",
+  "stat.new_notes": "New notes",
 
   "card.ai_summary.title": "Weekly summary",
   "card.ai_summary.setup": "Weekly AI summary is off",
@@ -387,7 +386,6 @@ export const en = {
   "card.lucky_number.yours_for_date": "It's your number on {date}!",
   "card.lucky_number.empty": "No lucky number published yet (e.g. during a school break)",
 
-  "card.student.title": "Student card",
   "stat.overall_rating": "overall",
   "stat.attendance_score": "Attendance",
   "stat.behaviour_score": "Behaviour",

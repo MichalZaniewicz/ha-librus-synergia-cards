@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { applyListOptions } from "./utils/list-options";
+import { activateOnKey } from "./utils/render-helpers";
 import { librusCardEditor } from "./utils/card-editor";
 
 interface RecentAnnouncement {
@@ -97,7 +98,14 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
             // resetting itself back to collapsed on every click).
             const key = a.id ?? String(i);
             return html`
-              <div class="list-item clickable ${a.read ? "read" : "unread"}" @click=${() => this._toggleExpanded(key)}>
+              <div
+                class="list-item clickable ${a.read ? "read" : "unread"}"
+                role="button"
+                tabindex="0"
+                aria-expanded=${this._expandedId === key ? "true" : "false"}
+                @click=${() => this._toggleExpanded(key)}
+                @keydown=${activateOnKey(() => this._toggleExpanded(key))}
+              >
                 <span class="dot ${a.read === false ? "good" : "neutral"}"></span>
                 <div class="body">
                   <div class="row1">${a.subject}</div>
