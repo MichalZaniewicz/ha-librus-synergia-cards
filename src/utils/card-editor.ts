@@ -65,7 +65,8 @@ type EditorField =
         | "hide_room"
         | "only_tomorrow"
         | "summary_only"
-        | "hide_generate";
+        | "hide_generate"
+        | "show_past";
       label: TranslationKey;
     }
   | {
@@ -177,6 +178,12 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-school-documents-card": [TITLE_FIELD, MAX_ITEMS_FIELD(20)],
   "custom:librus-justifications-card": [TITLE_FIELD, MAX_ITEMS_FIELD(10)],
   "custom:librus-catch-up-card": [TITLE_FIELD],
+  "custom:librus-substitutions-card": [
+    TITLE_FIELD,
+    { kind: "number", key: "days_ahead", label: "editor.days_ahead", min: 1, max: 30 },
+    { kind: "boolean", key: "show_past", label: "editor.show_past" },
+    MAX_ITEMS_FIELD(30),
+  ],
   "custom:librus-grade-log-card": [
     TITLE_FIELD,
     MAX_ITEMS_FIELD(100),

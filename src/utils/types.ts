@@ -24,6 +24,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   max_items?: number;
   /** Forward-looking window, in days (Agenda). */
   days_ahead?: number;
+  /** Timetable changes card: also list the last few changes (default on). */
+  show_past?: boolean;
   /** History window, in days (grade trend). */
   days?: number;
   /** Target average for the grade-goal card. */

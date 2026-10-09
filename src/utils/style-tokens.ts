@@ -644,6 +644,6 @@ export const librusSharedStyles = css`
   }
   .empty .t2 {
     font-size: 0.76rem;
-    max-width: 26ch;
+    max-width: 46ch;
   }
 `;

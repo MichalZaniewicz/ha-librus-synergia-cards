@@ -810,6 +810,14 @@
         ...weekdayEventsExToday,
         ...todayBellEvents,
         ...(tomorrowCovered ? [] : buildDayEvents(tomorrowDay, 5)),
+        // Upcoming changes (made-up) for the Timetable changes card.
+        ...[[2, 9, 50, "Matematyka (zastępstwo)", "Jan Wiśniewski\nZastępstwo za: Anna Nowak", "sala 204"],
+            [3, 8, 55, "Język polski (zmiana sali)", "Ewa Zielińska\nZmiana sali: 233 → 112", "sala 112"],
+            [4, 11, 40, "Chemia (przeniesiona)", "Maria Lewandowska\nPrzeniesiona z: 2026-10-16, lekcja 4", "sala 228"]]
+          .map(([days, h, m, summary, description, location]) => {
+            const s = new Date(); s.setDate(s.getDate() + days); s.setHours(h, m, 0, 0);
+            return { start: s.toISOString(), end: new Date(s.getTime() + 45 * 60000).toISOString(), allDay: false, summary, description, location };
+          }),
       ],
       "calendar.agenda": [
         { start: iso(agendaStart), end: iso(new Date(agendaStart.getTime() + 86400000)), allDay: true, summary: "[Zebranie z Rodzicami] Zebranie z rodzicami. Organizacja roku szkolnego 2026/2027.", description: null },

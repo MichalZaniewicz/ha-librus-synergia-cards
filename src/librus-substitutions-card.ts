@@ -9,6 +9,44 @@ import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { applyListOptions } from "./utils/list-options";
 import { fetchFullMessage, type FullMessage } from "./utils/services";
+import { fetchCalendarEvents, isoDate, lessonInfo, type LibrusCalendarEvent } from "./utils/calendar";
+import type { TranslationKey } from "./utils/localize";
+
+type ChangeKind = "substitution" | "cancelled" | "room" | "moved";
+const KINDS: { kind: ChangeKind; icon: string; label: TranslationKey; chip: TranslationKey }[] = [
+  { kind: "substitution", icon: "mdi:swap-horizontal", label: "card.changes.substitution", chip: "card.changes.chip_substitution" },
+  { kind: "cancelled", icon: "mdi:calendar-remove", label: "card.changes.cancelled", chip: "card.changes.chip_cancelled" },
+  { kind: "room", icon: "mdi:map-marker-outline", label: "card.changes.room", chip: "card.changes.chip_room" },
+  { kind: "moved", icon: "mdi:calendar-arrow-right", label: "card.changes.moved", chip: "card.changes.chip_moved" },
+];
+const PAST_DAYS = 14;
+const PAST_SHOWN = 3;
+
+interface LessonChange {
+  event: LibrusCalendarEvent;
+  kind: ChangeKind;
+  subject: string;
+  detail: string;
+}
+
+/** The change a timetable event carries (calendar.py's summary suffixes), or undefined. */
+function toChange(event: LibrusCalendarEvent): LessonChange | undefined {
+  const info = lessonInfo(event);
+  const kind: ChangeKind | undefined = info.cancelled
+    ? "cancelled"
+    : info.substitution
+      ? "substitution"
+      : info.moved
+        ? "moved"
+        : info.roomChange
+          ? "room"
+          : undefined;
+  if (!kind) return undefined;
+  const details = info.details.filter((d) => !d.startsWith("Temat:") && !d.startsWith("Zmiana sali:"));
+  const room = info.rooms ? `${info.rooms[0]} → ${info.rooms[1]}` : event.location;
+  const detail = [info.teacher, ...details, kind === "cancelled" ? undefined : room].filter(Boolean).join(" · ");
+  return { event, kind, subject: info.name, detail };
+}
 
 interface RecentMessage {
   id: string;
@@ -42,6 +80,10 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
   @state() private _fullByKey: Record<string, FullMessage> = {};
   @state() private _pendingKeys: Set<string> = new Set();
   @state() private _errorKeys: Set<string> = new Set();
+  @state() private _changes: LessonChange[] = [];
+  @state() private _filter: ChangeKind | "all" = "all";
+  private _fetchedFor?: string;
+  private _refreshTimer?: ReturnType<typeof setInterval>;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -57,7 +99,72 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
   }
 
   public getCardSize(): number {
-    return 2;
+    return 4;
+  }
+
+  public connectedCallback(): void {
+    super.connectedCallback();
+    this._refreshTimer = setInterval(() => void this._fetch(true), 30 * 60_000);
+  }
+
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearInterval(this._refreshTimer);
+  }
+
+  private get _daysAhead(): number {
+    return Math.max(1, Math.min(30, Number(this._config?.days_ahead) || 7));
+  }
+
+  /** Changed lessons from the timetable calendar: the last PAST_DAYS days
+   * and the next `days_ahead` days. */
+  private async _fetch(force = false): Promise<void> {
+    if (!this.hass || !this._config) return;
+    const resolved = this._resolveEntities();
+    if ("error" in resolved) return;
+    const entityId = resolved.map.timetable;
+    if (!entityId) return;
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - PAST_DAYS);
+    const end = new Date();
+    end.setHours(0, 0, 0, 0);
+    end.setDate(end.getDate() + this._daysAhead + 1);
+    const cacheKey = `${entityId}:${isoDate(start)}:${isoDate(end)}`;
+    if (!force && this._fetchedFor === cacheKey) return;
+    this._fetchedFor = cacheKey;
+    const generation = this._beginFetch();
+    try {
+      const events = await fetchCalendarEvents(this.hass, entityId, start, end);
+      const changes = events
+        .filter((e) => !e.allDay)
+        .map(toChange)
+        .filter((c): c is LessonChange => !!c)
+        .sort((a, b) => a.event.start.localeCompare(b.event.start));
+      if (this._isCurrentFetch(generation)) this._changes = changes;
+    } catch {
+      if (this._isCurrentFetch(generation)) this._changes = [];
+    }
+  }
+
+  private _when(event: LibrusCalendarEvent): string {
+    const start = new Date(event.start);
+    const day = start.toLocaleDateString(this.hass?.language, { weekday: "short", day: "numeric", month: "numeric" });
+    const time = start.toLocaleTimeString(this.hass?.language, { hour: "2-digit", minute: "2-digit" });
+    return `${day} · ${time}`;
+  }
+
+  private _changeRow(c: LessonChange, past: boolean): TemplateResult {
+    const hass = this.hass!;
+    const meta = KINDS.find((k) => k.kind === c.kind)!;
+    return html`<div class="change ${past ? "past" : ""}">
+      <span class="ci ${c.kind}"><ha-icon icon=${meta.icon}></ha-icon></span>
+      <div class="cbody">
+        <div class="csubj">${c.subject}<span class="ctag ${c.kind}">${t(hass, meta.label)}</span></div>
+        ${c.detail ? html`<div class="cdet">${c.detail}</div>` : nothing}
+      </div>
+      <time>${this._when(c.event)}</time>
+    </div>`;
   }
 
   private async _onClick(m: RecentMessage): Promise<void> {
@@ -157,28 +264,71 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
     if ("error" in resolved) return resolved.error;
     const { map } = resolved;
     const hass = this.hass;
+    void this._fetch();
 
     const entity = map.unread_messages ? hass.states[map.unread_messages] : undefined;
     const substitutions = (entity?.attributes.substitutions_recent as RecentMessage[] | undefined) ?? [];
     const alerts = (entity?.attributes.alerts_recent as RecentMessage[] | undefined) ?? [];
     const justifications = (entity?.attributes.justifications_recent as RecentMessage[] | undefined) ?? [];
+    const hasMessages = substitutions.length + alerts.length + justifications.length > 0;
 
-    if (!entity || (substitutions.length === 0 && alerts.length === 0 && justifications.length === 0)) {
-      return this._message("mdi:bell-alert-outline", t(hass, "card.substitutions.empty"));
-    }
+    const now = Date.now();
+    const upcoming = this._changes.filter((c) => new Date(c.event.end).getTime() > now);
+    const past = this._changes.filter((c) => new Date(c.event.end).getTime() <= now).slice(-PAST_SHOWN).reverse();
+    const shown = (this._filter === "all" ? upcoming : upcoming.filter((c) => c.kind === this._filter)).slice(
+      0,
+      this._config.max_items ?? 30
+    );
+    const shownPast =
+      this._config.show_past === false
+        ? []
+        : this._filter === "all"
+          ? past
+          : past.filter((c) => c.kind === this._filter);
+    const counts = new Map(KINDS.map((k) => [k.kind, upcoming.filter((c) => c.kind === k.kind).length]));
+    const next = upcoming[0];
+    const subtitle = next
+      ? t(hass, "card.changes.next", { subject: next.subject, when: this._when(next.event) })
+      : t(hass, "card.changes.none", { n: this._daysAhead });
 
     return html`
       <ha-card>
         <div class="header">
-          <div class="icon-badge amber"><ha-icon icon="mdi:bell-alert-outline"></ha-icon></div>
+          <div class="icon-badge"><ha-icon icon="mdi:swap-horizontal"></ha-icon></div>
           <div class="title-block">
-            <div class="title">${this._config?.title ?? t(hass, "card.substitutions.title")}</div>
-            <div class="subtitle">${t(hass, "card.substitutions.subtitle")}</div>
+            <div class="title">${this._config.title ?? t(hass, "card.substitutions.title")}</div>
+            <div class="subtitle">${subtitle}</div>
           </div>
         </div>
-        ${this._renderSection(t(hass, "mailbox.substitutions"), substitutions)}
-        ${this._renderSection(t(hass, "mailbox.alerts"), alerts)}
-        ${this._renderSection(t(hass, "mailbox.justifications"), justifications)}
+        ${upcoming.length
+          ? html`<div class="chips">
+              <span class="chip pickable ${this._filter === "all" ? "hot" : ""}" role="button" @click=${() => (this._filter = "all")}
+                >${t(hass, "card.changes.chip_all")} <span class="n">${upcoming.length}</span></span
+              >
+              ${KINDS.filter((k) => (counts.get(k.kind) ?? 0) > 0).map(
+                (k) => html`<span
+                  class="chip pickable ${this._filter === k.kind ? "hot" : ""}"
+                  role="button"
+                  @click=${() => (this._filter = k.kind)}
+                  >${t(hass, k.chip)} <span class="n">${counts.get(k.kind)}</span></span
+                >`
+              )}
+            </div>`
+          : html`<div class="no-changes"><ha-icon icon="mdi:check"></ha-icon>${t(hass, "card.substitutions.empty")}</div>`}
+        <div class="changes scroll-list">
+          ${shown.map((c) => this._changeRow(c, false))}
+          ${shownPast.length
+            ? html`<div class="section-title">${t(hass, "card.changes.recent")}</div>
+                ${shownPast.map((c) => this._changeRow(c, true))}`
+            : nothing}
+        </div>
+        ${hasMessages
+          ? html`<div class="messages">
+              ${this._renderSection(t(hass, "mailbox.substitutions"), substitutions)}
+              ${this._renderSection(t(hass, "mailbox.alerts"), alerts)}
+              ${this._renderSection(t(hass, "mailbox.justifications"), justifications)}
+            </div>`
+          : nothing}
       </ha-card>
     `;
   }
@@ -196,6 +346,98 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
       }
       .section-title:not(:first-of-type) {
         margin-top: 10px;
+      }
+      .chips {
+        margin-bottom: 10px;
+      }
+      .chip.pickable {
+        cursor: pointer;
+      }
+      .no-changes {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        color: var(--secondary-text-color);
+        margin-bottom: 4px;
+      }
+      .no-changes ha-icon {
+        --mdc-icon-size: 16px;
+        color: var(--lc-good);
+      }
+      .changes {
+        display: grid;
+        gap: 8px;
+      }
+      .change {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+      }
+      .change.past {
+        opacity: 0.55;
+      }
+      .ci {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        --mdc-icon-size: 17px;
+      }
+      .ci.substitution,
+      .ctag.substitution {
+        background: var(--lc-amber-bg);
+        color: var(--lc-amber);
+      }
+      .ci.cancelled,
+      .ctag.cancelled {
+        background: var(--lc-bad-bg);
+        color: var(--lc-bad);
+      }
+      .ci.room,
+      .ctag.room {
+        background: var(--lc-brand-bg);
+        color: var(--lc-brand-strong);
+      }
+      .ci.moved,
+      .ctag.moved {
+        background: var(--lc-good-bg);
+        color: var(--lc-good);
+      }
+      .csubj {
+        font-size: 0.86rem;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .ctag {
+        font-size: 0.62rem;
+        font-weight: 700;
+        padding: 1px 7px;
+        border-radius: 99px;
+        margin-left: 6px;
+        vertical-align: 1px;
+      }
+      .cdet {
+        font-size: 0.74rem;
+        color: var(--secondary-text-color);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .change time {
+        font-size: 0.72rem;
+        color: var(--secondary-text-color);
+        white-space: nowrap;
+        text-align: right;
+      }
+      .messages {
+        margin-top: 12px;
+        padding-top: 10px;
+        border-top: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2));
       }
       .list-item.clickable {
         cursor: pointer;
