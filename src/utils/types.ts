@@ -32,6 +32,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   mailbox?: string;
   /** Include Saturday in the week-timetable / lesson-time cards. */
   show_saturday?: boolean;
+  /** Grade log: also list descriptive grades (off by default). */
+  show_descriptive?: boolean;
   /** Comma-separated category keywords the exam-countdown card treats as an exam. */
   exam_keywords?: string;
   /** Comma-separated category keywords - grade-log/subject-grades keep a grade if its category matches any. */

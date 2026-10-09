@@ -539,16 +539,23 @@
       comment: "Ocena zachowania miesiąc za IX/26.",
       recent: [{ grade: "bdb", name: "bardzo dobre", short_name: "", value: 0, category: "zachowanie", date: iso(today), text: "", comments: ["     Ocena zachowania miesiąc za IX/26.      "] }],
     }, "bdb");
+    // Shape of integration 0.12.3+ (seen live, #13): `value` is the grade
+    // Synergia shows, `skill` the skill it is for.
+    const DESCRIPTIVE = [
+      { subject: "Edukacja muzyczna", value: "6", skill: "Ekspresja muzyczna. Śpiew", teacher: "Anna Nowak", date: iso(new Date(today.getTime() - 2 * 86400000)), comments: ["Pięknie zaśpiewana piosenka"] },
+      { subject: "Edukacja muzyczna", value: "5", skill: "Improwizacja ruchowa, rytmika i taniec", teacher: "Anna Nowak", date: iso(new Date(today.getTime() - 16 * 86400000)), comments: [] },
+    ];
     addEntity("sensor.descriptive_grades", "descriptive_grades", {
-      recent: [{ subject: "Edukacja wczesnoszkolna", value: "Opanował materiał w stopniu bardzo dobrym, chętnie pomaga innym.", skill_id: 1, category_id: null, date: iso(today) }],
-    }, 1);
+      grades: DESCRIPTIVE,
+      recent: DESCRIPTIVE,
+    }, DESCRIPTIVE.length);
 
     const MOCK_THRESHOLDS = [1.75, 2.75, 3.75, 4.75, 5.5];
     const MOCK_FORECASTS = [];
     for (const s of SUBJECTS) {
       const entityId = `sensor.subject_${s.id}_average`;
       const grades = [
-        { value: "5", category: "Sprawdzian", date: iso(new Date(today.getTime() - 1 * 86400000)), comments: ["Świetna praca, tak trzymaj!"] },
+        { value: "5", category: "Sprawdzian", date: iso(new Date(today.getTime() - 1 * 86400000)), comments: ["Świetna praca, tak trzymaj!"], teacher: "Jan Kowalski" },
         { value: "4+", category: "Kartkówka", date: iso(new Date(today.getTime() - 9 * 86400000)), comments: [] },
         { value: "4", category: "Odpowiedź", date: iso(new Date(today.getTime() - 15 * 86400000)), comments: [] },
       ];
@@ -985,6 +992,7 @@
       { tag: "librus-ai-summary-card", config: { type: "custom:librus-ai-summary-card" } },
       { tag: "librus-ai-summary-card", config: { type: "custom:librus-ai-summary-card", summary_only: true, title: "Tydzień (tylko rady)" } },
       { tag: "librus-grade-log-card", config: { type: "custom:librus-grade-log-card", title: "Tylko sprawdziany (filtr)", category_filter: "sprawdzian", sort: "oldest" } },
+      { tag: "librus-grade-log-card", config: { type: "custom:librus-grade-log-card", title: "Z ocenami opisowymi", show_descriptive: true, days: 3 } },
       { tag: "librus-rank-card", config: { type: "custom:librus-rank-card", compact: true } },
     ];
 

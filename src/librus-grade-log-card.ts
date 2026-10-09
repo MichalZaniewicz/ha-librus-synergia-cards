@@ -7,7 +7,14 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
-import { filterAndSortGrades, pointGradeEntries, pointTone, textGradeEntries, type GradeLogEntry } from "./utils/grade-filters";
+import {
+  descriptiveGradeEntries,
+  filterAndSortGrades,
+  pointGradeEntries,
+  pointTone,
+  textGradeEntries,
+  type GradeLogEntry,
+} from "./utils/grade-filters";
 
 interface FlatGrade extends GradeLogEntry {
   subject: string;
@@ -43,7 +50,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
 
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
-    const { deviceId } = resolved;
+    const { deviceId, map } = resolved;
     const hass = this.hass;
 
     const flat: FlatGrade[] = [];
@@ -55,6 +62,9 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
         ...textGradeEntries(attributes),
       ];
       for (const g of grades) flat.push({ ...g, subject: s.subject });
+    }
+    if (this._config.show_descriptive && map.descriptive_grades) {
+      flat.push(...descriptiveGradeEntries(hass.states[map.descriptive_grades]?.attributes));
     }
 
     if (flat.length === 0) return this._message("mdi:notebook-multiple", t(hass, "card.grades.empty"));
@@ -79,7 +89,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
           ${filtered.slice(0, max).map(
             (g) => html`
               <div class="list-item">
-                <div class="grade-chip ${g.improved ? "improved" : ""} ${g.points ? `points ${pointTone(g.percentage)}` : ""}">
+                <div class="grade-chip ${g.improved ? "improved" : ""} ${g.points ? `points ${pointTone(g.percentage)}` : ""} ${g.descriptive ? "descriptive" : ""}">
                   ${g.value}${g.points && g.percentage !== null && g.percentage !== undefined
                     ? html`<small>${Math.round(g.percentage)}%</small>`
                     : nothing}
@@ -89,6 +99,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
                     <span>${g.subject}${g.category ? html` · <span class="cat-label">${g.category}</span>` : nothing}${g.improves ? html` · <span class="fix-label">${t(hass, "label.grade_improves", { value: g.improves })}</span>` : nothing}</span>
                     ${g.date ? html`<time>${formatShortDate(g.date, hass.language)}</time>` : nothing}
                   </div>
+                  ${g.teacher ? html`<div class="item-text">${g.teacher}</div>` : nothing}
                   ${g.comments.length ? html`<div class="quote">${g.comments.join(" · ")}</div>` : nothing}
                 </div>
               </div>
@@ -103,6 +114,10 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
     librusTokens,
     librusSharedStyles,
     css`
+      .grade-chip.descriptive {
+        background: transparent;
+        box-shadow: inset 0 0 0 1.5px var(--lc-brand-bg);
+      }
       .grade-chip.improved {
         text-decoration: line-through;
         opacity: 0.55;

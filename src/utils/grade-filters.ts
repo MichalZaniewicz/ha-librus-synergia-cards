@@ -16,6 +16,42 @@ export interface GradeLogEntry {
   points?: boolean;
   /** True for an entry built from `text_grades` (see `textGradeEntries`). */
   text?: boolean;
+  /** Who gave the grade (backend 0.9.2+ on ordinary grades). */
+  teacher?: string | null;
+  /** True for an entry built from the Descriptive grades sensor (see `descriptiveGradeEntries`). */
+  descriptive?: boolean;
+}
+
+/** One entry of the Descriptive grades sensor's `grades` / `recent` attribute. */
+export interface DescriptiveGradeAttr {
+  subject: string | null;
+  value: string;
+  skill?: string | null;
+  teacher?: string | null;
+  date: string | null;
+  comments?: string[];
+}
+
+/**
+ * The Descriptive grades sensor's grades as grade-log entries: the skill
+ * ("Ekspresja muzyczna. Śpiew") is shown where an ordinary grade shows its
+ * category. Reads `grades` (every grade, integration 0.12.3+) and falls back
+ * to `recent` (the newest five) on older versions.
+ */
+export function descriptiveGradeEntries(
+  attributes: Record<string, unknown> | undefined
+): (GradeLogEntry & { subject: string })[] {
+  const raw = Array.isArray(attributes?.grades) ? attributes?.grades : attributes?.recent;
+  if (!Array.isArray(raw)) return [];
+  return (raw as DescriptiveGradeAttr[]).map((g) => ({
+    subject: g.subject ?? "",
+    value: g.value,
+    category: g.skill ?? null,
+    date: g.date,
+    comments: g.comments ?? [],
+    teacher: g.teacher ?? null,
+    descriptive: true,
+  }));
 }
 
 /**

@@ -7,14 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
-
-interface RecentDescriptiveGrade {
-  subject: string | null;
-  value: string;
-  skill_id: number | null;
-  category_id: number | null;
-  date: string | null;
-}
+import { descriptiveGradeEntries } from "./utils/grade-filters";
 
 @customElement("librus-descriptive-grades-card")
 export class LibrusDescriptiveGradesCard extends LibrusBaseCard {
@@ -47,9 +40,12 @@ export class LibrusDescriptiveGradesCard extends LibrusBaseCard {
     const hass = this.hass;
 
     const entity = map.descriptive_grades ? hass.states[map.descriptive_grades] : undefined;
-    const recent = (entity?.attributes.recent as RecentDescriptiveGrade[] | undefined) ?? [];
+    // Newest first; `grades` holds all of them (integration 0.12.3+), `recent` the last five.
+    const grades = descriptiveGradeEntries(entity?.attributes).sort((a, b) =>
+      (b.date ?? "").localeCompare(a.date ?? "")
+    );
 
-    if (!entity || recent.length === 0) {
+    if (!entity || grades.length === 0) {
       return this._message("mdi:text-box-outline", t(hass, "card.descriptive_grades.empty"));
     }
 
@@ -63,16 +59,17 @@ export class LibrusDescriptiveGradesCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="scroll-list">
-          ${recent.map(
+          ${grades.map(
             (g) => html`
               <div class="list-item">
-                <span class="dot neutral"></span>
+                <div class="grade-chip">${g.value}</div>
                 <div class="body">
                   <div class="row1">
-                    <span>${g.subject ?? ""}</span>
+                    <span>${g.subject}${g.category ? html` · <span class="cat-label">${g.category}</span>` : nothing}</span>
                     ${g.date ? html`<time>${formatShortDate(g.date, hass.language)}</time>` : nothing}
                   </div>
-                  <div class="item-text">${g.value}</div>
+                  ${g.teacher ? html`<div class="item-text">${g.teacher}</div>` : nothing}
+                  ${g.comments.length ? html`<div class="quote">${g.comments.join(" · ")}</div>` : nothing}
                 </div>
               </div>
             `
@@ -82,7 +79,26 @@ export class LibrusDescriptiveGradesCard extends LibrusBaseCard {
     `;
   }
 
-  static styles = [librusTokens, librusSharedStyles];
+  static styles = [
+    librusTokens,
+    librusSharedStyles,
+    css`
+      .grade-chip {
+        flex: none;
+        min-width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        background: var(--lc-brand-bg);
+        color: var(--lc-brand-strong);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.78rem;
+        padding: 0 4px;
+      }
+    `,
+  ];
 }
 
 declare global {
