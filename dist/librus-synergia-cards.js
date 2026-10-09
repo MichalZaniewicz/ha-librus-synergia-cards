@@ -3423,7 +3423,7 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
         <div class="item-text"><b>${a.topic}</b></div>
         <div class="full-text">${a.content}</div>
         ${a.attachments?.length&&"archive"===this._mailbox?W`
-              <div class="attachments">
+              <div class="attachments" @click=${e=>e.stopPropagation()}>
                 ${a.attachments.map(e=>W`<div class="attachment archived">
                     <ha-icon icon="mdi:paperclip"></ha-icon>
                     <span class="attachment-name">${e.filename??e.id}</span>

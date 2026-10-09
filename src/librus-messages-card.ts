@@ -163,7 +163,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
         <div class="full-text">${full.content}</div>
         ${full.attachments?.length && this._mailbox === "archive"
           ? html`
-              <div class="attachments">
+              <div class="attachments" @click=${(ev: Event) => ev.stopPropagation()}>
                 ${full.attachments.map(
                   (a) => html`<div class="attachment archived">
                     <ha-icon icon="mdi:paperclip"></ha-icon>
