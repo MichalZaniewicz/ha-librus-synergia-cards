@@ -391,8 +391,8 @@
       ],
       // Sent messages and the archive (newer integration). Made-up people.
       outbox_recent: [
-        { id: "9101", mailbox: "outbox", sender: "", receiver: "Nowak Anna", topic: "Pytanie o zebranie", content: "Dzień dobry, czy zebranie odbędzie się w sali 12?", date: iso(new Date(today.getTime() - 1 * 86400000)), unread: false, has_attachment: false },
-        { id: "9102", mailbox: "outbox", sender: "", receiver: "Zielińska Maria", topic: "Nieobecność", content: "Zosia jutro będzie nieobecna z powodu wizyty u lekarza.", date: iso(new Date(today.getTime() - 5 * 86400000)), unread: false, has_attachment: false },
+        { id: "9101", mailbox: "outbox", sender: "", receiver: "Nowak Anna", topic: "Pytanie o zebranie", content: "Dzień dobry, czy zebranie odbędzie się w sali 12?", date: iso(new Date(today.getTime() - 1 * 86400000)), unread: false, has_attachment: false, read_by: ["Anna Nowak"], read_count: 1, receivers_count: 1 },
+        { id: "9102", mailbox: "outbox", sender: "", receiver: "Zielińska Maria", topic: "Nieobecność", content: "Zosia jutro będzie nieobecna z powodu wizyty u lekarza.", date: iso(new Date(today.getTime() - 5 * 86400000)), unread: false, has_attachment: false, read_by: [], read_count: 0, receivers_count: 1 },
       ],
       // Mailboxes this account doesn't have - the card hides their chips.
       missing_mailboxes: ["trash"],

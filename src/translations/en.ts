@@ -242,6 +242,9 @@ export const en = {
   "card.messages.attachment_notice": "Tap a file to download it to this device",
   "card.messages.attachment_error": "couldn't download - needs integration 0.12.0+",
   "card.messages.to": "To {name}",
+  "card.messages.read_all": "Read",
+  "card.messages.read_some": "Read by {read} of {total}",
+  "card.messages.read_none": "Not read yet",
   "card.messages.empty": "No messages here",
 
   "card.substitutions.title": "Substitutions, alerts & justifications",

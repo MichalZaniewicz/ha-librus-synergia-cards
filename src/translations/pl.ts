@@ -243,6 +243,9 @@ export const pl: Record<keyof typeof en, string> = {
   "card.messages.attachment_notice": "Kliknij plik, aby pobrać go na to urządzenie",
   "card.messages.attachment_error": "nie udało się pobrać - wymaga integracji 0.12.0+",
   "card.messages.to": "Do: {name}",
+  "card.messages.read_all": "Przeczytana",
+  "card.messages.read_some": "Przeczytana przez {read} z {total}",
+  "card.messages.read_none": "Jeszcze nieprzeczytana",
   "card.messages.empty": "Brak wiadomości",
 
   "card.substitutions.title": "Zastępstwa, alerty i usprawiedliwienia",

@@ -21,6 +21,10 @@ interface RecentMessage {
   date: string | null;
   unread: boolean;
   has_attachment: boolean;
+  /** Sent messages from the last 30 days (integration 0.12.5+): who has read it. */
+  read_by?: string[];
+  read_count?: number;
+  receivers_count?: number;
 }
 
 /** Which sensor attribute holds each mailbox's preview list. */
@@ -271,6 +275,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
                           >
                           ${m.date ? html`<time>${formatShortDate(m.date, hass.language)}</time>` : nothing}
                         </div>
+                        ${this._renderReadState(m)}
                         ${this._renderMessageBody(m)}
                       </div>
                     </div>
@@ -283,10 +288,44 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     `;
   }
 
+  /** A sent message's read receipt: read by everyone, by some, or not yet. */
+  private _renderReadState(m: RecentMessage): TemplateResult | typeof nothing {
+    const total = m.receivers_count;
+    if (!m.receiver || total === undefined || total === 0) return nothing;
+    const hass = this.hass!;
+    const read = m.read_count ?? 0;
+    const names = (m.read_by ?? []).join(", ");
+    if (read >= total) {
+      return html`<div class="read-state all" title=${names}>
+        <ha-icon icon="mdi:check-all"></ha-icon>${t(hass, "card.messages.read_all")}
+      </div>`;
+    }
+    if (read > 0) {
+      return html`<div class="read-state some" title=${names}>
+        <ha-icon icon="mdi:check"></ha-icon>${t(hass, "card.messages.read_some", { read, total })}
+      </div>`;
+    }
+    return html`<div class="read-state">${t(hass, "card.messages.read_none")}</div>`;
+  }
+
   static styles = [
     librusTokens,
     librusSharedStyles,
     css`
+      .read-state {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.72rem;
+        color: var(--secondary-text-color);
+        margin-top: 2px;
+      }
+      .read-state ha-icon {
+        --mdc-icon-size: 14px;
+      }
+      .read-state.all {
+        color: var(--lc-good);
+      }
       .list-item.clickable {
         cursor: pointer;
       }
