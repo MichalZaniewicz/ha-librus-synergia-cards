@@ -122,7 +122,7 @@ export class LibrusReportCardCard extends LibrusBaseCard {
           ${rows.map(
             (r) => html`
               <div
-                class="tile ${r.at_risk ? "bad" : r.declining ? "warn" : r.predicted === 6 ? "six" : ""}"
+                class="tile g${r.predicted} ${r.at_risk ? "bad" : r.declining ? "warn" : ""}"
                 title=${`${r.subject}: ${fmt(r.average)}`}
               >
                 <div class="g">${r.predicted}${r.declining ? "↓" : ""}</div>
@@ -284,8 +284,17 @@ export class LibrusReportCardCard extends LibrusBaseCard {
         color: var(--secondary-text-color);
         font-variant-numeric: tabular-nums;
       }
-      .tile.six .g {
+      /* The digit's colour follows the grade; the background marks risk
+         (red) or a falling forecast (amber). */
+      .tile.g6 .g {
         color: var(--lc-good);
+      }
+      .tile.g3 .g {
+        color: var(--lc-warn);
+      }
+      .tile.g1 .g,
+      .tile.g2 .g {
+        color: var(--lc-bad);
       }
       .tile.warn {
         background: var(--lc-warn-bg);

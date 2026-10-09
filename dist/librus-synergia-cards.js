@@ -3281,7 +3281,7 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
         <div class="tiles">
           ${s.map(e=>W`
               <div
-                class="tile ${e.at_risk?"bad":e.declining?"warn":6===e.predicted?"six":""}"
+                class="tile g${e.predicted} ${e.at_risk?"bad":e.declining?"warn":""}"
                 title=${`${e.subject}: ${l(e.average)}`}
               >
                 <div class="g">${e.predicted}${e.declining?"↓":""}</div>
@@ -3415,8 +3415,17 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
         color: var(--secondary-text-color);
         font-variant-numeric: tabular-nums;
       }
-      .tile.six .g {
+      /* The digit's colour follows the grade; the background marks risk
+         (red) or a falling forecast (amber). */
+      .tile.g6 .g {
         color: var(--lc-good);
+      }
+      .tile.g3 .g {
+        color: var(--lc-warn);
+      }
+      .tile.g1 .g,
+      .tile.g2 .g {
+        color: var(--lc-bad);
       }
       .tile.warn {
         background: var(--lc-warn-bg);
