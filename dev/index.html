@@ -322,7 +322,32 @@
     addEntity("sensor.attendance_streak", "attendance_streak", {}, 18);
     addEntity("sensor.behaviour_streak", "behaviour_streak", {}, 42);
     addEntity("sensor.good_grade_streak", "good_grade_streak", {}, 7);
-    addEntity("sensor.rank", "rank", { average: 4.68, points_to_next_tier: 0.32 }, "gold");
+    // Badges (made-up), the shape of the Rank sensor's `badges` attribute.
+    const badge = (key, title, icon, tiers, earned, value = null, target = null, unit = null) =>
+      ({ key, title, icon, tiers, earned, value, target, unit });
+    const BADGES = [
+      badge("first_six", "Pierwsza szóstka", "mdi:numeric-6-box", null, ["2026-09-12"]),
+      badge("sixes", "Kolekcjoner szóstek", "mdi:star-shooting", [5, 10, 25], ["2026-09-29"], 7, null, "grades"),
+      badge("good_grade_streak", "Seria dobrych ocen", "mdi:fire", [5, 10, 20], ["2026-09-18", "2026-10-03"], 12, null, "grades"),
+      badge("hat_trick", "Hat-trick", "mdi:crown", null, [], 2, 3, "grades"),
+      badge("test_ace", "Sprawdzian na 5+", "mdi:certificate", null, ["2026-10-08"]),
+      badge("subject_star", "Prymus przedmiotu", "mdi:school", null, ["2026-10-06"], 5.62, 5.5, "average"),
+      badge("honours", "Świadectwo z paskiem", "mdi:medal", null, [], 4.68, 4.75, "average"),
+      badge("comeback", "Comeback", "mdi:arrow-up-bold-circle", null, []),
+      badge("no_ones", "Semestr bez jedynki", "mdi:check-decagram", null, [], 39, 152, "days"),
+      badge("attendance_streak", "Bez nieobecności", "mdi:calendar-check", [7, 30, 90], ["2026-09-09"], 24, null, "days"),
+      badge("full_month", "100% w miesiącu", "mdi:calendar-star", null, ["2026-09-30"]),
+      badge("punctual", "Punktualność", "mdi:clock-check-outline", null, [], 21, 30, "days"),
+      badge("subject_attendance", "Wzorowa frekwencja z przedmiotu", "mdi:run-fast", null, ["2026-10-02"], 20, 20, "lessons"),
+      badge("behaviour_streak", "Bez uwagi", "mdi:shield-star", [7, 30, 90], ["2026-09-08", "2026-10-01"], 38, null, "days"),
+      badge("praise", "Pochwała", "mdi:thumb-up", null, ["2026-09-15"]),
+      badge("praises", "Seria pochwał", "mdi:cards-playing-heart-multiple", [3, 5], [], 2, null, "notes"),
+      badge("exemplary_behaviour", "Wzorowe zachowanie", "mdi:medal-outline", null, []),
+      badge("lucky", "Szczęśliwy numerek", "mdi:clover", null, []),
+      badge("homework", "Pracowitość", "mdi:checkbox-marked-circle-outline", [10, 25], [], 4, null, "tasks"),
+      badge("school_year", "Rok ukończony", "mdi:flag-checkered", null, [], 39, 297, "days"),
+    ];
+    addEntity("sensor.rank", "rank", { average: 4.68, points_to_next_tier: 0.32, badges: BADGES }, "gold");
     // CONFIRMED live (2026-09-06): Librus can publish the NEXT school
     // day's number a day ahead - shown here exactly as observed live on
     // a Sunday (today has no school, "4" is actually Monday's number).

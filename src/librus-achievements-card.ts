@@ -20,6 +20,17 @@ interface AchievementEventData {
   id: string;
   title: string;
 }
+/** One badge from the Rank sensor's `badges` attribute (integration 0.12.5+). */
+interface BadgeInfo {
+  key: string;
+  title: string;
+  icon: string;
+  tiers: number[] | null;
+  earned: string[];
+  value: number | null;
+  target: number | null;
+  unit: string | null;
+}
 interface UnlockedAchievement {
   id: string;
   title: string;
@@ -199,6 +210,9 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
     const { deviceId, map } = resolved;
     const hass = this.hass;
 
+    const badges = (map.rank ? hass.states[map.rank]?.attributes.badges : undefined) as BadgeInfo[] | undefined;
+    if (Array.isArray(badges) && badges.length) return this._renderBadges(hass, badges);
+
     this._load(deviceId);
     void this._subscribe(deviceId);
 
@@ -252,6 +266,106 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
     `;
   }
 
+  private _badgeName(hass: LibrusHass, b: BadgeInfo, tierIndex?: number): string {
+    const name = t(hass, `badge.${b.key}` as TranslationKey) ?? b.title;
+    return tierIndex !== undefined && b.tiers ? `${name} · ${b.tiers[tierIndex]}` : name;
+  }
+
+  private _number(hass: LibrusHass, value: number, unit: string | null): string {
+    return unit === "average"
+      ? value.toLocaleString(hass.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : String(Math.round(value));
+  }
+
+  /** Progress towards the badge's next tier; undefined when complete or unknown. */
+  private _goal(b: BadgeInfo): { target: number; ratio: number } | undefined {
+    const done = b.earned.length >= (b.tiers?.length ?? 1);
+    const target = b.tiers ? b.tiers[b.earned.length] : b.target;
+    if (done || target === undefined || target === null || b.value === null || !(target > 0)) return undefined;
+    return { target, ratio: Math.max(0, Math.min(1, b.value / target)) };
+  }
+
+  private _dateLabel(hass: LibrusHass, iso: string): string {
+    const day = new Date(`${iso.slice(0, 10)}T12:00:00`);
+    return Number.isNaN(day.getTime())
+      ? iso
+      : day.toLocaleDateString(hass.language, { day: "numeric", month: "short" });
+  }
+
+  /** Every earned badge, the three closest goals and the latest earned. */
+  private _renderBadges(hass: LibrusHass, badges: BadgeInfo[]): TemplateResult {
+    const total = badges.reduce((n, b) => n + (b.tiers?.length ?? 1), 0);
+    const earnedCount = badges.reduce((n, b) => n + b.earned.length, 0);
+    const earned = badges.filter((b) => b.earned.length > 0);
+    const goals = badges
+      .map((b) => ({ b, goal: this._goal(b) }))
+      .filter((g): g is { b: BadgeInfo; goal: { target: number; ratio: number } } => !!g.goal && g.goal.ratio > 0)
+      .sort((x, y) => y.goal.ratio - x.goal.ratio)
+      .slice(0, 3);
+    const recent = badges
+      .flatMap((b) => b.earned.map((day, i) => ({ b, day, i })))
+      .sort((x, y) => y.day.localeCompare(x.day))
+      .slice(0, 3);
+    const subtitle = goals.length
+      ? t(hass, "card.achievements.closest", { title: this._badgeName(hass, goals[0].b) })
+      : t(hass, "card.achievements.count", { n: earnedCount });
+    const daysUnit = t(hass, "card.achievements.days");
+
+    return html`
+      <ha-card>
+        <div class="header">
+          <div class="icon-badge amber"><ha-icon icon="mdi:trophy"></ha-icon></div>
+          <div class="title-block">
+            <div class="title">${this._config?.title ?? t(hass, "card.achievements.title")}</div>
+            <div class="subtitle">${subtitle}</div>
+          </div>
+          <div class="sum"><b>${earnedCount}</b><span>${t(hass, "card.achievements.of", { n: total })}</span></div>
+        </div>
+        <div class="bar"><i style="width:${total ? Math.round((earnedCount / total) * 100) : 0}%"></i></div>
+        ${earned.length
+          ? html`<div class="strip">
+              ${earned.map((b) => {
+                const tier = b.tiers ? b.earned.length - 1 : undefined;
+                return html`<span class="strip-ic" title=${this._badgeName(hass, b, tier)}
+                  ><ha-icon icon=${b.icon}></ha-icon
+                ></span>`;
+              })}
+            </div>`
+          : html`<div class="none">${t(hass, "card.achievements.none_yet")}</div>`}
+        ${goals.length
+          ? html`<div class="section-title">${t(hass, "card.achievements.goals")}</div>
+              <div class="goals">
+                ${goals.map(
+                  ({ b, goal }) => html`<div class="goal">
+                    <span class="goal-ic"><ha-icon icon=${b.icon}></ha-icon></span>
+                    <div class="goal-body">
+                      <div class="goal-name">${this._badgeName(hass, b)}</div>
+                      <div class="bar"><i style="width:${Math.round(goal.ratio * 100)}%"></i></div>
+                    </div>
+                    <span class="goal-val"
+                      >${this._number(hass, b.value ?? 0, b.unit)} /
+                      ${this._number(hass, goal.target, b.unit)}${b.unit === "days" ? ` ${daysUnit}` : ""}</span
+                    >
+                  </div>`
+                )}
+              </div>`
+          : nothing}
+        ${recent.length
+          ? html`<div class="recent">
+              <div class="section-title">${t(hass, "card.achievements.recent")}</div>
+              ${recent.map(
+                ({ b, day, i }) => html`<div class="recent-row">
+                  <ha-icon icon=${b.icon}></ha-icon>
+                  <span>${this._badgeName(hass, b, b.tiers ? i : undefined)}</span>
+                  <time>${this._dateLabel(hass, day)}</time>
+                </div>`
+              )}
+            </div>`
+          : nothing}
+      </ha-card>
+    `;
+  }
+
   static styles = [
     librusTokens,
     librusSharedStyles,
@@ -271,6 +385,118 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
         border-top: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2));
         font-size: 0.78rem;
         color: var(--secondary-text-color);
+      }
+      .sum {
+        margin-left: auto;
+        text-align: right;
+        line-height: 1.1;
+      }
+      .sum b {
+        font-size: 1.3rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      .sum span {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--secondary-text-color);
+      }
+      .bar {
+        height: 6px;
+        border-radius: 99px;
+        background: var(--lc-ring-track);
+        overflow: hidden;
+      }
+      .bar > i {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--lc-brand);
+      }
+      .strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 12px;
+      }
+      .strip-ic {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: var(--lc-amber-bg);
+        color: var(--lc-amber);
+        --mdc-icon-size: 19px;
+      }
+      .none {
+        margin-top: 12px;
+        font-size: 0.8rem;
+        color: var(--secondary-text-color);
+      }
+      .section-title {
+        margin: 14px 0 8px;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--secondary-text-color);
+      }
+      .goals {
+        display: grid;
+        gap: 10px;
+      }
+      .goal {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+      }
+      .goal-ic {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        background: var(--lc-chip-bg);
+        color: var(--secondary-text-color);
+        --mdc-icon-size: 17px;
+      }
+      .goal-name {
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .goal-val {
+        font-size: 0.74rem;
+        color: var(--secondary-text-color);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .recent {
+        margin-top: 14px;
+        border-top: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2));
+      }
+      .recent-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        padding: 3px 0;
+      }
+      .recent-row ha-icon {
+        --mdc-icon-size: 16px;
+        color: var(--lc-good);
+        flex-shrink: 0;
+      }
+      .recent-row time {
+        margin-left: auto;
+        color: var(--secondary-text-color);
+        font-size: 0.74rem;
+        white-space: nowrap;
       }
       .next-hint ha-icon {
         --mdc-icon-size: 16px;

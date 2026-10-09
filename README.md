@@ -98,7 +98,7 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Student card | `custom:librus-student-card` | A playful trading-card style summary computed from attendance/behaviour/grades/activity |
 | Streaks | `custom:librus-streak-card` | Three "passy": days without an absence, days without a negative behaviour note, consecutive good grades in a row (requires `ha-librus-synergia` 0.6.0+ for the two new ones - falls back to the old attendance-only computation on an older backend) |
 | Rank | `custom:librus-rank-card` | Cosmetic Bronze/Silver/Gold/Diamond tier from your overall average, as a progress ring toward the next one up (requires `ha-librus-synergia` 0.6.0+) |
-| Achievements | `custom:librus-achievements-card` | A trophy case for the `librus_synergia_achievement_unlocked` event (requires `ha-librus-synergia` 0.6.0+) - there's no backend sensor listing achievement history, so this card subscribes to the event bus directly and keeps its own list in `localStorage`. Only grows going forward from whenever the card is first added; earlier achievements can't be recovered. Also shows a "N more to: ..." hint for the nearest un-unlocked streak milestone, computed live from the current streak sensors |
+| Achievements | `custom:librus-achievements-card` | Every badge earned (20 badges, several with tiers - sixes, good-grade, attendance and behaviour streaks, a full month at school, a test at 5+, and more), the three closest goals with progress bars and the latest earned with their dates. Badges come from the Rank sensor's `badges` attribute (`ha-librus-synergia` 0.12.5+), counted from the whole school year, so ones earned before the card was added show too. With an older integration the card falls back to the events it saw in this browser |
 | Teachers | `custom:librus-teachers-card` | Homeroom teacher plus every subject teacher, one directory in one place (requires `ha-librus-synergia` 0.6.0+ for the `subject_teachers` attribute) |
 | Level | `custom:librus-level-card` | A pure-fun XP meter, separate from Rank - it only ever goes up (XP for every grade ever recorded, more for a good one, plus attendance), computed entirely client-side, no backend change needed |
 | Hero | `custom:librus-hero-card` | One deterministic result computed from subject averages, attendance, behaviour and streaks - never random, same data always gives the same answer. "Mode" in the card's editor picks the tone: a school-counsellor-style **Archetype** (e.g. "Naukowiec") or an RPG-flavoured **Hero** (e.g. "Archimag") for the exact same underlying result. Every name/description is written to a fixed length so the card's height never changes across any of the 12 possible results |
@@ -274,13 +274,11 @@ sensor state - `src/utils/calendar.ts` normalizes both response shapes HA has sh
 defensively, since which one a given HA version sends wasn't verified against every version this
 repo might run on.
 
-The Achievements card is the one card that reads the WebSocket event bus directly
-(`hass.connection.subscribeEvents`) instead of entity state - `librus_synergia_achievement_unlocked`
-has no backing sensor to read history from, only the individual event firings, so the card
-maintains its own running list in `localStorage`. Because that event fires domain-wide (every
-configured student, not just the one this card's `device_id` points at), the card filters incoming
-events by matching `event.entry_id` against `hass.devices[deviceId].config_entries` - otherwise a
-multi-student household's cards would cross-pollinate each other's achievements.
+The Achievements card reads the Rank sensor's `badges` attribute (integration 0.12.5+): every
+badge with its tiers, the date each tier was earned and the progress towards the next one. With an
+older integration it falls back to the `librus_synergia_achievement_unlocked` event bus
+(`hass.connection.subscribeEvents`), keeping a list in `localStorage` and filtering events by the
+card's own config entry, so a multi-student household's cards don't mix achievements.
 
 ## Disclaimer
 
