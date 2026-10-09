@@ -430,48 +430,44 @@ export class LibrusCardEditor extends LitElement {
       return html`${findLibrusDeviceIds(hass).map((id) => {
         const device = hass.devices?.[id];
         return html`
-          <ha-textfield
-            label=${t(hass, "editor.student_name", { device: device?.name_by_user || device?.name || id })}
-            .value=${config.names?.[id] ?? ""}
-            @change=${(ev: Event) => this._onName(id, (ev.target as HTMLInputElement).value)}
-          ></ha-textfield>
+          ${this._input(
+            t(hass, "editor.student_name", { device: device?.name_by_user || device?.name || id }),
+            config.names?.[id] ?? "",
+            (value) => this._onName(id, value)
+          )}
         `;
       })}`;
     }
     if (field.kind === "text") {
-      return html`
-        <ha-textfield
-          label=${t(hass, field.label)}
-          .value=${(config[field.key] as string | undefined) ?? ""}
-          @change=${(ev: Event) => this._onText(field.key, (ev.target as HTMLInputElement).value)}
-        ></ha-textfield>
-      `;
+      return this._input(t(hass, field.label), (config[field.key] as string | undefined) ?? "", (value) =>
+        this._onText(field.key, value)
+      );
     }
     if (field.kind === "boolean") {
+      const onChange = (ev: Event): void =>
+        this._patch({ [field.key]: (ev.target as HTMLInputElement).checked || undefined });
+      // The frontend is dropping <ha-formfield> (PR #54200, after 2026.10):
+      // the switch then takes its label as content.
+      if (!customElements.get("ha-formfield")) {
+        return html`
+          <ha-switch .checked=${Boolean(config[field.key])} @change=${onChange}
+            >${t(hass, field.label)}</ha-switch
+          >
+        `;
+      }
       return html`
         <ha-formfield label=${t(hass, field.label)}>
-          <ha-switch
-            .checked=${Boolean(config[field.key])}
-            @change=${(ev: Event) =>
-              this._patch({ [field.key]: (ev.target as HTMLInputElement).checked || undefined })}
-          ></ha-switch>
+          <ha-switch .checked=${Boolean(config[field.key])} @change=${onChange}></ha-switch>
         </ha-formfield>
       `;
     }
     if (field.kind === "number") {
-      return html`
-        <ha-textfield
-          type="number"
-          no-spinner
-          label=${t(hass, field.label)}
-          min=${field.min}
-          max=${field.max}
-          step=${field.float ? "0.05" : "1"}
-          .value=${config[field.key] !== undefined ? String(config[field.key]) : ""}
-          @change=${(ev: Event) =>
-            this._onNumber(field, (ev.target as HTMLInputElement).value)}
-        ></ha-textfield>
-      `;
+      return this._input(
+        t(hass, field.label),
+        config[field.key] !== undefined ? String(config[field.key]) : "",
+        (value) => this._onNumber(field, value),
+        { type: "number", min: field.min, max: field.max, step: field.float ? "0.05" : "1" }
+      );
     }
     // select
     return html`
@@ -491,6 +487,80 @@ export class LibrusCardEditor extends LitElement {
           (o) => html`<ha-list-item .value=${o.value}>${t(hass, o.label)}</ha-list-item>`
         )}
       </ha-select>
+    `;
+  }
+
+  /**
+   * A text/number field. Home Assistant 2026.4 removed `<ha-textfield>`
+   * (frontend PR #30349, "Migrate all from ha-textfield to ha-input") - an
+   * undefined element renders nothing, which is how every text field of
+   * this editor silently disappeared (found live). Use whichever exists:
+   * `<ha-input>` (2026.4+), `<ha-textfield>` (older), or a plain `<input>`.
+   * The value is committed when the field is left, on Enter, or on
+   * `change` - not on every keystroke, so a number's min/max clamp doesn't
+   * fight the typing.
+   */
+  private _input(
+    label: string,
+    value: string,
+    commit: (value: string) => void,
+    opts: { type?: "number"; min?: number; max?: number; step?: string } = {}
+  ): TemplateResult {
+    let last = value;
+    const done = (ev: Event): void => {
+      const next = String((ev.currentTarget as { value?: unknown } | null)?.value ?? "");
+      if (next === last) return;
+      last = next;
+      commit(next);
+    };
+    const onKey = (ev: KeyboardEvent): void => {
+      if (ev.key === "Enter") done(ev);
+    };
+    if (customElements.get("ha-input")) {
+      return html`
+        <ha-input
+          .label=${label}
+          .value=${value}
+          .type=${opts.type ?? "text"}
+          .min=${opts.min}
+          .max=${opts.max}
+          .step=${opts.step}
+          ?without-spin-buttons=${opts.type === "number"}
+          @change=${done}
+          @focusout=${done}
+          @keydown=${onKey}
+        ></ha-input>
+      `;
+    }
+    if (customElements.get("ha-textfield")) {
+      return html`
+        <ha-textfield
+          label=${label}
+          .value=${value}
+          type=${opts.type ?? "text"}
+          ?no-spinner=${opts.type === "number"}
+          min=${opts.min ?? ""}
+          max=${opts.max ?? ""}
+          step=${opts.step ?? ""}
+          @change=${done}
+          @focusout=${done}
+          @keydown=${onKey}
+        ></ha-textfield>
+      `;
+    }
+    return html`
+      <label class="plain">
+        <span>${label}</span>
+        <input
+          .value=${value}
+          type=${opts.type ?? "text"}
+          min=${opts.min ?? ""}
+          max=${opts.max ?? ""}
+          step=${opts.step ?? ""}
+          @change=${done}
+          @keydown=${onKey}
+        />
+      </label>
     `;
   }
 
@@ -577,8 +647,24 @@ export class LibrusCardEditor extends LitElement {
       padding: 4px 0;
     }
     ha-select,
+    ha-input,
     ha-textfield {
       width: 100%;
+    }
+    label.plain {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+      color: var(--secondary-text-color);
+    }
+    label.plain input {
+      font: inherit;
+      color: var(--primary-text-color);
+      background: var(--card-background-color, transparent);
+      border: 1px solid var(--divider-color);
+      border-radius: 6px;
+      padding: 8px 10px;
     }
     hr.sep {
       border: none;

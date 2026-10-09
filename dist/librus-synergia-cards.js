@@ -70,7 +70,7 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
         <hr class="sep" />
         ${this._commonFields.map(e=>this._renderField(e))}
       </div>
-    `}_renderField(e){if("subject"===e.kind)return G;const t=this.hass,a=this._config;return"action"===e.kind?R`
+    `}_renderField(e){if("subject"===e.kind)return G;const t=this.hass,a=this._config;if("action"===e.kind)return R`
         <ha-selector
           .hass=${t}
           .selector=${{ui_action:{}}}
@@ -78,37 +78,17 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
           .value=${a.tap_action}
           @value-changed=${e=>this._patch({tap_action:e.detail.value||void 0})}
         ></ha-selector>
-      `:"names"===e.kind?R`${fe(t).map(e=>{const s=t.devices?.[e];return R`
-          <ha-textfield
-            label=${je(t,"editor.student_name",{device:s?.name_by_user||s?.name||e})}
-            .value=${a.names?.[e]??""}
-            @change=${t=>this._onName(e,t.target.value)}
-          ></ha-textfield>
-        `})}`:"text"===e.kind?R`
-        <ha-textfield
-          label=${je(t,e.label)}
-          .value=${a[e.key]??""}
-          @change=${t=>this._onText(e.key,t.target.value)}
-        ></ha-textfield>
-      `:"boolean"===e.kind?R`
+      `;if("names"===e.kind)return R`${fe(t).map(e=>{const s=t.devices?.[e];return R`
+          ${this._input(je(t,"editor.student_name",{device:s?.name_by_user||s?.name||e}),a.names?.[e]??"",t=>this._onName(e,t))}
+        `})}`;if("text"===e.kind)return this._input(je(t,e.label),a[e.key]??"",t=>this._onText(e.key,t));if("boolean"===e.kind){const s=t=>this._patch({[e.key]:t.target.checked||void 0});return customElements.get("ha-formfield")?R`
         <ha-formfield label=${je(t,e.label)}>
-          <ha-switch
-            .checked=${Boolean(a[e.key])}
-            @change=${t=>this._patch({[e.key]:t.target.checked||void 0})}
-          ></ha-switch>
+          <ha-switch .checked=${Boolean(a[e.key])} @change=${s}></ha-switch>
         </ha-formfield>
-      `:"number"===e.kind?R`
-        <ha-textfield
-          type="number"
-          no-spinner
-          label=${je(t,e.label)}
-          min=${e.min}
-          max=${e.max}
-          step=${e.float?"0.05":"1"}
-          .value=${void 0!==a[e.key]?String(a[e.key]):""}
-          @change=${t=>this._onNumber(e,t.target.value)}
-        ></ha-textfield>
       `:R`
+          <ha-switch .checked=${Boolean(a[e.key])} @change=${s}
+            >${je(t,e.label)}</ha-switch
+          >
+        `}return"number"===e.kind?this._input(je(t,e.label),void 0!==a[e.key]?String(a[e.key]):"",t=>this._onNumber(e,t),{type:"number",min:e.min,max:e.max,step:e.float?"0.05":"1"}):R`
       <ha-select
         label=${je(t,e.label)}
         .value=${a[e.key]??e.options[0].value}
@@ -120,6 +100,45 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
       >
         ${e.options.map(e=>R`<ha-list-item .value=${e.value}>${je(t,e.label)}</ha-list-item>`)}
       </ha-select>
+    `}_input(e,t,a,s={}){let i=t;const r=e=>{const t=String(e.currentTarget?.value??"");t!==i&&(i=t,a(t))},o=e=>{"Enter"===e.key&&r(e)};return customElements.get("ha-input")?R`
+        <ha-input
+          .label=${e}
+          .value=${t}
+          .type=${s.type??"text"}
+          .min=${s.min}
+          .max=${s.max}
+          .step=${s.step}
+          ?without-spin-buttons=${"number"===s.type}
+          @change=${r}
+          @focusout=${r}
+          @keydown=${o}
+        ></ha-input>
+      `:customElements.get("ha-textfield")?R`
+        <ha-textfield
+          label=${e}
+          .value=${t}
+          type=${s.type??"text"}
+          ?no-spinner=${"number"===s.type}
+          min=${s.min??""}
+          max=${s.max??""}
+          step=${s.step??""}
+          @change=${r}
+          @focusout=${r}
+          @keydown=${o}
+        ></ha-textfield>
+      `:R`
+      <label class="plain">
+        <span>${e}</span>
+        <input
+          .value=${t}
+          type=${s.type??"text"}
+          min=${s.min??""}
+          max=${s.max??""}
+          step=${s.step??""}
+          @change=${r}
+          @keydown=${o}
+        />
+      </label>
     `}static _selectValue(e){const t=e.detail;if(t&&void 0!==t.value)return String(t.value);const a=e.currentTarget;return a?.value??""}_pickDevice(e){const t=Se._selectValue(e);t&&t!==this._config?.device_id&&this._patch({device_id:t})}_pickSubject(e){const t=Se._selectValue(e),a=""===t?void 0:Number(t);a!==this._config?.subject_id&&this._patch({subject_id:Number.isNaN(a)?void 0:a})}_pickSelect(e,t){const a=Se._selectValue(t);if(!a)return;a!==(this._config?.[e.key]??e.options[0].value)&&this._patch({[e.key]:a===e.options[0].value?void 0:a})}_onName(e,t){const a={...this._config?.names??{}};t.trim()?a[e]=t.trim():delete a[e],this._patch({names:Object.keys(a).length?a:void 0})}_onText(e,t){this._patch({[e]:t.trim()||void 0})}_onNumber(e,t){const a=e.float?Number.parseFloat(t):Number.parseInt(t,10);if(Number.isNaN(a))return void this._patch({[e.key]:void 0});const s=Math.min(e.max,Math.max(e.min,a));this._patch({[e.key]:e.float?Math.round(100*s)/100:s})}_patch(e){if(!this._config)return;const t={...this._config,...e};for(const[a,s]of Object.entries(e))void 0===s&&delete t[a];this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:t},bubbles:!0,composed:!0}))}};function We(e){const t=new Date(e);return Number.isNaN(t.getTime())?"":t.toLocaleTimeString(void 0,{hour:"2-digit",minute:"2-digit"})}function Re(e,t){const a=new Date(`${e.slice(0,10)}T00:00:00`);return Number.isNaN(a.getTime())?e:a.toLocaleDateString(t,{day:"numeric",month:"short"})}function He(e,t){const a=Date.UTC(e.getFullYear(),e.getMonth(),e.getDate()),s=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());return Math.round((s-a)/864e5)}function qe(e,t){return Math.max(0,Math.floor((e.getTime()-t.getTime())/6e4))}function Ge(e){if(null==e)return null;const t=Number(e);return Number.isFinite(t)?t:null}Ue.styles=o`
     .form {
       display: flex;
@@ -128,8 +147,24 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
       padding: 4px 0;
     }
     ha-select,
+    ha-input,
     ha-textfield {
       width: 100%;
+    }
+    label.plain {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+      color: var(--secondary-text-color);
+    }
+    label.plain input {
+      font: inherit;
+      color: var(--primary-text-color);
+      background: var(--card-background-color, transparent);
+      border: 1px solid var(--divider-color);
+      border-radius: 6px;
+      padding: 8px 10px;
     }
     hr.sep {
       border: none;
