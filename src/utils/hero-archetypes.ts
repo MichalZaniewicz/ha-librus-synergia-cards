@@ -344,8 +344,10 @@ export function readHeroHistory(deviceId: string): HeroHistoryEntry[] {
 
 /**
  * How many achievements the student has. The integration's Rank sensor
- * (0.12.5+) is the source of truth: the sum of `badges[].earned` (every
- * earned tier), else the length of its `achievements` list. Without either
+ * (0.12.5+) is the source of truth: the number of distinct `badges` with at
+ * least one earned tier (a badge's higher tiers don't count again, so one
+ * long streak can't make a "collector"), else the length of its
+ * `achievements` list. Without either
  * attribute (an older integration), falls back to a read-only peek at
  * `librus-achievements-card`'s own localStorage list
  * (`librus-achievements:<deviceId>`) - a deliberate, soft coupling: if that
@@ -358,10 +360,7 @@ export function readHeroHistory(deviceId: string): HeroHistoryEntry[] {
 export function readAchievementCount(deviceId: string, rankAttributes?: Record<string, unknown>): number {
   const badges = rankAttributes?.badges;
   if (Array.isArray(badges) && badges.length) {
-    return badges.reduce(
-      (n: number, b: { earned?: unknown }) => n + (Array.isArray(b?.earned) ? b.earned.length : 0),
-      0
-    );
+    return badges.filter((b: { earned?: unknown }) => Array.isArray(b?.earned) && b.earned.length > 0).length;
   }
   const achievements = rankAttributes?.achievements;
   if (Array.isArray(achievements) && achievements.length) return achievements.length;

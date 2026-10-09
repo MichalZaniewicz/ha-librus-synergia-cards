@@ -105,6 +105,26 @@ export abstract class LibrusBaseCard extends LitElement {
     return generation === this._fetchGeneration;
   }
 
+  // The range key (the cache key without the data stamp: entity, dates,
+  // options) of the result the card currently shows - see _keepAfterError().
+  private _goodRange?: string;
+
+  /** Call once a successful fetch for `range` has been applied. */
+  protected _fetchSucceeded(range: string): void {
+    this._goodRange = range;
+  }
+
+  /**
+   * After a failed fetch for `range`: true if the result on screen is for
+   * the same range (a refresh after a new Librus update or the periodic
+   * one), so a passing error keeps it instead of blanking the card. False
+   * if it belongs to another day, week or student (or nothing loaded yet) -
+   * then the card clears it rather than show the wrong data.
+   */
+  protected _keepAfterError(range: string): boolean {
+    return this._goodRange === range;
+  }
+
   // Memoizes _resolveAllByTranslationKey()'s results, same reasoning and
   // same `hass.entities` reference-identity keying as `_resolvedCache`
   // above (see its comment) - `mapAllByTranslationKey` is its own full

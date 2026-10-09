@@ -58,7 +58,8 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const cacheKey = `${entityId}:${today.toDateString()}:${this._dataStamp()}`;
+    const range = `${entityId}:${today.toDateString()}`;
+    const cacheKey = `${range}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
@@ -68,9 +69,12 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
       const sorted = events
         .filter((e) => !e.allDay)
         .sort((a, b) => a.start.localeCompare(b.start));
-      if (this._isCurrentFetch(generation)) this._events = sorted;
+      if (this._isCurrentFetch(generation)) {
+        this._events = sorted;
+        this._fetchSucceeded(range);
+      }
     } catch {
-      if (this._isCurrentFetch(generation)) this._events = [];
+      if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._events = [];
     }
   }
 

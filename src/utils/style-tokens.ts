@@ -622,7 +622,8 @@ export const librusSharedStyles = css`
     flex-wrap: wrap;
     gap: 6px;
   }
-  .chip[role="button"]:focus-visible {
+  .chip[role="button"]:focus-visible,
+  .list-item[role="button"]:focus-visible {
     outline: 2px solid var(--lc-brand);
     outline-offset: 2px;
   }

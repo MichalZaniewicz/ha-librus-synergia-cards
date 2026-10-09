@@ -102,7 +102,8 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
     const day = this._targetDay();
     const dayAfter = new Date(day);
     dayAfter.setDate(dayAfter.getDate() + 1);
-    const cacheKey = `${entityId}:${isoDate(day)}:${this._dataStamp()}`;
+    const range = `${entityId}:${isoDate(day)}`;
+    const cacheKey = `${range}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
@@ -111,9 +112,12 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
       const events = (await fetchCalendarEvents(this.hass, entityId, day, dayAfter)).filter(
         (e) => !e.allDay
       );
-      if (this._isCurrentFetch(generation)) this._events = events;
+      if (this._isCurrentFetch(generation)) {
+        this._events = events;
+        this._fetchSucceeded(range);
+      }
     } catch {
-      if (this._isCurrentFetch(generation)) this._events = [];
+      if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._events = [];
     }
   }
 

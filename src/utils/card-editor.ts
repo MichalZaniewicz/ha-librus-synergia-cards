@@ -317,13 +317,25 @@ export function librusCardEditor(): LovelaceCardEditor {
   return document.createElement("librus-card-editor") as unknown as LovelaceCardEditor;
 }
 
+/**
+ * Older option spellings rewritten to the current ones, for both the card
+ * and the editor: the Timetable changes card's `show_past: false` becomes
+ * `hide_past: true`, so the editor's "Hide past changes" switch shows it
+ * and turning the switch off really shows past changes again.
+ */
+export function migrateLegacyConfig(config: LibrusCardConfig): LibrusCardConfig {
+  if (config.show_past === undefined) return config;
+  const { show_past: showPast, ...rest } = config;
+  return showPast === false && rest.hide_past === undefined ? { ...rest, hide_past: true } : rest;
+}
+
 @customElement("librus-card-editor")
 export class LibrusCardEditor extends LitElement {
   @property({ attribute: false }) public hass?: LibrusHass;
   @state() private _config?: LibrusCardConfig;
 
   public setConfig(config: LibrusCardConfig): void {
-    this._config = config;
+    this._config = migrateLegacyConfig(config);
   }
 
   private get _fields(): EditorField[] {

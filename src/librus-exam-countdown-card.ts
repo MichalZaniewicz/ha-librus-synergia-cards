@@ -125,7 +125,8 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
     const end = new Date(today);
     end.setDate(end.getDate() + RANGE_DAYS);
     const kw = this._config.exam_keywords || DEFAULT_EXAM_KEYWORDS;
-    const cacheKey = `${entityId}:${today.toDateString()}:${kw}:${this._dataStamp()}`;
+    const range = `${entityId}:${today.toDateString()}:${kw}`;
+    const cacheKey = `${range}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
@@ -139,9 +140,12 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
           return category !== null && re.test(category);
         })
         .sort((a, b) => a.start.localeCompare(b.start));
-      if (this._isCurrentFetch(generation)) this._events = filtered;
+      if (this._isCurrentFetch(generation)) {
+        this._events = filtered;
+        this._fetchSucceeded(range);
+      }
     } catch {
-      if (this._isCurrentFetch(generation)) this._events = [];
+      if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._events = [];
     }
   }
 

@@ -85,7 +85,8 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
     const target = nextSchoolDay(new Date());
     const dayAfter = new Date(target);
     dayAfter.setDate(dayAfter.getDate() + 1);
-    const cacheKey = `${entityId}:${isoDate(target)}:${this._dataStamp()}`;
+    const range = `${entityId}:${isoDate(target)}`;
+    const cacheKey = `${range}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
@@ -93,9 +94,12 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
     try {
       const events = await fetchCalendarEvents(this.hass, entityId, target, dayAfter);
       const lessons = events.filter((e) => !e.allDay).sort((a, b) => a.start.localeCompare(b.start));
-      if (this._isCurrentFetch(generation)) this._lessons = lessons;
+      if (this._isCurrentFetch(generation)) {
+        this._lessons = lessons;
+        this._fetchSucceeded(range);
+      }
     } catch {
-      if (this._isCurrentFetch(generation)) this._lessons = [];
+      if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._lessons = [];
     }
   }
 

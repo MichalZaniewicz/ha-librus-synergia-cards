@@ -278,7 +278,14 @@ export class LibrusMessagesCard extends LibrusBaseCard {
               <div class="scroll-list">
                 ${applyListOptions(recent, { sort: this._config.sort, max_items: max }).map(
                   (m) => html`
-                    <div class="list-item clickable" @click=${() => this._onMessageClick(m)}>
+                    <div
+                      class="list-item clickable"
+                      role="button"
+                      tabindex="0"
+                      aria-expanded=${this._expandedId === m.id ? "true" : "false"}
+                      @click=${() => this._onMessageClick(m)}
+                      @keydown=${activateOnKey(() => void this._onMessageClick(m))}
+                    >
                       <span class="dot ${m.unread && !m.receiver ? "good" : "neutral"}"></span>
                       <div class="body">
                         <div class="row1">

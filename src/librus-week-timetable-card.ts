@@ -115,16 +115,20 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     const monday = mondayOfSchoolWeek(new Date());
     const rangeEnd = new Date(monday);
     rangeEnd.setDate(rangeEnd.getDate() + this._dayCount);
-    const cacheKey = `${entityId}:${monday.toDateString()}:${this._dayCount}:${this._dataStamp()}`;
+    const range = `${entityId}:${monday.toDateString()}:${this._dayCount}`;
+    const cacheKey = `${range}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
     const generation = this._beginFetch();
     try {
       const events = await fetchCalendarEvents(this.hass, entityId, monday, rangeEnd);
-      if (this._isCurrentFetch(generation)) this._events = events;
+      if (this._isCurrentFetch(generation)) {
+        this._events = events;
+        this._fetchSucceeded(range);
+      }
     } catch {
-      if (this._isCurrentFetch(generation)) this._events = [];
+      if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._events = [];
     }
   }
 

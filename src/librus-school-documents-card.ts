@@ -20,21 +20,27 @@ interface SchoolDocument {
 /** A document counts as new for this many days after it was added. */
 const NEW_DAYS = 7;
 
+/** The document's Synergia link, only if it's a plain web address (never
+ * e.g. a `javascript:` one) - used as an `href` and opened in a new tab. */
+function webUrl(doc: SchoolDocument): string | undefined {
+  return doc.url && /^https?:\/\//i.test(doc.url) ? doc.url : undefined;
+}
+
 /**
  * Forms and regulations the school shares with parents. A tap downloads the
  * document through Home Assistant (integration 0.12.5+) - its Synergia link
- * only works in a browser logged in to Synergia. An older integration has no
- * download view (HTTP 404): the card then opens that link instead, and from
- * then on renders the rows as plain links so the tab opens straight from
- * the tap (a `window.open` after an await can be stopped by popup blockers).
+ * only works in a browser logged in to Synergia. When the download answers
+ * 404 (an older integration without the download view), the card opens that
+ * document's link instead, and from then on renders that one row as a plain
+ * link so its tab opens straight from the tap (a `window.open` after an
+ * await can be stopped by popup blockers). Other rows keep downloading.
  */
 @customElement("librus-school-documents-card")
 export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
-  /** Per-document download state. */
-  @state() private _fileState: Record<string, "loading" | "error"> = {};
-  /** Set once the integration answered 404: no download view, link to Synergia instead. */
-  @state() private _noDownloadView = false;
+  /** Per-document download state; "link" = the download answered 404, the
+   * row links to Synergia now. */
+  @state() private _fileState: Record<string, "loading" | "error" | "link"> = {};
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -89,6 +95,7 @@ export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
         <div class="docs">
           ${shown.map((doc) => {
             const isNew = this._isNew(doc);
+            const link = this._fileState[doc.id] === "link" ? webUrl(doc) : undefined;
             const body = html`
               <span class="file ${isNew ? "new" : ""}"><ha-icon icon="mdi:file-document-outline"></ha-icon></span>
               <span class="body">
@@ -109,15 +116,15 @@ export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
                 : nothing}
               <ha-icon
                 class="open"
-                icon=${this._noDownloadView && doc.url
+                icon=${link
                   ? "mdi:open-in-new"
                   : this._fileState[doc.id] === "loading"
                     ? "mdi:progress-download"
                     : "mdi:download"}
               ></ha-icon>
             `;
-            if (this._noDownloadView && doc.url) {
-              return html`<a class="doc" href=${doc.url} target="_blank" rel="noopener noreferrer">
+            if (link) {
+              return html`<a class="doc" href=${link} target="_blank" rel="noopener noreferrer">
                 ${body}
               </a>`;
             }
@@ -144,16 +151,15 @@ export class LibrusSchoolDocumentsCard extends LibrusBaseCard {
       delete next[doc.id];
       this._fileState = next;
     } catch (err) {
-      // Only an integration older than 0.12.5 (no download view -> 404)
-      // falls back to the Synergia page; any other failure is a real error.
-      if (err instanceof DownloadHttpError && err.status === 404 && doc.url) {
-        this._noDownloadView = true;
+      // A 404 (an integration older than 0.12.5 has no download view, or
+      // this document can't be fetched) falls back to this document's
+      // Synergia page; any other failure is a real error.
+      const url = webUrl(doc);
+      if (err instanceof DownloadHttpError && err.status === 404 && url) {
         // Usually still allowed right after the tap; if a popup blocker
         // stops it, the row is a plain link now and the next tap opens it.
-        window.open(doc.url, "_blank", "noopener,noreferrer");
-        const next = { ...this._fileState };
-        delete next[doc.id];
-        this._fileState = next;
+        window.open(url, "_blank", "noopener,noreferrer");
+        this._fileState = { ...this._fileState, [doc.id]: "link" };
       } else {
         this._fileState = { ...this._fileState, [doc.id]: "error" };
       }

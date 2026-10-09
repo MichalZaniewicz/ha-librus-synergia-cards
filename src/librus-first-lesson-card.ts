@@ -152,7 +152,8 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
     today.setHours(0, 0, 0, 0);
     const end = nextSchoolDay(today);
     end.setDate(end.getDate() + 1);
-    const cacheKey = `${ids.join(",")}:${isoDate(today)}:${this._dataStamp(true)}`;
+    const range = `${ids.join(",")}:${isoDate(today)}`;
+    const cacheKey = `${range}:${this._dataStamp(true)}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
@@ -164,11 +165,15 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
         try {
           return [id, await fetchCalendarEvents(hass, entityId, today, end)];
         } catch {
-          return [id, undefined];
+          // A failed refresh keeps that student's lessons from the same day.
+          return [id, this._keepAfterError(range) ? this._events.get(id) : undefined];
         }
       })
     );
-    if (this._isCurrentFetch(generation)) this._events = new Map(results);
+    if (this._isCurrentFetch(generation)) {
+      this._events = new Map(results);
+      this._fetchSucceeded(range);
+    }
   }
 
   protected render(): TemplateResult | typeof nothing {

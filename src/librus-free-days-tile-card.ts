@@ -60,7 +60,8 @@ export class LibrusFreeDaysTileCard extends LibrusBaseCard {
     today.setHours(0, 0, 0, 0);
     const end = new Date(today);
     end.setDate(end.getDate() + RANGE_DAYS);
-    const cacheKey = `${entityId}:${today.toDateString()}:${this._dataStamp()}`;
+    const range = `${entityId}:${today.toDateString()}`;
+    const cacheKey = `${range}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
@@ -68,9 +69,12 @@ export class LibrusFreeDaysTileCard extends LibrusBaseCard {
     try {
       const events = await fetchCalendarEvents(this.hass, entityId, today, end);
       const sorted = events.sort((a, b) => a.start.localeCompare(b.start));
-      if (this._isCurrentFetch(generation)) this._events = sorted;
+      if (this._isCurrentFetch(generation)) {
+        this._events = sorted;
+        this._fetchSucceeded(range);
+      }
     } catch {
-      if (this._isCurrentFetch(generation)) this._events = [];
+      if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._events = [];
     }
   }
 

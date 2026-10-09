@@ -3,7 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
-import { librusCardEditor } from "./utils/card-editor";
+import { librusCardEditor, migrateLegacyConfig } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
@@ -95,7 +95,8 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
   }
 
   public setConfig(config: LibrusCardConfig): void {
-    this._config = config;
+    // An older `show_past: false` becomes `hide_past: true`.
+    this._config = migrateLegacyConfig(config);
     this._configuredDeviceId = config.device_id;
   }
 
@@ -117,9 +118,9 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
     return Math.max(1, Math.min(30, Number(this._config?.days_ahead) || 7));
   }
 
-  /** `hide_past: true`, or the older `show_past: false` still in someone's YAML. */
+  /** `hide_past: true` (setConfig turns an older `show_past: false` into it). */
   private get _hidePast(): boolean {
-    return Boolean(this._config?.hide_past) || this._config?.show_past === false;
+    return Boolean(this._config?.hide_past);
   }
 
   /** Changed lessons from the timetable calendar: the last PAST_DAYS days
@@ -137,7 +138,8 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
     const end = new Date();
     end.setHours(0, 0, 0, 0);
     end.setDate(end.getDate() + this._daysAhead + 1);
-    const cacheKey = `${entityId}:${isoDate(start)}:${isoDate(end)}:${this._dataStamp()}`;
+    const range = `${entityId}:${isoDate(start)}:${isoDate(end)}`;
+    const cacheKey = `${range}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
     const generation = this._beginFetch();
@@ -148,9 +150,12 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
         .map(toChange)
         .filter((c): c is LessonChange => !!c)
         .sort((a, b) => a.event.start.localeCompare(b.event.start));
-      if (this._isCurrentFetch(generation)) this._changes = changes;
+      if (this._isCurrentFetch(generation)) {
+        this._changes = changes;
+        this._fetchSucceeded(range);
+      }
     } catch {
-      if (this._isCurrentFetch(generation)) this._changes = [];
+      if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._changes = [];
     }
   }
 
@@ -243,7 +248,14 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
       <div class="scroll-list">
         ${applyListOptions(items, { max_items: this._config?.max_items }).map(
           (m) => html`
-            <div class="list-item clickable" @click=${() => this._onClick(m)}>
+            <div
+              class="list-item clickable"
+              role="button"
+              tabindex="0"
+              aria-expanded=${this._expandedKey === itemKey(m) ? "true" : "false"}
+              @click=${() => this._onClick(m)}
+              @keydown=${activateOnKey(() => void this._onClick(m))}
+            >
               <span class="dot ${m.unread ? "good" : "neutral"}"></span>
               <div class="body">
                 <div class="row1">

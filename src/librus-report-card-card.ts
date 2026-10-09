@@ -284,8 +284,8 @@ export class LibrusReportCardCard extends LibrusBaseCard {
         color: var(--secondary-text-color);
         font-variant-numeric: tabular-nums;
       }
-      /* The digit's colour follows the grade; the background marks risk
-         (red) or a falling forecast (amber). */
+      /* The digit's colour follows the grade; the background alone marks
+         risk (red) or a falling forecast (amber), so a falling 6 stays green. */
       .tile.g6 .g {
         color: var(--lc-good);
       }
@@ -299,14 +299,8 @@ export class LibrusReportCardCard extends LibrusBaseCard {
       .tile.warn {
         background: var(--lc-warn-bg);
       }
-      .tile.warn .g {
-        color: var(--lc-warn);
-      }
       .tile.bad {
         background: var(--lc-bad-bg);
-      }
-      .tile.bad .g {
-        color: var(--lc-bad);
       }
       .closest {
         display: flex;

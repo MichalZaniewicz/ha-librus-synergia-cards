@@ -106,16 +106,20 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
     start.setHours(0, 0, 0, 0);
     const end = new Date(start);
     end.setDate(end.getDate() + LOOKAHEAD_DAYS);
-    const cacheKey = `${entityId}:${isoDate(start)}:${this._dataStamp()}`;
+    const range = `${entityId}:${isoDate(start)}`;
+    const cacheKey = `${range}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
     const generation = this._beginFetch();
     try {
       const events = await fetchCalendarEvents(this.hass, entityId, start, end);
-      if (this._isCurrentFetch(generation)) this._events = events.filter((e) => !e.allDay);
+      if (this._isCurrentFetch(generation)) {
+        this._events = events.filter((e) => !e.allDay);
+        this._fetchSucceeded(range);
+      }
     } catch {
-      if (this._isCurrentFetch(generation)) this._events = [];
+      if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._events = [];
     } finally {
       if (this._isCurrentFetch(generation)) this._loaded = true;
     }

@@ -14,7 +14,7 @@ const KINDS: Kind[] = ["test", "quiz", "trip", "meeting", "homework", "other"];
 // Agenda categories are each school's own names, so they're matched by text.
 const KIND_RE: [Kind, RegExp][] = [
   ["quiz", /kartk|quiz/i],
-  ["test", /sprawdzian|praca klasowa|test|egzamin|diagnoz/i],
+  ["test", /sprawdzian|praca klasowa|\btest|egzamin|diagnoz/i],
   ["trip", /wycieczk|wyjści/i],
   ["meeting", /zebrani|konsultacj|wywiadówk/i],
 ];
@@ -30,6 +30,9 @@ interface HomeworkItem {
   subject?: string | null;
   due_date?: string | null;
 }
+
+// One shared empty list, so _index()'s memo still hits without homework.
+const NO_HOMEWORK: HomeworkItem[] = [];
 
 function kindOf(category: string | null, text: string): Kind {
   const haystack = `${category ?? ""} ${text}`;
@@ -106,26 +109,67 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const shown = this._shownMonth;
     const start = new Date(shown);
     const end = new Date(shown.getFullYear(), shown.getMonth() + 1, 1);
-    const cacheKey = `${agenda}:${freeDays}:${isoDate(start)}:${this._dataStamp()}`;
+    const range = `${agenda}:${freeDays}:${isoDate(start)}`;
+    const cacheKey = `${range}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
     const generation = this._beginFetch();
-    const load = (id?: string) => (id ? fetchCalendarEvents(this.hass!, id, start, end).catch(() => []) : []);
+    // undefined = the fetch failed (an entity that isn't there loads as []).
+    const load = async (id?: string): Promise<LibrusCalendarEvent[] | undefined> =>
+      id ? fetchCalendarEvents(this.hass!, id, start, end).catch(() => undefined) : [];
     const [agendaEvents, freeEvents] = await Promise.all([load(agenda), load(freeDays)]);
     if (!this._isCurrentFetch(generation)) return;
-    this._agenda = agendaEvents;
-    this._free = freeEvents;
+    // A failed calendar keeps what the card already shows for this month.
+    const keep = this._keepAfterError(range);
+    this._agenda = agendaEvents ?? (keep ? this._agenda : []);
+    this._free = freeEvents ?? (keep ? this._free : []);
+    if (agendaEvents && freeEvents) this._fetchSucceeded(range);
   }
 
   private _shift(months: number): void {
     const shown = this._shownMonth;
-    this._month = new Date(shown.getFullYear(), shown.getMonth() + months, 1);
+    const target = new Date(shown.getFullYear(), shown.getMonth() + months, 1);
+    const today = new Date();
+    const isTodaysMonth = target.getFullYear() === today.getFullYear() && target.getMonth() === today.getMonth();
+    // Back on today's month: follow today again (also across midnight into
+    // a new month), as if the arrows had never been used.
+    this._month = isTodaysMonth ? undefined : target;
     this._selected = undefined;
     void this._fetch();
   }
 
+  // _index()'s last result and what it was built from - render() runs on
+  // every hass update, the index only changes with these.
+  private _indexCache?: {
+    agenda: LibrusCalendarEvent[];
+    free: LibrusCalendarEvent[];
+    homework: HomeworkItem[];
+    month: string;
+    language: string;
+    result: { entries: Map<string, DayEntry[]>; free: Map<string, string> };
+  };
+
   /** date -> entries, and date -> free-day name, for the shown month. */
   private _index(homework: HomeworkItem[]): { entries: Map<string, DayEntry[]>; free: Map<string, string> } {
+    const hass = this.hass!;
+    const month = isoDate(this._shownMonth);
+    const c = this._indexCache;
+    if (
+      c &&
+      c.agenda === this._agenda &&
+      c.free === this._free &&
+      c.homework === homework &&
+      c.month === month &&
+      c.language === hass.language
+    ) {
+      return c.result;
+    }
+    const result = this._buildIndex(homework);
+    this._indexCache = { agenda: this._agenda, free: this._free, homework, month, language: hass.language, result };
+    return result;
+  }
+
+  private _buildIndex(homework: HomeworkItem[]): { entries: Map<string, DayEntry[]>; free: Map<string, string> } {
     const hass = this.hass!;
     const entries = new Map<string, DayEntry[]>();
     const add = (day: string, entry: DayEntry) => entries.set(day, [...(entries.get(day) ?? []), entry]);
@@ -164,7 +208,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     void this._fetch();
 
     const homeworkEntity = map.homework_assignments ? hass.states[map.homework_assignments] : undefined;
-    const homework = (homeworkEntity?.attributes.recent as HomeworkItem[] | undefined) ?? [];
+    const homework = (homeworkEntity?.attributes.recent as HomeworkItem[] | undefined) ?? NO_HOMEWORK;
     const { entries, free } = this._index(homework);
 
     const shownMonth = this._shownMonth;
@@ -175,9 +219,11 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const todayIso = isoDate(new Date());
     const monthPrefix = `${year}-${String(month + 1).padStart(2, "0")}`;
     const inMonth = [...entries.keys()].filter((d) => d.startsWith(monthPrefix)).sort();
+    // A day picked in another month (e.g. before the month followed today
+    // across midnight) doesn't count.
+    const picked = this._selected?.startsWith(monthPrefix) ? this._selected : undefined;
     const selected =
-      this._selected ??
-      (todayIso.startsWith(monthPrefix) ? todayIso : (inMonth.find((d) => d >= todayIso) ?? inMonth[0]));
+      picked ?? (todayIso.startsWith(monthPrefix) ? todayIso : (inMonth.find((d) => d >= todayIso) ?? inMonth[0]));
 
     // A multi-day entry sits on several days as the same object - count it once.
     const monthEntries = new Set(inMonth.flatMap((day) => entries.get(day) ?? []));
