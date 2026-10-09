@@ -60,7 +60,7 @@ export class LibrusFreeDaysTileCard extends LibrusBaseCard {
     today.setHours(0, 0, 0, 0);
     const end = new Date(today);
     end.setDate(end.getDate() + RANGE_DAYS);
-    const cacheKey = `${entityId}:${today.toDateString()}`;
+    const cacheKey = `${entityId}:${today.toDateString()}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 

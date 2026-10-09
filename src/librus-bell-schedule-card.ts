@@ -102,7 +102,7 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
     const day = this._targetDay();
     const dayAfter = new Date(day);
     dayAfter.setDate(dayAfter.getDate() + 1);
-    const cacheKey = `${entityId}:${isoDate(day)}`;
+    const cacheKey = `${entityId}:${isoDate(day)}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 

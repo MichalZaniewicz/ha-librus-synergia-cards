@@ -58,7 +58,7 @@ export class LibrusAgendaCard extends LibrusBaseCard {
     today.setHours(0, 0, 0, 0);
     const end = new Date(today);
     end.setDate(end.getDate() + rangeDays);
-    const cacheKey = `${entityId}:${today.toDateString()}:${rangeDays}`;
+    const cacheKey = `${entityId}:${today.toDateString()}:${rangeDays}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 

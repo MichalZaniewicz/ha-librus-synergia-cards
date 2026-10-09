@@ -100,7 +100,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const { agenda, free_days: freeDays } = resolved.map;
     const start = new Date(this._month);
     const end = new Date(this._month.getFullYear(), this._month.getMonth() + 1, 1);
-    const cacheKey = `${agenda}:${freeDays}:${isoDate(start)}`;
+    const cacheKey = `${agenda}:${freeDays}:${isoDate(start)}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
     const generation = this._beginFetch();

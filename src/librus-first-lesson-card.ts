@@ -152,7 +152,7 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
     today.setHours(0, 0, 0, 0);
     const end = nextSchoolDay(today);
     end.setDate(end.getDate() + 1);
-    const cacheKey = `${ids.join(",")}:${isoDate(today)}`;
+    const cacheKey = `${ids.join(",")}:${isoDate(today)}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 

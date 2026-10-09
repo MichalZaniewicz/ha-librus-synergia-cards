@@ -69,7 +69,7 @@ export class LibrusSubjectTimeCard extends LibrusBaseCard {
     const monday = mondayOfSchoolWeek(new Date());
     const rangeEnd = new Date(monday);
     rangeEnd.setDate(rangeEnd.getDate() + this._dayCount);
-    const cacheKey = `${entityId}:${monday.toDateString()}:${this._dayCount}`;
+    const cacheKey = `${entityId}:${monday.toDateString()}:${this._dayCount}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 

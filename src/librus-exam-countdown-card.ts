@@ -125,7 +125,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
     const end = new Date(today);
     end.setDate(end.getDate() + RANGE_DAYS);
     const kw = this._config.exam_keywords || DEFAULT_EXAM_KEYWORDS;
-    const cacheKey = `${entityId}:${today.toDateString()}:${kw}`;
+    const cacheKey = `${entityId}:${today.toDateString()}:${kw}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 

@@ -85,7 +85,7 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
     const target = nextSchoolDay(new Date());
     const dayAfter = new Date(target);
     dayAfter.setDate(dayAfter.getDate() + 1);
-    const cacheKey = `${entityId}:${isoDate(target)}`;
+    const cacheKey = `${entityId}:${isoDate(target)}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 

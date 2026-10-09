@@ -106,7 +106,7 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
     start.setHours(0, 0, 0, 0);
     const end = new Date(start);
     end.setDate(end.getDate() + LOOKAHEAD_DAYS);
-    const cacheKey = `${entityId}:${isoDate(start)}`;
+    const cacheKey = `${entityId}:${isoDate(start)}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 

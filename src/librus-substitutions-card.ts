@@ -130,7 +130,7 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
     const end = new Date();
     end.setHours(0, 0, 0, 0);
     end.setDate(end.getDate() + this._daysAhead + 1);
-    const cacheKey = `${entityId}:${isoDate(start)}:${isoDate(end)}`;
+    const cacheKey = `${entityId}:${isoDate(start)}:${isoDate(end)}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
     const generation = this._beginFetch();

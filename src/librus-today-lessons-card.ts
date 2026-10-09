@@ -58,7 +58,7 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const cacheKey = `${entityId}:${today.toDateString()}`;
+    const cacheKey = `${entityId}:${today.toDateString()}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 

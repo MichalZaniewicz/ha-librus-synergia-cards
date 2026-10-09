@@ -76,7 +76,7 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
 
     const end = new Date();
     const start = new Date(end.getTime() - this._historyDays * 86_400_000);
-    const cacheKey = `${entityId}:${end.toDateString()}:${this._historyDays}`;
+    const cacheKey = `${entityId}:${end.toDateString()}:${this._historyDays}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey) return;
     this._fetchedFor = cacheKey;
 
