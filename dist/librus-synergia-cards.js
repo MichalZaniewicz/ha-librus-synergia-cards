@@ -3270,7 +3270,7 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
               </div>
             `:G}
         ${"outbox"===this._mailbox?G:W`<div class="read-notice">${je(t,"card.messages.read_notice")}</div>`}
-      `:this._errorIds.has(e.id)?W`<div class="item-text"><b>${e.topic}</b> - ${je(t,"card.messages.fetch_failed")}</div>`:W`<div class="item-text"><b>${e.topic}</b> - ${je(t,"empty.loading")}</div>`}render(){if(!this._config||!this.hass)return G;this._syncTheme();const e=this._resolveEntities();if("error"in e)return e.error;const{map:t}=e,a=this.hass,s=t.unread_messages?a.states[t.unread_messages]:void 0;if(!s||"unavailable"===s.state)return this._message("mdi:email-outline",je(a,"card.messages.unavailable"));const i=this._mailbox,r=s.attributes.mailbox_breakdown??{},o=s.attributes[Sa[i]]??[];Number(s.state);const n=this._config.max_items??6;return W`
+      `:this._errorIds.has(e.id)?W`<div class="item-text"><b>${e.topic}</b> - ${je(t,"card.messages.fetch_failed")}</div>`:W`<div class="item-text"><b>${e.topic}</b> - ${je(t,"empty.loading")}</div>`}render(){if(!this._config||!this.hass)return G;this._syncTheme();const e=this._resolveEntities();if("error"in e)return e.error;const{map:t}=e,a=this.hass,s=t.unread_messages?a.states[t.unread_messages]:void 0;if(!s||"unavailable"===s.state)return this._message("mdi:email-outline",je(a,"card.messages.unavailable"));const i=this._mailbox,r=s.attributes.mailbox_breakdown??{},o=s.attributes[Sa[i]]??[],n=new Set(s.attributes.missing_mailboxes??[]);Number(s.state);const c=this._config.max_items??6;return W`
       <ha-card>
         <div class="header">
           <div class="icon-badge"><ha-icon icon="mdi:email-outline"></ha-icon></div>
@@ -3280,7 +3280,7 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
           </div>
         </div>
         <div class="chips">
-          ${Ia.filter(({key:e})=>!Da.has(e)||void 0!==s.attributes[Sa[e]]).map(({key:e,label:t})=>{const o=void 0!==s.attributes[Sa[e]];return W`
+          ${Ia.filter(({key:e})=>!(Da.has(e)&&void 0===s.attributes[Sa[e]]||n.has(Ta[e]??e))).map(({key:e,label:t})=>{const o=void 0!==s.attributes[Sa[e]];return W`
                 <span
                   class="chip ${e===i?"hot":""} ${o?"pickable":""}"
                   role=${o?"button":G}
@@ -3292,7 +3292,7 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
         ${o.length?W`
               <hr />
               <div class="scroll-list">
-                ${o.slice(0,n).map(e=>W`
+                ${o.slice(0,c).map(e=>W`
                     <div class="list-item clickable" @click=${()=>this._onMessageClick(e)}>
                       <span class="dot ${e.unread&&!e.receiver?"good":"neutral"}"></span>
                       <div class="body">

@@ -208,6 +208,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     const breakdown = (entity.attributes.mailbox_breakdown as Record<string, number> | undefined) ?? {};
     const recent =
       (entity.attributes[RECENT_ATTR[mailbox]] as RecentMessage[] | undefined) ?? [];
+    const missing = new Set((entity.attributes.missing_mailboxes as string[] | undefined) ?? []);
     const unread = Number(entity.state) || 0;
     const max = this._config.max_items ?? 6;
 
@@ -222,8 +223,11 @@ export class LibrusMessagesCard extends LibrusBaseCard {
         </div>
         <div class="chips">
           ${MAILBOXES.filter(
-            // Sent/archive only once the integration provides them.
-            ({ key }) => !NO_COUNT.has(key) || entity.attributes[RECENT_ATTR[key]] !== undefined
+            // Sent/archive only once the integration provides them; no chip
+            // for a mailbox this account doesn't have.
+            ({ key }) =>
+              (!NO_COUNT.has(key) || entity.attributes[RECENT_ATTR[key]] !== undefined) &&
+              !missing.has(SERVICE_MAILBOX[key] ?? key)
           ).map(
             ({ key, label }) => {
               const pickable = entity.attributes[RECENT_ATTR[key]] !== undefined;

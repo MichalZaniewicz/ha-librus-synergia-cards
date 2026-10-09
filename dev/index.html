@@ -394,6 +394,8 @@
         { id: "9101", mailbox: "outbox", sender: "", receiver: "Nowak Anna", topic: "Pytanie o zebranie", content: "Dzień dobry, czy zebranie odbędzie się w sali 12?", date: iso(new Date(today.getTime() - 1 * 86400000)), unread: false, has_attachment: false },
         { id: "9102", mailbox: "outbox", sender: "", receiver: "Zielińska Maria", topic: "Nieobecność", content: "Zosia jutro będzie nieobecna z powodu wizyty u lekarza.", date: iso(new Date(today.getTime() - 5 * 86400000)), unread: false, has_attachment: false },
       ],
+      // Mailboxes this account doesn't have - the card hides their chips.
+      missing_mailboxes: ["trash"],
       archive_recent: [
         { id: "9201", mailbox: "archive/inbox", sender: "Sekretariat", topic: "Zakończenie roku szkolnego", content: "Uroczyste zakończenie roku szkolnego odbędzie się 26 czerwca o 9:00.", date: "2026-06-20", unread: false, has_attachment: false },
       ],
