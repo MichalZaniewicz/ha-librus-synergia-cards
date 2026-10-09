@@ -204,7 +204,19 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
 
     const nextHint = this._nextMilestoneHint(hass, map);
 
-    if (this._unlocked.length === 0) {
+    // Everything the integration has recorded (Rank sensor, 0.12.5+) - the
+    // first sync records achievements silently, so the event alone misses
+    // those - plus what this browser saw arrive (with the time it did).
+    const recorded =
+      ((map.rank ? hass.states[map.rank]?.attributes.achievements : undefined) as
+        | { key: string; title: string }[]
+        | undefined) ?? [];
+    const unlocked = [...this._unlocked];
+    for (const a of recorded) {
+      if (!unlocked.some((u) => u.id === a.key)) unlocked.push({ id: a.key, title: a.title, when: "" });
+    }
+
+    if (unlocked.length === 0) {
       return this._message(
         "mdi:trophy-outline",
         t(hass, "card.achievements.empty"),
@@ -212,7 +224,7 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
       );
     }
 
-    const sorted = [...this._unlocked].sort((a, b) => b.when.localeCompare(a.when));
+    const sorted = unlocked.sort((a, b) => b.when.localeCompare(a.when));
 
     return html`
       <ha-card>
