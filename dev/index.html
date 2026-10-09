@@ -396,9 +396,8 @@
       ],
       // Mailboxes this account doesn't have - the card hides their chips.
       missing_mailboxes: ["trash"],
-      archive_recent: [
-        { id: "9201", mailbox: "archive/inbox", sender: "Sekretariat", topic: "Zakończenie roku szkolnego", content: "Uroczyste zakończenie roku szkolnego odbędzie się 26 czerwca o 9:00.", date: "2026-06-20", unread: false, has_attachment: false },
-      ],
+      // Empty, so the Archive chip shows greyed out.
+      archive_recent: [],
     }, 1);
     // Bell schedule built around the real wall-clock now so the
     // bell-schedule card always has a "current" period to highlight in the

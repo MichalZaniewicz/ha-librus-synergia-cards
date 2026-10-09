@@ -230,10 +230,17 @@ export class LibrusMessagesCard extends LibrusBaseCard {
               !missing.has(SERVICE_MAILBOX[key] ?? key)
           ).map(
             ({ key, label }) => {
-              const pickable = entity.attributes[RECENT_ATTR[key]] !== undefined;
+              const list = entity.attributes[RECENT_ATTR[key]] as RecentMessage[] | undefined;
+              // Greyed out: a listed mailbox with no messages, or a
+              // count-only one with nothing unread.
+              const empty =
+                key !== mailbox && (list !== undefined ? list.length === 0 : !breakdown[key]);
+              const pickable = list !== undefined && !empty;
               return html`
                 <span
-                  class="chip ${key === mailbox ? "hot" : ""} ${pickable ? "pickable" : ""}"
+                  class="chip ${key === mailbox ? "hot" : ""} ${pickable ? "pickable" : ""} ${empty
+                    ? "muted"
+                    : ""}"
                   role=${pickable ? "button" : nothing}
                   @click=${pickable ? () => this._pickMailbox(key) : nothing}
                   >${t(hass, label)}${NO_COUNT.has(key)
@@ -284,6 +291,9 @@ export class LibrusMessagesCard extends LibrusBaseCard {
       }
       .chip.pickable {
         cursor: pointer;
+      }
+      .chip.muted {
+        opacity: 0.45;
       }
       .empty-box {
         font-size: 0.75rem;

@@ -3280,11 +3280,11 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
           </div>
         </div>
         <div class="chips">
-          ${Ia.filter(({key:e})=>!(Da.has(e)&&void 0===s.attributes[Sa[e]]||n.has(Ta[e]??e))).map(({key:e,label:t})=>{const o=void 0!==s.attributes[Sa[e]];return W`
+          ${Ia.filter(({key:e})=>!(Da.has(e)&&void 0===s.attributes[Sa[e]]||n.has(Ta[e]??e))).map(({key:e,label:t})=>{const o=s.attributes[Sa[e]],n=e!==i&&(void 0!==o?0===o.length:!r[e]),c=void 0!==o&&!n;return W`
                 <span
-                  class="chip ${e===i?"hot":""} ${o?"pickable":""}"
-                  role=${o?"button":G}
-                  @click=${o?()=>this._pickMailbox(e):G}
+                  class="chip ${e===i?"hot":""} ${c?"pickable":""} ${n?"muted":""}"
+                  role=${c?"button":G}
+                  @click=${c?()=>this._pickMailbox(e):G}
                   >${je(a,t)}${Da.has(e)?G:W` <span class="n">${r[e]??0}</span>`}</span
                 >
               `})}
@@ -3315,6 +3315,9 @@ const he=e=>(t,a)=>{void 0!==a?a.addInitializer(()=>{customElements.define(e,t)}
       }
       .chip.pickable {
         cursor: pointer;
+      }
+      .chip.muted {
+        opacity: 0.45;
       }
       .empty-box {
         font-size: 0.75rem;
