@@ -7,6 +7,13 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import {
+  downloadHomeworkFile,
+  homeworkFileStyles,
+  renderHomeworkFiles,
+  type FileState,
+  type HomeworkFile,
+} from "./utils/homework-files";
 
 interface RecentAssignment {
   topic: string;
@@ -14,11 +21,14 @@ interface RecentAssignment {
   due_date: string | null;
   date: string | null;
   teacher: string | null;
+  /** Files the teacher attached (newer integration). */
+  attachments?: HomeworkFile[];
 }
 
 @customElement("librus-homework-assignments-card")
 export class LibrusHomeworkAssignmentsCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  @state() private _fileState: FileState = {};
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -43,7 +53,7 @@ export class LibrusHomeworkAssignmentsCard extends LibrusBaseCard {
 
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
-    const { map } = resolved;
+    const { deviceId, map } = resolved;
     const hass = this.hass;
 
     const entity = map.homework_assignments ? hass.states[map.homework_assignments] : undefined;
@@ -75,6 +85,11 @@ export class LibrusHomeworkAssignmentsCard extends LibrusBaseCard {
                       : nothing}
                   </div>
                   <div class="item-text">${a.text}${a.teacher ? html` - ${a.teacher}` : nothing}</div>
+                  ${renderHomeworkFiles(hass, a.attachments, this._fileState, (ev, file) =>
+                    downloadHomeworkFile(ev, hass, deviceId, file, this._fileState, (next) => {
+                      this._fileState = next;
+                    })
+                  )}
                 </div>
               </div>
             `
@@ -84,7 +99,7 @@ export class LibrusHomeworkAssignmentsCard extends LibrusBaseCard {
     `;
   }
 
-  static styles = [librusTokens, librusSharedStyles];
+  static styles = [librusTokens, librusSharedStyles, homeworkFileStyles];
 }
 
 declare global {
