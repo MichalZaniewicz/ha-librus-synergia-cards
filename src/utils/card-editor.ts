@@ -43,6 +43,7 @@ type EditorField =
   | { kind: "subject" }
   | { kind: "names" }
   | { kind: "action" }
+  | { kind: "color" }
   | {
       kind: "text";
       key: "title" | "exam_keywords" | "category_filter" | "icon" | "accent_color";
@@ -90,7 +91,7 @@ type EditorField =
  */
 const COMMON_FIELDS: EditorField[] = [
   { kind: "text", key: "icon", label: "editor.icon" },
-  { kind: "text", key: "accent_color", label: "editor.accent_color" },
+  { kind: "color" },
   { kind: "boolean", key: "hide_header", label: "editor.hide_header" },
   { kind: "boolean", key: "hide_icon", label: "editor.hide_icon" },
   { kind: "boolean", key: "hide_subtitle", label: "editor.hide_subtitle" },
@@ -99,6 +100,17 @@ const COMMON_FIELDS: EditorField[] = [
 ];
 
 /** Tiles and the student card have no title line, so no `title` field for them. */
+/** Ready-made accent colors under the color field. The first one is the
+ * cards' own indigo - picking it clears `accent_color`. */
+const ACCENT_SWATCHES: { color: string; label: TranslationKey }[] = [
+  { color: "#4f46e5", label: "editor.accent_default" },
+  { color: "#e91e63", label: "editor.accent_pink" },
+  { color: "#7e57c2", label: "editor.accent_purple" },
+  { color: "#009688", label: "editor.accent_teal" },
+  { color: "#43a047", label: "editor.accent_green" },
+  { color: "#ff7043", label: "editor.accent_orange" },
+];
+
 const NO_TITLE_CARDS = new Set([
   "custom:librus-announcements-tile-card",
   "custom:librus-attendance-tile-card",
@@ -403,7 +415,7 @@ export class LibrusCardEditor extends LitElement {
           : nothing}
         ${this._addsTitle ? this._renderField(TITLE_FIELD) : nothing}
         ${fields.map((field) => this._renderField(field))}
-        <hr class="sep" />
+        <div class="section">${t(hass, "editor.appearance")}</div>
         ${this._commonFields.map((field) => this._renderField(field))}
       </div>
     `;
@@ -424,6 +436,37 @@ export class LibrusCardEditor extends LitElement {
           @value-changed=${(ev: CustomEvent<{ value?: unknown }>) =>
             this._patch({ tap_action: ev.detail.value || undefined })}
         ></ha-selector>
+      `;
+    }
+    if (field.kind === "color") {
+      const current = config.accent_color ?? "";
+      const valid = current !== "" && typeof CSS !== "undefined" && CSS.supports("color", current);
+      return html`
+        <div class="color-field">
+          ${this._input(
+            t(hass, "editor.accent_color"),
+            current,
+            (value) => this._onText("accent_color", value),
+            {},
+            html`<span
+              class="preview ${valid ? "" : "none"}"
+              style=${valid ? `background:${current}` : ""}
+            ></span>`
+          )}
+          <div class="swatches">
+            ${ACCENT_SWATCHES.map((s, i) => {
+              const selected = i === 0 ? !current : current.toLowerCase() === s.color;
+              return html`<button
+                type="button"
+                class="swatch ${selected ? "selected" : ""}"
+                style="background:${s.color}"
+                title=${t(hass, s.label)}
+                aria-label=${t(hass, s.label)}
+                @click=${() => this._patch({ accent_color: i === 0 ? undefined : s.color })}
+              ></button>`;
+            })}
+          </div>
+        </div>
       `;
     }
     if (field.kind === "names") {
@@ -504,7 +547,8 @@ export class LibrusCardEditor extends LitElement {
     label: string,
     value: string,
     commit: (value: string) => void,
-    opts: { type?: "number"; min?: number; max?: number; step?: string } = {}
+    opts: { type?: "number"; min?: number; max?: number; step?: string } = {},
+    end?: TemplateResult
   ): TemplateResult {
     let last = value;
     const done = (ev: Event): void => {
@@ -529,7 +573,8 @@ export class LibrusCardEditor extends LitElement {
           @change=${done}
           @focusout=${done}
           @keydown=${onKey}
-        ></ha-input>
+          >${end ? html`<span slot="end">${end}</span>` : nothing}</ha-input
+        >
       `;
     }
     if (customElements.get("ha-textfield")) {
@@ -546,6 +591,7 @@ export class LibrusCardEditor extends LitElement {
           @focusout=${done}
           @keydown=${onKey}
         ></ha-textfield>
+        ${end ? html`<span class="end-outside">${end}</span>` : nothing}
       `;
     }
     return html`
@@ -560,6 +606,7 @@ export class LibrusCardEditor extends LitElement {
           @change=${done}
           @keydown=${onKey}
         />
+        ${end ? html`<span class="end-outside">${end}</span>` : nothing}
       </label>
     `;
   }
@@ -666,10 +713,53 @@ export class LibrusCardEditor extends LitElement {
       border-radius: 6px;
       padding: 8px 10px;
     }
-    hr.sep {
-      border: none;
+    .section {
+      margin-top: 6px;
+      padding-top: 12px;
       border-top: 1px solid var(--divider-color);
-      margin: 2px 0;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--secondary-text-color);
+    }
+    .color-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .preview {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      margin-inline-end: 4px;
+      vertical-align: middle;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+    }
+    .preview.none {
+      background: repeating-conic-gradient(var(--divider-color) 0 25%, transparent 0 50%) 50% / 8px 8px;
+    }
+    .end-outside {
+      align-self: flex-end;
+    }
+    .swatches {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+    }
+    .swatch.selected {
+      outline: 2px solid var(--primary-text-color);
+      outline-offset: 2px;
     }
   `;
 }
