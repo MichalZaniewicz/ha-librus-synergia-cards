@@ -48,6 +48,7 @@ type EditorField =
       key:
         | "show_saturday"
         | "show_descriptive"
+        | "hide_teacher"
         | "hide_header"
         | "compact"
         | "hide_outage_warning"
@@ -138,6 +139,10 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     DAYS_BACK_FIELD,
     SORT_FIELD,
     { kind: "boolean", key: "show_descriptive", label: "editor.show_descriptive" },
+    { kind: "boolean", key: "hide_teacher", label: "editor.hide_teacher" },
+  ],
+  "custom:librus-descriptive-grades-card": [
+    { kind: "boolean", key: "hide_teacher", label: "editor.hide_teacher" },
   ],
   "custom:librus-recent-activity-card": [TITLE_FIELD, MAX_ITEMS_FIELD(50)],
   "custom:librus-subject-attendance-card": [TITLE_FIELD],

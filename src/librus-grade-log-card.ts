@@ -99,7 +99,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
                     <span>${g.subject}${g.category ? html` · <span class="cat-label">${g.category}</span>` : nothing}${g.improves ? html` · <span class="fix-label">${t(hass, "label.grade_improves", { value: g.improves })}</span>` : nothing}</span>
                     ${g.date ? html`<time>${formatShortDate(g.date, hass.language)}</time>` : nothing}
                   </div>
-                  ${g.teacher ? html`<div class="item-text">${g.teacher}</div>` : nothing}
+                  ${g.teacher && !this._config?.hide_teacher ? html`<div class="item-text">${g.teacher}</div>` : nothing}
                   ${g.comments.length ? html`<div class="quote">${g.comments.join(" · ")}</div>` : nothing}
                 </div>
               </div>

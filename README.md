@@ -170,6 +170,7 @@ card supports:
 | `mode` | Hero, Hero History | `archetype` or `hero` - which set of names and descriptions to use |
 | `mailbox` | Messages | The mailbox shown first: `inbox` / `substitutions` / `alerts` / `justifications` / `outbox` / `archive` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
+| `hide_teacher` | Grade log, Descriptive grades | Don't show who gave each grade - off by default |
 | `show_descriptive` | Grade log | Also list descriptive grades (a skill-based subject, e.g. music in grades 1-3), with the skill shown where other grades show their category - off by default |
 | `summary_only` / `hide_generate` | Weekly AI summary | Show only the headline, warning and to-dos (no section tabs); hide the Generate now button |
 | `exam_keywords` | Next exam | Comma-separated Agenda-category keywords that count as an exam (default `sprawdzian`), e.g. `sprawdzian, praca klasowa, egzamin` |
@@ -226,7 +227,7 @@ and empty state, with a light/dark toggle and a language switcher.
    If a student picker is all the card needs, that's it (no `EDITOR_FIELDS` entry required); for
    extra controls add one, keyed by the card's `custom:` type - a `text` field (`title`,
    `exam_keywords`, `category_filter`), a `number` (`max_items`, `days_ahead`, `days`, `target`), a
-   `boolean` (`show_saturday`, `show_descriptive`), a `subject` picker, or a `select` (`mailbox`, `sort`, `mode`). The editor
+   `boolean` (`show_saturday`, `show_descriptive`, `hide_teacher`), a `subject` picker, or a `select` (`mailbox`, `sort`, `mode`). The editor
    renders the student picker automatically whenever more than one Librus device exists, and always
    appends the universal `icon` / `hide_header` / `compact` / `hide_outage_warning` fields - those are honored generically by
    `LibrusBaseCard` (see `utils/base-card.ts`), so a new card gets them for free.

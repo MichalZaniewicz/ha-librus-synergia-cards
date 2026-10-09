@@ -34,6 +34,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   show_saturday?: boolean;
   /** Grade log: also list descriptive grades (off by default). */
   show_descriptive?: boolean;
+  /** Grade log / Descriptive grades: don't show who gave each grade. */
+  hide_teacher?: boolean;
   /** Comma-separated category keywords the exam-countdown card treats as an exam. */
   exam_keywords?: string;
   /** Comma-separated category keywords - grade-log/subject-grades keep a grade if its category matches any. */

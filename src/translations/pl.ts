@@ -81,6 +81,7 @@ export const pl: Record<keyof typeof en, string> = {
   "editor.mailbox": "Skrzynka",
   "editor.show_saturday": "Pokaż sobotę",
   "editor.show_descriptive": "Pokaż oceny opisowe",
+  "editor.hide_teacher": "Ukryj nauczyciela",
   "editor.exam_keywords": "Słowa-klucze kategorii sprawdzianów (po przecinku)",
   "editor.icon": "Własna ikona (np. mdi:star)",
   "editor.hide_header": "Ukryj nagłówek",

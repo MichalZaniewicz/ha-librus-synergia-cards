@@ -80,6 +80,7 @@ export const en = {
   "editor.mailbox": "Mailbox",
   "editor.show_saturday": "Show Saturday",
   "editor.show_descriptive": "Show descriptive grades",
+  "editor.hide_teacher": "Hide the teacher",
   "editor.exam_keywords": "Exam category keywords (comma-separated)",
   "editor.icon": "Icon override (e.g. mdi:star)",
   "editor.hide_header": "Hide header",
