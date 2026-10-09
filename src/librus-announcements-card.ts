@@ -16,6 +16,8 @@ interface RecentAnnouncement {
   start_date: string | null;
   end_date: string | null;
   creation_date: string | null;
+  /** Integration 0.12.5+: the notice board lists read notices too. */
+  read?: boolean;
 }
 
 @customElement("librus-announcements-card")
@@ -59,7 +61,14 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
     const hass = this.hass;
 
     const entity = map.unread_announcements ? hass.states[map.unread_announcements] : undefined;
-    const recent = (entity?.attributes.recent as RecentAnnouncement[] | undefined) ?? [];
+    // The whole board (`notices`, read ones too) when the integration
+    // provides it - Librus marks a notice read once it's opened anywhere,
+    // so the unread-only `recent` is usually empty.
+    const recent =
+      (entity?.attributes.notices as RecentAnnouncement[] | undefined) ??
+      (entity?.attributes.recent as RecentAnnouncement[] | undefined) ??
+      [];
+    const unread = Number(entity?.state) || 0;
 
     if (!entity || recent.length === 0) {
       return this._message("mdi:bullhorn-outline", t(hass, "card.announcements.empty"));
@@ -73,7 +82,9 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
           <div class="icon-badge amber"><ha-icon icon="mdi:bullhorn-outline"></ha-icon></div>
           <div class="title-block">
             <div class="title">${this._config.title ?? t(hass, "card.announcements.title")}</div>
-            <div class="subtitle">${entity.state}</div>
+            <div class="subtitle">
+              ${unread ? t(hass, "card.announcements.unread", { n: unread }) : t(hass, "card.announcements.all_read")}
+            </div>
           </div>
         </div>
         <div class="scroll-list">
@@ -86,8 +97,8 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
             // resetting itself back to collapsed on every click).
             const key = a.id ?? String(i);
             return html`
-              <div class="list-item clickable" @click=${() => this._toggleExpanded(key)}>
-                <span class="dot neutral"></span>
+              <div class="list-item clickable ${a.read ? "read" : "unread"}" @click=${() => this._toggleExpanded(key)}>
+                <span class="dot ${a.read === false ? "good" : "neutral"}"></span>
                 <div class="body">
                   <div class="row1">${a.subject}</div>
                   ${a.start_date && a.end_date
@@ -112,6 +123,12 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
     css`
       .list-item.clickable {
         cursor: pointer;
+      }
+      .list-item.unread .row1 {
+        font-weight: 700;
+      }
+      .list-item.read .row1 {
+        color: var(--secondary-text-color);
       }
       .full-text {
         font-size: 0.75rem;

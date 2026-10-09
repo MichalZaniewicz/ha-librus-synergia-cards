@@ -277,6 +277,8 @@ export const en = {
 
   "card.announcements.title": "Announcements",
   "card.announcements.empty": "No announcements",
+  "card.announcements.unread": "{n} unread",
+  "card.announcements.all_read": "All read",
 
   "card.homework_assignments.title": "Homework assignments",
   "card.homework_assignments.empty": "No homework assignments",

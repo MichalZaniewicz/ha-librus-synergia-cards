@@ -389,6 +389,11 @@
       recent: [
         { id: "LID-NBOARD-NOTICE-1", subject: "Kandydaci do Rady Samorządu Uczniowskiego", content: "Zgłoszenia przyjmujemy do końca miesiąca. Kandydaci powinni złożyć krótki opis swojego programu wyborczego u wychowawcy klasy najpóźniej do piątku.", start_date: iso(today), end_date: iso(new Date(today.getTime() + 29 * 86400000)), creation_date: iso(today) },
       ],
+      notices: [
+        { id: "LID-NBOARD-NOTICE-1", subject: "Kandydaci do Rady Samorządu Uczniowskiego", content: "Zgłoszenia przyjmujemy do końca miesiąca. Kandydaci powinni złożyć krótki opis swojego programu wyborczego u wychowawcy klasy najpóźniej do piątku.", start_date: iso(today), end_date: iso(new Date(today.getTime() + 29 * 86400000)), creation_date: iso(today), read: false },
+        { id: "LID-NBOARD-NOTICE-2", subject: "Dzień Edukacji Narodowej - dzień wolny", content: "14 października zajęcia dydaktyczne się nie odbywają. Świetlica czynna 7:00-16:00.", start_date: iso(new Date(today.getTime() - 4 * 86400000)), end_date: iso(new Date(today.getTime() + 6 * 86400000)), creation_date: iso(new Date(today.getTime() - 4 * 86400000)), read: true },
+        { id: "LID-NBOARD-NOTICE-3", subject: "Zbiórka makulatury", content: "Zbieramy makulaturę do końca miesiąca, punkt przy sali gimnastycznej.", start_date: iso(new Date(today.getTime() - 12 * 86400000)), end_date: iso(new Date(today.getTime() + 18 * 86400000)), creation_date: iso(new Date(today.getTime() - 12 * 86400000)), read: true },
+      ],
     }, 1);
     addEntity("sensor.behaviour_notices", "behaviour_notices", {
       recent: [

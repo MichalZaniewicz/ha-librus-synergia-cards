@@ -278,6 +278,8 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.announcements.title": "Ogłoszenia",
   "card.announcements.empty": "Brak ogłoszeń",
+  "card.announcements.unread": "Nieprzeczytane: {n}",
+  "card.announcements.all_read": "Wszystkie przeczytane",
 
   "card.homework_assignments.title": "Zadania domowe",
   "card.homework_assignments.empty": "Brak zadań domowych",
