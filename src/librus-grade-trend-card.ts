@@ -76,7 +76,7 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
     // The history only grows when this sensor's value changes, so its
     // last_changed is the key - not every Librus refresh.
     const cacheKey = `${range}:${this.hass.states[entityId]?.last_changed ?? ""}`;
-    if (!force && this._fetchedFor === cacheKey) return;
+    if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
     this._fetchedFor = cacheKey;
 
     const generation = this._beginFetch();
@@ -87,8 +87,29 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
         this._fetchSucceeded(range);
       }
     } catch {
+      this._fetchFailed(generation);
       if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._points = [];
     }
+  }
+
+  /**
+   * The fetched history plus the sensor's live value when that differs from
+   * the last history point. A changed average changes the cache key at
+   * once, but the history request then runs within ~100 ms - before the
+   * recorder commits the new state (~5 s) - so the newest value was missing
+   * until midnight or the next change.
+   */
+  private _withLivePoint(entityId: string): HistoryPoint[] {
+    const live = this.hass?.states[entityId];
+    return this._memo("points", [this._points, live], () => {
+      const value = Number(live?.state);
+      if (!live || live.state === "" || !Number.isFinite(value)) return this._points;
+      const last = this._points[this._points.length - 1];
+      if (last && last.value === value) return this._points;
+      const changed = new Date(live.last_changed).getTime();
+      const timestamp = Number.isNaN(changed) ? Date.now() : Math.max(changed, last ? last.timestamp + 1 : changed);
+      return [...this._points, { timestamp, value }];
+    });
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -109,12 +130,13 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
           )?.subject
         : undefined;
 
-    if (!entityId || this._points.length < 2) {
+    const points = entityId ? this._withLivePoint(entityId) : [];
+    if (!entityId || points.length < 2) {
       return this._message("mdi:chart-line", t(hass, "card.grade_trend.empty"));
     }
 
-    const first = this._points[0];
-    const last = this._points[this._points.length - 1];
+    const first = points[0];
+    const last = points[points.length - 1];
     const delta = Math.round((last.value - first.value) * 100) / 100;
     const trendIcon = delta > 0 ? "mdi:trending-up" : delta < 0 ? "mdi:trending-down" : "mdi:trending-neutral";
     const trendClass = delta > 0 ? "good" : delta < 0 ? "bad" : "";
@@ -134,7 +156,7 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
         </div>
         <div class="chart-row">
           <div class="current-value">${last.value.toFixed(2)}</div>
-          ${lineChart(this._points, { colorVar: "var(--lc-brand)" })}
+          ${lineChart(points, { colorVar: "var(--lc-brand)" })}
         </div>
       </ha-card>
     `;

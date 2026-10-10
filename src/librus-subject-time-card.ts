@@ -66,7 +66,7 @@ export class LibrusSubjectTimeCard extends LibrusBaseCard {
     rangeEnd.setDate(rangeEnd.getDate() + this._dayCount);
     const range = `${entityId}:${monday.toDateString()}:${this._dayCount}`;
     const cacheKey = `${range}:${this._dataStamp()}`;
-    if (!force && this._fetchedFor === cacheKey) return;
+    if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
     this._fetchedFor = cacheKey;
 
     const generation = this._beginFetch();
@@ -77,6 +77,7 @@ export class LibrusSubjectTimeCard extends LibrusBaseCard {
         this._fetchSucceeded(range);
       }
     } catch {
+      this._fetchFailed(generation);
       if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._events = [];
     }
   }

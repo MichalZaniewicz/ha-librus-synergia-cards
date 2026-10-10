@@ -24,6 +24,9 @@ type ResolvedEntities = { deviceId: string; map: Record<string, string> } | { er
  * when a new `hass` arrives - day changes, "X min ago" texts and the like. */
 const HEARTBEAT_MS = 60_000;
 
+/** A failed on-demand fetch is tried again no sooner than this. */
+const FETCH_RETRY_MS = 60_000;
+
 interface CardTimer {
   fn: () => void;
   handle: ReturnType<typeof setInterval>;
@@ -271,12 +274,38 @@ export abstract class LibrusBaseCard extends LitElement {
    * that gap.
    */
   protected _beginFetch(): number {
+    this._fetchFailedAt = undefined;
     return ++this._fetchGeneration;
   }
 
   /** True if `generation` (from `_beginFetch()`) is still the most recent one. */
   protected _isCurrentFetch(generation: number): boolean {
     return generation === this._fetchGeneration;
+  }
+
+  // When the latest fetch failed - see _fetchFailed()/_retryDue().
+  private _fetchFailedAt?: number;
+
+  /**
+   * Call from a fetch's catch (with its `_beginFetch()` generation). A card
+   * sets `_fetchedFor` before awaiting, so without this a fetch that failed
+   * (e.g. during an HA restart just after midnight) was never retried while
+   * the cache key stayed the same - the card stayed empty for hours.
+   */
+  protected _fetchFailed(generation: number): void {
+    if (this._isCurrentFetch(generation)) this._fetchFailedAt = Date.now();
+  }
+
+  /**
+   * True once the latest fetch failed at least a minute ago: the card's
+   * `_fetch()` then runs again even though its cache key is unchanged. Not
+   * sooner - render() calls `_fetch()` on every render, and an immediate
+   * retry would hammer a Home Assistant that isn't answering. The retry
+   * comes with the next render after that (the heartbeat brings one at
+   * least once a minute) or the card's own timer.
+   */
+  protected _retryDue(): boolean {
+    return this._fetchFailedAt !== undefined && Date.now() - this._fetchFailedAt >= FETCH_RETRY_MS;
   }
 
   // The range key (the cache key without the data stamp: entity, dates,

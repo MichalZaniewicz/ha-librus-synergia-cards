@@ -69,7 +69,7 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
     dayAfter.setDate(dayAfter.getDate() + 1);
     const range = `${entityId}:${isoDate(target)}`;
     const cacheKey = `${range}:${this._dataStamp()}`;
-    if (!force && this._fetchedFor === cacheKey) return;
+    if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
     this._fetchedFor = cacheKey;
 
     const generation = this._beginFetch();
@@ -81,6 +81,7 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
         this._fetchSucceeded(range);
       }
     } catch {
+      this._fetchFailed(generation);
       if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._lessons = [];
     }
   }

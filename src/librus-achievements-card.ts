@@ -15,6 +15,8 @@ const STORAGE_PREFIX = "librus-achievements:";
 // ha-librus-synergia 0.6.0) - just a sane upper bound so a stored list
 // can't grow without limit if the vocabulary ever grows a lot.
 const MAX_STORED = 50;
+// Wait before subscribing again after a passing failure (not a refusal).
+const SUBSCRIBE_RETRY_MS = 60_000;
 
 interface AchievementEventData {
   entry_id: string | null;
@@ -86,6 +88,8 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
   // `subscribeEvents()` and it resolving - see that method's own comment.
   private _subscribeGeneration = 0;
   private _torndown = false;
+  // After a failed (not refused) subscription: no new attempt before this time.
+  private _subscribeRetryAt = 0;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -107,6 +111,10 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
   public connectedCallback(): void {
     super.connectedCallback();
     this._torndown = false;
+    // disconnectedCallback() dropped the subscription, and only render()
+    // subscribes again - with shouldUpdate() a reconnected card may not
+    // render for up to a minute and would miss events meanwhile.
+    this.requestUpdate();
   }
 
   public disconnectedCallback(): void {
@@ -160,6 +168,7 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
    */
   private async _subscribe(deviceId: string): Promise<void> {
     if (this._subscribedDeviceId === deviceId || !this.hass) return;
+    if (Date.now() < this._subscribeRetryAt) return;
     this._subscribedDeviceId = deviceId;
     this._unsubscribe?.();
     this._unsubscribe = undefined;
@@ -175,11 +184,18 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
         this._unlocked = [...this._unlocked, { id: data.id, title: data.title, when: new Date().toISOString() }];
         this._persist();
       }, EVENT_TYPE);
-    } catch {
+    } catch (err) {
       // Home Assistant only lets administrators subscribe to an integration's
-      // own events - for anyone else this rejects. The card then simply shows
-      // what it already knows; `_subscribedDeviceId` stays set so it doesn't
-      // retry (and fail) on every render.
+      // own events - for anyone else this rejects with `unauthorized`. The
+      // card then simply shows what it already knows; `_subscribedDeviceId`
+      // stays set so it doesn't retry (and fail) on every render. Any other
+      // failure (a websocket reconnecting during an HA restart) is passing:
+      // try again on a render a minute later.
+      const code = (err as { code?: unknown } | null)?.code;
+      if (code !== "unauthorized" && !this._torndown && generation === this._subscribeGeneration) {
+        this._subscribedDeviceId = undefined;
+        this._subscribeRetryAt = Date.now() + SUBSCRIBE_RETRY_MS;
+      }
       return;
     }
 

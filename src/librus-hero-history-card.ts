@@ -8,7 +8,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate, daysBetween } from "./utils/format";
 import { t } from "./utils/localize";
 import { applyListOptions } from "./utils/list-options";
-import { CATALOG, HERO_HISTORY_EVENT, readHeroHistory, type HeroMode } from "./utils/hero-archetypes";
+import { CATALOG, HERO_HISTORY_EVENT, HERO_HISTORY_STORAGE_PREFIX, readHeroHistory, type HeroMode } from "./utils/hero-archetypes";
 import { isoDate } from "./utils/calendar";
 
 /**
@@ -23,21 +23,31 @@ import { isoDate } from "./utils/calendar";
 @customElement("librus-hero-history-card")
 export class LibrusHeroHistoryCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
-  // Bumped when the Hero card on this page records a new result.
+  // Bumped when the Hero card on this page records a new result, when
+  // another browser tab writes the log (`storage` event), and on every
+  // reconnect - while this card was off screen (another dashboard view) the
+  // Hero card may have recorded entries it never heard about.
   @state() private _historyVersion = 0;
 
   private _onHistoryChanged = (): void => {
     this._historyVersion += 1;
   };
 
+  private _onStorage = (ev: StorageEvent): void => {
+    if (ev.key === null || ev.key.startsWith(HERO_HISTORY_STORAGE_PREFIX)) this._historyVersion += 1;
+  };
+
   public connectedCallback(): void {
     super.connectedCallback();
+    this._historyVersion += 1;
     window.addEventListener(HERO_HISTORY_EVENT, this._onHistoryChanged);
+    window.addEventListener("storage", this._onStorage);
   }
 
   public disconnectedCallback(): void {
     super.disconnectedCallback();
     window.removeEventListener(HERO_HISTORY_EVENT, this._onHistoryChanged);
+    window.removeEventListener("storage", this._onStorage);
   }
 
   public static getConfigElement(): LovelaceCardEditor {

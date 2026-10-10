@@ -135,7 +135,7 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
     end.setDate(end.getDate() + this._daysAhead + 1);
     const range = `${entityId}:${isoDate(start)}:${isoDate(end)}`;
     const cacheKey = `${range}:${this._dataStamp()}`;
-    if (!force && this._fetchedFor === cacheKey) return;
+    if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
     this._fetchedFor = cacheKey;
     const generation = this._beginFetch();
     try {
@@ -150,6 +150,7 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
         this._fetchSucceeded(range);
       }
     } catch {
+      this._fetchFailed(generation);
       if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._changes = [];
     }
   }

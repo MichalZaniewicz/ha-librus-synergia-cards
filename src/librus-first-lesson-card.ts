@@ -145,10 +145,11 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
     end.setDate(end.getDate() + 1);
     const range = `${ids.join(",")}:${isoDate(today)}`;
     const cacheKey = `${range}:${this._dataStamp(true)}`;
-    if (!force && this._fetchedFor === cacheKey) return;
+    if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
     this._fetchedFor = cacheKey;
 
     const generation = this._beginFetch();
+    let failed = false;
     const results = await Promise.all(
       ids.map(async (id): Promise<[string, LibrusCalendarEvent[] | undefined]> => {
         const entityId = mapByTranslationKey(hass, id).timetable;
@@ -156,6 +157,7 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
         try {
           return [id, await fetchCalendarEvents(hass, entityId, today, end)];
         } catch {
+          failed = true;
           // A failed refresh keeps that student's lessons from the same day.
           return [id, this._keepAfterError(range) ? this._events.get(id) : undefined];
         }
@@ -164,6 +166,8 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
     if (this._isCurrentFetch(generation)) {
       this._events = new Map(results);
       this._fetchSucceeded(range);
+      // Tried again a minute later, so that student's lessons come back.
+      if (failed) this._fetchFailed(generation);
     }
   }
 

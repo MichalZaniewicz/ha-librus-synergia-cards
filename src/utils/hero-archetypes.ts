@@ -295,7 +295,7 @@ export function computeHeroResult(inputs: HeroInputs): HeroResult | null {
   };
 }
 
-const HISTORY_STORAGE_PREFIX = "librus-hero-history:";
+export const HERO_HISTORY_STORAGE_PREFIX = "librus-hero-history:";
 // Generous but bounded, same order of magnitude as achievements-card's own
 // MAX_STORED - this is a "recent trend" log, not a full career record.
 const HISTORY_MAX_STORED = 30;
@@ -317,7 +317,7 @@ export interface HeroHistoryEntry {
  */
 export function recordHeroHistory(deviceId: string, resultId: string): void {
   try {
-    const key = `${HISTORY_STORAGE_PREFIX}${deviceId}`;
+    const key = `${HERO_HISTORY_STORAGE_PREFIX}${deviceId}`;
     const raw = window.localStorage.getItem(key);
     const history: HeroHistoryEntry[] = raw ? JSON.parse(raw) : [];
     const last = history[history.length - 1];
@@ -338,7 +338,7 @@ export const HERO_HISTORY_EVENT = "librus-hero-history-changed";
  * they were recorded in. */
 export function readHeroHistory(deviceId: string): HeroHistoryEntry[] {
   try {
-    const raw = window.localStorage.getItem(`${HISTORY_STORAGE_PREFIX}${deviceId}`);
+    const raw = window.localStorage.getItem(`${HERO_HISTORY_STORAGE_PREFIX}${deviceId}`);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];

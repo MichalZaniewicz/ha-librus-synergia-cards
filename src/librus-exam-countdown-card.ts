@@ -124,7 +124,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
     const kw = this._config.exam_keywords || DEFAULT_EXAM_KEYWORDS;
     const range = `${entityId}:${today.toDateString()}:${kw}`;
     const cacheKey = `${range}:${this._dataStamp()}`;
-    if (!force && this._fetchedFor === cacheKey) return;
+    if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
     this._fetchedFor = cacheKey;
 
     const re = examRegex(this._config.exam_keywords);
@@ -142,6 +142,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
         this._fetchSucceeded(range);
       }
     } catch {
+      this._fetchFailed(generation);
       if (this._isCurrentFetch(generation) && !this._keepAfterError(range)) this._events = [];
     }
   }

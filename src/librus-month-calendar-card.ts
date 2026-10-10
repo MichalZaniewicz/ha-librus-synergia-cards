@@ -106,7 +106,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const end = new Date(shown.getFullYear(), shown.getMonth() + 1, 1);
     const range = `${agenda}:${freeDays}:${isoDate(start)}`;
     const cacheKey = `${range}:${this._dataStamp()}`;
-    if (!force && this._fetchedFor === cacheKey) return;
+    if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
     this._fetchedFor = cacheKey;
     const generation = this._beginFetch();
     // undefined = the fetch failed (an entity that isn't there loads as []).
@@ -119,6 +119,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     this._agenda = agendaEvents ?? (keep ? this._agenda : []);
     this._free = freeEvents ?? (keep ? this._free : []);
     if (agendaEvents && freeEvents) this._fetchSucceeded(range);
+    else this._fetchFailed(generation);
   }
 
   private _shift(months: number): void {

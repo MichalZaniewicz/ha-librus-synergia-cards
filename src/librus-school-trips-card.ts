@@ -7,6 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { daysBetween, formatShortDate, formatDate } from "./utils/format";
+import { isoDate } from "./utils/calendar";
 
 /** One trip in the Next school trip sensor's attributes (integration 0.12.0+). */
 interface Trip {
@@ -54,7 +55,13 @@ export class LibrusSchoolTripsCard extends LibrusBaseCard {
     const entity = entityId ? hass.states[entityId] : undefined;
     if (!entity) return this._message("mdi:bus-school", t(hass, "card.school_trips.requires"));
 
-    const upcoming = (entity.attributes.upcoming as Trip[] | undefined) ?? [];
+    // The sensor's list only changes when the sensor does - after midnight a
+    // trip that ended yesterday would still lead it and read "today".
+    const today = isoDate(new Date());
+    const upcoming = ((entity.attributes.upcoming as Trip[] | undefined) ?? []).filter((trip) => {
+      const last = (trip.date_to ?? trip.date_from)?.slice(0, 10);
+      return !last || last >= today;
+    });
     const title = this._config.title ?? t(hass, "card.school_trips.title");
     if (upcoming.length === 0) {
       return this._message("mdi:bus-school", title, t(hass, "card.school_trips.empty"));
