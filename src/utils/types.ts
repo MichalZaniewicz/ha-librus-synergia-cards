@@ -46,6 +46,16 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   category_filter?: string;
   /** Sort order for the list cards that support it ("newest" default). */
   sort?: "newest" | "oldest";
+  /** Attendance colours: at or above this % is good (default 90). */
+  good_above?: number;
+  /** Attendance colours: below this % is bad (Attendance 75, Attendance by subject 50). */
+  bad_below?: number;
+  /** Report card: the average the distinction needs (default 4.75). */
+  honours?: number;
+  /** Attendance heatmap: show only the last N weeks (default: the whole school year). */
+  weeks?: number;
+  /** Month calendar: leave out the cancelled lessons and substitutions. */
+  hide_changes?: boolean;
   /** Which tone the Hero/Archetype card shows ("archetype" default). */
   mode?: "archetype" | "hero";
   /** Tap behaviour for the glanceable cards (navigate / more-info / url / call-service).

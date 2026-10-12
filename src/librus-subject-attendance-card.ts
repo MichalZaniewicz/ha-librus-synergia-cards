@@ -25,8 +25,9 @@ const WARN_BELOW = 90;
 
 type Level = "good" | "warn" | "bad" | "few";
 
-const levelOf = (s: SubjectAttendance): Level =>
-  s.total < MIN_RECORDS ? "few" : s.percentage < RISK_BELOW ? "bad" : s.percentage < WARN_BELOW ? "warn" : "good";
+/** `riskBelow` / `warnBelow` come from the card's `bad_below` / `good_above`. */
+const levelOf = (s: SubjectAttendance, riskBelow = RISK_BELOW, warnBelow = WARN_BELOW): Level =>
+  s.total < MIN_RECORDS ? "few" : s.percentage < riskBelow ? "bad" : s.percentage < warnBelow ? "warn" : "good";
 
 /**
  * Attendance per subject as a grid of tiles (approved mockup variant B,
@@ -75,7 +76,7 @@ export class LibrusSubjectAttendanceCard extends LibrusBaseCard {
     }
     const subjects = (sensor.attributes.subjects as Record<string, SubjectAttendance> | undefined) ?? {};
     const rows = Object.entries(subjects)
-      .map(([name, s]) => ({ name, ...s, level: levelOf(s) }))
+      .map(([name, s]) => ({ name, ...s, level: levelOf(s, this._config?.bad_below, this._config?.good_above) }))
       .sort(
         (a, b) =>
           Number(a.level === "few") - Number(b.level === "few") ||

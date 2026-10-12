@@ -9,8 +9,8 @@ import { parseCategory, formatDate } from "./utils/format";
 import { t, type TranslationKey } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 
-type Kind = "test" | "quiz" | "trip" | "meeting" | "homework" | "other";
-const KINDS: Kind[] = ["test", "quiz", "trip", "meeting", "homework", "other"];
+type Kind = "test" | "quiz" | "trip" | "meeting" | "homework" | "other" | "cancelled" | "substitution";
+const KINDS: Kind[] = ["test", "quiz", "trip", "meeting", "homework", "other", "cancelled", "substitution"];
 // Agenda categories are each school's own names, so they're matched by text.
 const KIND_RE: [Kind, RegExp][] = [
   ["quiz", /kartk|quiz/i],
@@ -31,8 +31,17 @@ interface HomeworkItem {
   due_date?: string | null;
 }
 
-// One shared empty list, so _index()'s memo still hits without homework.
+/** One lesson change in the Cancelled lessons sensor's `by_date` attribute. */
+interface LessonChangeItem {
+  lesson_no: number | null;
+  subject: string | null;
+  kind: "cancelled" | "substitution" | "shifted";
+}
+type ChangesByDate = Record<string, LessonChangeItem[]>;
+
+// Shared empty values, so _index()'s memo still hits without them.
 const NO_HOMEWORK: HomeworkItem[] = [];
+const NO_CHANGES: ChangesByDate = {};
 
 function kindOf(category: string | null, text: string): Kind {
   const haystack = `${category ?? ""} ${text}`;
@@ -140,13 +149,17 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     agenda: LibrusCalendarEvent[];
     free: LibrusCalendarEvent[];
     homework: HomeworkItem[];
+    changes: ChangesByDate;
     month: string;
     language: string;
     result: { entries: Map<string, DayEntry[]>; free: Map<string, string> };
   };
 
   /** date -> entries, and date -> free-day name, for the shown month. */
-  private _index(homework: HomeworkItem[]): { entries: Map<string, DayEntry[]>; free: Map<string, string> } {
+  private _index(
+    homework: HomeworkItem[],
+    changes: ChangesByDate
+  ): { entries: Map<string, DayEntry[]>; free: Map<string, string> } {
     const hass = this.hass!;
     const month = isoDate(this._shownMonth);
     const c = this._indexCache;
@@ -155,17 +168,21 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
       c.agenda === this._agenda &&
       c.free === this._free &&
       c.homework === homework &&
+      c.changes === changes &&
       c.month === month &&
       c.language === hass.language
     ) {
       return c.result;
     }
-    const result = this._buildIndex(homework);
-    this._indexCache = { agenda: this._agenda, free: this._free, homework, month, language: hass.language, result };
+    const result = this._buildIndex(homework, changes);
+    this._indexCache = { agenda: this._agenda, free: this._free, homework, changes, month, language: hass.language, result };
     return result;
   }
 
-  private _buildIndex(homework: HomeworkItem[]): { entries: Map<string, DayEntry[]>; free: Map<string, string> } {
+  private _buildIndex(
+    homework: HomeworkItem[],
+    changes: ChangesByDate
+  ): { entries: Map<string, DayEntry[]>; free: Map<string, string> } {
     const hass = this.hass!;
     const entries = new Map<string, DayEntry[]>();
     const add = (day: string, entry: DayEntry) => entries.set(day, [...(entries.get(day) ?? []), entry]);
@@ -188,6 +205,27 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
         detail: hw.topic || undefined,
       });
     }
+    // Lessons the school cancelled or covered with a substitute: one entry
+    // per kind and day, listing the lessons.
+    for (const [day, items] of Object.entries(changes)) {
+      for (const kind of ["cancelled", "substitution"] as const) {
+        const lessons = items.filter((c) => (kind === "cancelled" ? c.kind === "cancelled" : c.kind !== "cancelled"));
+        if (!lessons.length) continue;
+        add(day, {
+          kind,
+          title: t(hass, kind === "cancelled" ? "card.month.cancelled_n" : "card.month.substitution_n", {
+            n: lessons.length,
+          }),
+          detail: lessons
+            .map((c) =>
+              [c.lesson_no ? t(hass, "card.changes.lesson_no", { n: c.lesson_no }) : "", c.subject ?? ""]
+                .filter(Boolean)
+                .join(" ")
+            )
+            .join(", "),
+        });
+      }
+    }
     const free = new Map<string, string>();
     for (const ev of this._free) for (const day of coveredDays(ev)) free.set(day, ev.summary);
     return { entries, free };
@@ -205,7 +243,11 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
 
     const homeworkEntity = map.homework_assignments ? hass.states[map.homework_assignments] : undefined;
     const homework = (homeworkEntity?.attributes.recent as HomeworkItem[] | undefined) ?? NO_HOMEWORK;
-    const { entries, free } = this._index(homework);
+    // Cancelled lessons and substitutions (integration 0.12.10+), unless hidden.
+    const changesEntity =
+      !this._config.hide_changes && map.cancelled_lessons ? hass.states[map.cancelled_lessons] : undefined;
+    const changes = (changesEntity?.attributes.by_date as ChangesByDate | undefined) ?? NO_CHANGES;
+    const { entries, free } = this._index(homework, changes);
 
     const shownMonth = this._shownMonth;
     const year = shownMonth.getFullYear();
@@ -415,6 +457,17 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
       }
       .k-other {
         background: var(--secondary-text-color);
+      }
+      /* The school's lesson changes are rings, so they don't read as a test
+         (red) or a quiz (amber) dot. */
+      .k-cancelled,
+      .k-substitution {
+        background: transparent;
+        box-sizing: border-box;
+        border: 2px solid var(--lc-bad);
+      }
+      .k-substitution {
+        border-color: var(--lc-amber);
       }
       .free-box {
         width: 9px;

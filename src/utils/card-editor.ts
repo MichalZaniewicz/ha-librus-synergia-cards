@@ -66,12 +66,13 @@ type EditorField =
         | "only_tomorrow"
         | "summary_only"
         | "hide_generate"
-        | "hide_past";
+        | "hide_past"
+        | "hide_changes";
       label: TranslationKey;
     }
   | {
       kind: "number";
-      key: "max_items" | "days_ahead" | "days" | "target" | "list_height";
+      key: "max_items" | "days_ahead" | "days" | "target" | "list_height" | "good_above" | "bad_below" | "honours" | "weeks";
       label: TranslationKey;
       min: number;
       max: number;
@@ -156,6 +157,8 @@ const SORT_FIELD: EditorField = { kind: "select", key: "sort", label: "editor.so
 const DAYS_BACK_FIELD: EditorField = { kind: "number", key: "days", label: "editor.days_back", min: 7, max: 365 };
 
 const TITLE_FIELD: EditorField = { kind: "text", key: "title", label: "editor.title" };
+const GOOD_ABOVE_FIELD: EditorField = { kind: "number", key: "good_above", label: "editor.good_above", min: 1, max: 100 };
+const BAD_BELOW_FIELD: EditorField = { kind: "number", key: "bad_below", label: "editor.bad_below", min: 0, max: 99 };
 const MAX_ITEMS_FIELD = (max: number): EditorField => ({
   kind: "number",
   key: "max_items",
@@ -180,7 +183,10 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-cancelled-lessons-card": [TITLE_FIELD, MAX_ITEMS_FIELD(16)],
   "custom:librus-justifications-card": [TITLE_FIELD, MAX_ITEMS_FIELD(10)],
   "custom:librus-catch-up-card": [TITLE_FIELD],
-  "custom:librus-month-calendar-card": [TITLE_FIELD],
+  "custom:librus-month-calendar-card": [
+    TITLE_FIELD,
+    { kind: "boolean", key: "hide_changes", label: "editor.hide_changes" },
+  ],
   "custom:librus-substitutions-card": [
     TITLE_FIELD,
     { kind: "number", key: "days_ahead", label: "editor.days_ahead", min: 1, max: 30 },
@@ -200,8 +206,16 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     { kind: "boolean", key: "hide_teacher", label: "editor.hide_teacher" },
   ],
   "custom:librus-recent-activity-card": [TITLE_FIELD, MAX_ITEMS_FIELD(50)],
-  "custom:librus-subject-attendance-card": [TITLE_FIELD],
-  "custom:librus-report-card-card": [TITLE_FIELD],
+  "custom:librus-subject-attendance-card": [TITLE_FIELD, GOOD_ABOVE_FIELD, BAD_BELOW_FIELD],
+  "custom:librus-report-card-card": [
+    TITLE_FIELD,
+    { kind: "number", key: "honours", label: "editor.honours", min: 3, max: 6, float: true },
+  ],
+  "custom:librus-attendance-card": [TITLE_FIELD, GOOD_ABOVE_FIELD, BAD_BELOW_FIELD],
+  "custom:librus-attendance-heatmap-card": [
+    TITLE_FIELD,
+    { kind: "number", key: "weeks", label: "editor.weeks", min: 4, max: 52 },
+  ],
   "custom:librus-school-day-card": [TITLE_FIELD],
   "custom:librus-homework-checklist-card": [TITLE_FIELD, MAX_ITEMS_FIELD(30)],
   "custom:librus-announcements-card": [TITLE_FIELD, MAX_ITEMS_FIELD(20)],
@@ -250,6 +264,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-exam-countdown-card": [
     TITLE_FIELD,
     { kind: "text", key: "exam_keywords", label: "editor.exam_keywords" },
+    { kind: "number", key: "days_ahead", label: "editor.exam_days_ahead", min: 7, max: 365 },
   ],
   "custom:librus-hero-card": [
     TITLE_FIELD,

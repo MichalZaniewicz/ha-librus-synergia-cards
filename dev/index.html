@@ -540,6 +540,12 @@
           "Język angielski": { cancelled: 0, substitutions: 2 },
         },
         by_month: { "2026-09": { cancelled: 6, substitutions: 9 }, "2026-10": { cancelled: 3, substitutions: 6 } },
+        by_date: {
+          [ago(1)]: [{ lesson_no: 4, subject: "Historia", kind: "substitution" }],
+          [ago(4)]: [{ lesson_no: 2, subject: "Matematyka", kind: "cancelled" }, { lesson_no: 3, subject: "Matematyka", kind: "cancelled" }],
+          [ago(5)]: [{ lesson_no: 6, subject: "Wychowanie fizyczne", kind: "substitution" }],
+          [ago(8)]: [{ lesson_no: 1, subject: "Chemia", kind: "cancelled" }, { lesson_no: 5, subject: "Biologia", kind: "substitution" }],
+        },
         recent: [
           { date: ago(1), lesson_no: 4, subject: "Historia", teacher: "Jan Kowalski", kind: "substitution", new_subject: "Historia", new_teacher: "Anna Nowak", classroom: "12" },
           { date: ago(4), lesson_no: 2, subject: "Matematyka", teacher: "Jan Kowalski", kind: "cancelled", new_subject: null, new_teacher: null, classroom: "21" },

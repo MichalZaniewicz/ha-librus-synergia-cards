@@ -43,6 +43,7 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
     todayIso: string;
     /** The cell tooltips are translated. */
     language: string;
+    weeksOption: number | undefined;
     weeks: Date[];
     grid: TemplateResult;
   };
@@ -88,13 +89,27 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
     const cached = this._gridCache;
     let weeks: Date[];
     let grid: TemplateResult;
-    if (cached && cached.byDate === byDate && cached.yearStartIso === yearStartIso && cached.todayIso === todayIso && cached.language === hass.language) {
+    const weeksOption = this._config.weeks;
+    if (
+      cached &&
+      cached.byDate === byDate &&
+      cached.yearStartIso === yearStartIso &&
+      cached.todayIso === todayIso &&
+      cached.language === hass.language &&
+      cached.weeksOption === weeksOption
+    ) {
       ({ weeks, grid } = cached);
     } else {
       const todayMonday = mondayOfWeek(today);
-      const startMonday = yearStartIso
-        ? mondayOfWeek(new Date(`${yearStartIso}T00:00:00`))
-        : new Date(todayMonday.getTime() - FALLBACK_LOOKBACK_WEEKS * 7 * 86400000);
+      const yearStart = yearStartIso ? mondayOfWeek(new Date(`${yearStartIso}T00:00:00`)) : undefined;
+      // `weeks` shows only the last N weeks (never before the year started).
+      const lastWeeks = weeksOption
+        ? new Date(todayMonday.getTime() - (weeksOption - 1) * 7 * 86400000)
+        : undefined;
+      const startMonday =
+        lastWeeks && (!yearStart || lastWeeks > yearStart)
+          ? lastWeeks
+          : (yearStart ?? new Date(todayMonday.getTime() - FALLBACK_LOOKBACK_WEEKS * 7 * 86400000));
 
       weeks = [];
       for (let w = new Date(startMonday); w <= todayMonday; w.setDate(w.getDate() + 7)) {
@@ -116,7 +131,7 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
         `
       )}`;
 
-      this._gridCache = { byDate, yearStartIso, todayIso, language: hass.language, weeks, grid };
+      this._gridCache = { byDate, yearStartIso, todayIso, language: hass.language, weeksOption, weeks, grid };
     }
 
     return html`

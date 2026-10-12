@@ -76,8 +76,11 @@ export class LibrusReportCardCard extends LibrusBaseCard {
     const average = Number(sensor.state);
     const atRisk = rows.filter((r) => r.at_risk).length;
     const declining = rows.filter((r) => r.declining).length;
-    const honours = average >= HONOURS;
-    const barPct = Math.max(0, Math.min(100, ((average - BAR_FROM) / (HONOURS - BAR_FROM)) * 100));
+    // The distinction line from the card options (schools set their own).
+    const honoursLine = this._config.honours ?? HONOURS;
+    const barFrom = Math.min(BAR_FROM, honoursLine - 0.5);
+    const honours = average >= honoursLine;
+    const barPct = Math.max(0, Math.min(100, ((average - barFrom) / (honoursLine - barFrom)) * 100));
     const fmt = (v: number) =>
       formatNumber(v, hass.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const basis = sensor.attributes.basis === "school_year" ? "school_year" : "semester_1";
@@ -110,11 +113,11 @@ export class LibrusReportCardCard extends LibrusBaseCard {
         <div class="honours">
           <div class="hbar"><span class=${honours ? "done" : ""} style="width:${barPct}%"></span></div>
           <div class="hrow">
-            <span>${t(hass, "card.report_card.honours_from", { avg: fmt(HONOURS) })}</span>
+            <span>${t(hass, "card.report_card.honours_from", { avg: fmt(honoursLine) })}</span>
             <span>
               ${honours
                 ? html`<b class="ok">${t(hass, "card.report_card.honours_ok")}</b>`
-                : html`${t(hass, "card.report_card.missing")} <b>${fmt(HONOURS - average)}</b>`}
+                : html`${t(hass, "card.report_card.missing")} <b>${fmt(honoursLine - average)}</b>`}
             </span>
           </div>
         </div>

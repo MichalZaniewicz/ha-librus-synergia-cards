@@ -48,7 +48,7 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Library | `custom:librus-library-card` | The books the school library lent to the student, with author and lending date, and how long until the school year ends - in its last 30 days a reminder to return them turns amber. Librus's own due date isn't shown: for textbooks lent for the year it's nominal. Options: title. Needs `ha-librus-synergia` 0.12.10+ (Library books sensor) |
 | Cancelled lessons | `custom:librus-cancelled-lessons-card` | Every lesson cancelled or covered by a substitute this school year, not just the two timetable weeks: the counts and the share of lessons cancelled, the subjects ranked with cancelled and substituted lessons on one bar, and a column per month of the school year. Options: title, how many subjects (default 6). Needs `ha-librus-synergia` 0.12.10+ (Cancelled lessons sensor) |
 | Justifications | `custom:librus-justifications-card` | The days still to excuse (nothing sent yet), then the justifications sent with the school's decision (waiting, accepted, rejected). Options: title, how many to list (default 5). Needs `ha-librus-synergia` 0.12.0+ (Absence justifications sensor) |
-| Month calendar | `custom:librus-month-calendar-card` | A month grid with coloured dots for tests, quizzes, trips, meetings and other Agenda entries, homework due dates and days off; arrows switch the month, tapping a day lists its entries. Tests and quizzes are recognised by the school's own Agenda category names. Options: title |
+| Month calendar | `custom:librus-month-calendar-card` | A month grid with coloured dots for tests, quizzes, trips, meetings and other Agenda entries, homework due dates and days off; arrows switch the month, tapping a day lists its entries. Tests and quizzes are recognised by the school's own Agenda category names. With `ha-librus-synergia` 0.12.10+, cancelled lessons and substitutions show as red and amber rings, with the lessons listed under the day. Options: title, hide the lesson changes |
 | Catch up | `custom:librus-catch-up-card` | After the latest absence: the lessons missed with their topics and the homework given meanwhile, grouped by subject, each with a tick-box (kept in this browser) and a progress bar. Options: title. Needs `ha-librus-synergia` 0.12.2+ (Lesson topics sensor with `catch_up`) |
 | What was taught | `custom:librus-lesson-topics-card` | The topics of the last few school days, day by day and lesson by lesson; lessons the student missed are marked, so it doubles as a "what to catch up on" list. Options: title, number of school days. Needs `ha-librus-synergia` 0.12.0+ (Lesson topics sensor) |
 | Grade log | `custom:librus-grade-log-card` | Every grade from every subject, newest first, one chronological list (point grades as "17/20 85%") |
@@ -165,6 +165,11 @@ card supports:
 | `max_items` | Next exam, Free days | How many later exams / free days to list under the next one (default 4, `0` hides them) |
 | `list_height` | the cards with a scrolling list (Grade log, Agenda, Messages, Announcements, Grades, ...) | Height limit of the list in px (default 320; Grades 220) |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
+| `days_ahead` | Next exam | How far forward to look for tests when there's no Next exam sensor (default 90) |
+| `good_above` / `bad_below` | Attendance, Attendance by subject | Colour lines in %: good from `good_above` (default 90), bad below `bad_below` (Attendance 75, Attendance by subject 50) |
+| `honours` | Report card forecast | The average the distinction needs (default 4.75) |
+| `weeks` | Attendance heatmap | Show only the last N weeks (default: the whole school year) |
+| `hide_changes` | Month calendar | Leave out cancelled lessons and substitutions - off by default |
 | `days` | Grade trend | How much history to chart (default 60) |
 | `days` | Grade log, Subject grades | Only include grades from the last N days (unset = no limit) |
 | `days` | What was taught | Number of school days shown (default 3, 1-10) |

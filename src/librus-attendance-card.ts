@@ -117,7 +117,13 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
         <div class="stats">
           ${percentage != null
             ? html`
-                <div class="stat ${percentage >= 90 ? "good" : percentage < 75 ? "bad" : ""}">
+                <div
+                  class="stat ${percentage >= (this._config?.good_above ?? 90)
+                    ? "good"
+                    : percentage < (this._config?.bad_below ?? 75)
+                      ? "bad"
+                      : ""}"
+                >
                   <div class="stat-value">${percentage}<span class="unit">%</span></div>
                   <div class="stat-label">${t(hass, "stat.percentage")}</div>
                 </div>
