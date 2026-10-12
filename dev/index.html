@@ -402,6 +402,8 @@
       ],
     }, 2);
     addEntity("sensor.unread_messages", "unread_messages", {
+      // "Allow sending messages (beta)" on (integration 0.12.12+): Reply / Write show.
+      sending_enabled: true,
       mailbox_breakdown: { inbox: 1, notes: 0, alerts: 1, substitutions: 1, absences: 0, justifications: 1, trash: 0 },
       recent: [
         { id: "100001", mailbox: "inbox", sender: "Nowak Anna", topic: "Zebranie z rodzicami", content: "Dzień dobry, zapraszam na zebranie z rodzicami w przyszłą środę o 17:00…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
@@ -584,9 +586,6 @@
         justification_sent: [],
       }, 2);
     }
-    // The "Message sending (beta)" switch (integration 0.12.12+): on, so the
-    // Messages card shows Write / Reply.
-    addEntity("switch.message_sending", "message_sending", {}, "on");
     addEntity("sensor.school_class", "school_class", {
       homeroom_teacher: "Anna Nowak",
       student_number: 25,

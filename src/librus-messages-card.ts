@@ -79,8 +79,8 @@ export class LibrusMessagesCard extends LibrusBaseCard {
   /** Mailbox picked by tapping a chip; overrides the configured one. */
   @state() private _viewMailbox?: string;
 
-  // Writing (integration 0.12.12+, only while the "Message sending (beta)"
-  // switch is on). A send always takes two clicks: the first arms
+  // Writing (integration 0.12.12+, only while "Allow sending messages
+  // (beta)" is on under the integration's Configure). A send always takes two clicks: the first arms
   // `_confirm`, the second sends.
   @state() private _replyFor?: string;
   @state() private _replyText = "";
@@ -162,10 +162,11 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     }
   }
 
-  /** Whether the "Message sending (beta)" switch is on. */
+  /** Whether "Allow sending messages (beta)" is on under the integration's
+   * Configure - the Unread messages sensor's `sending_enabled`. */
   private _sendingOn(map: Record<string, string>): boolean {
-    const id = map.message_sending;
-    return !!id && this.hass?.states[id]?.state === "on";
+    const id = map.unread_messages;
+    return !!id && this.hass?.states[id]?.attributes.sending_enabled === true;
   }
 
   private _deviceId(): string | undefined {
@@ -556,7 +557,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     return html`<div class="item-text"><b>${m.topic}</b> - ${t(hass, "empty.loading")}</div>`;
   }
 
-  /** Set in render(): the "Message sending (beta)" switch is on. */
+  /** Set in render(): sending is allowed in the integration's options. */
   private _canWrite = false;
 
   protected render(): TemplateResult | typeof nothing {
