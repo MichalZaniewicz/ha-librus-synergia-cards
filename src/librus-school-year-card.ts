@@ -11,12 +11,16 @@ import { daysBetween, formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { tapAction } from "./utils/actions";
 
+/** The library line turns amber this many days before the year ends. */
+const LIBRARY_REMIND_DAYS = 30;
+
 /**
  * Countdown to the end of the school year, plus a "how far through it are
  * we" progress ring and the current semester's own end date. Entirely
  * local computation from the `school_class` sensor's own attributes
  * (`school_year_start`/`first_semester_end`/`school_year_end`, already
- * shipped for the School & class card) - no calendar fetch needed.
+ * shipped for the School & class card) - no calendar fetch needed. With
+ * integration 0.12.10+ it also says how many library books are still out.
  */
 @customElement("librus-school-year-card")
 export class LibrusSchoolYearCard extends LibrusBaseCard {
@@ -80,6 +84,10 @@ export class LibrusSchoolYearCard extends LibrusBaseCard {
     const isFirstSemester = semesterEndIso ? isoDate(today) <= semesterEndIso : true;
     const currentSemesterEndIso = isFirstSemester && semesterEndIso ? semesterEndIso : yearEndIso;
     const semesterDaysLeft = Math.max(0, daysBetween(today, new Date(`${currentSemesterEndIso}T00:00:00`)));
+    // Library books to return (integration 0.12.10+) - amber in the year's
+    // last LIBRARY_REMIND_DAYS days.
+    const library = map.library_books ? hass.states[map.library_books] : undefined;
+    const books = Number(library?.state);
 
     return html`
       <ha-card ${tapAction(this, this._config.tap_action, map.school_class)}>
@@ -112,6 +120,12 @@ export class LibrusSchoolYearCard extends LibrusBaseCard {
             <div class="stat-label">${t(hass, "label.year_progress")}</div>
           </div>
         </div>
+        ${Number.isFinite(books) && books > 0
+          ? html`<div class="library ${daysLeft <= LIBRARY_REMIND_DAYS ? "soon" : ""}">
+              <ha-icon icon="mdi:bookshelf"></ha-icon>
+              <span>${t(hass, "card.school_year.library", { count: books })}</span>
+            </div>`
+          : nothing}
       </ha-card>
     `;
   }
@@ -131,6 +145,21 @@ export class LibrusSchoolYearCard extends LibrusBaseCard {
         font-variant-numeric: tabular-nums;
         line-height: 1.1;
         color: var(--lc-brand);
+      }
+      .library {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.78rem;
+        color: var(--secondary-text-color);
+      }
+      .library ha-icon {
+        --mdc-icon-size: 16px;
+        flex: none;
+      }
+      .library.soon {
+        color: var(--lc-amber);
+        font-weight: 600;
       }
       .ring-label {
         font-size: 0.72rem;

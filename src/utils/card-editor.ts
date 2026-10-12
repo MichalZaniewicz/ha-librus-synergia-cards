@@ -79,7 +79,7 @@ type EditorField =
     }
   | {
       kind: "select";
-      key: "mailbox" | "sort" | "mode";
+      key: "mailbox" | "sort" | "mode" | "style";
       label: TranslationKey;
       options: { value: string; label: TranslationKey }[];
     };
@@ -146,6 +146,10 @@ const SORT_OPTIONS: { value: string; label: TranslationKey }[] = [
   { value: "oldest", label: "sort.oldest" },
 ];
 
+const STYLE_OPTIONS: { value: string; label: TranslationKey }[] = [
+  { value: "list", label: "style.list" },
+  { value: "shelf", label: "style.shelf" },
+];
 const MODE_OPTIONS: { value: string; label: TranslationKey }[] = [
   { value: "archetype", label: "mode.archetype" },
   { value: "hero", label: "mode.hero" },
@@ -176,6 +180,11 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     { kind: "number", key: "days_ahead", label: "editor.days_ahead", min: 1, max: 60 },
   ],
   "custom:librus-school-documents-card": [TITLE_FIELD, MAX_ITEMS_FIELD(20)],
+  "custom:librus-library-card": [
+    TITLE_FIELD,
+    { kind: "select", key: "style", label: "editor.style", options: STYLE_OPTIONS },
+  ],
+  "custom:librus-cancelled-lessons-card": [TITLE_FIELD, MAX_ITEMS_FIELD(16)],
   "custom:librus-justifications-card": [TITLE_FIELD, MAX_ITEMS_FIELD(10)],
   "custom:librus-catch-up-card": [TITLE_FIELD],
   "custom:librus-month-calendar-card": [TITLE_FIELD],
@@ -669,7 +678,7 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ subject_id: Number.isNaN(next as number) ? undefined : next });
   }
 
-  private _pickSelect(field: { key: "mailbox" | "sort" | "mode"; options: { value: string }[] }, ev: Event): void {
+  private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "style"; options: { value: string }[] }, ev: Event): void {
     const value = LibrusCardEditor._selectValue(ev);
     if (!value) return;
     const current = (this._config?.[field.key] as string | undefined) ?? field.options[0].value;

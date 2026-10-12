@@ -49,6 +49,17 @@ function toChange(event: LibrusCalendarEvent): LessonChange | undefined {
   return { event, kind, subject: info.name, detail };
 }
 
+/** One entry of the Cancelled lessons sensor's `recent` attribute. */
+interface YearChange {
+  date: string | null;
+  lesson_no: number | null;
+  subject: string | null;
+  teacher: string | null;
+  kind: "cancelled" | "substitution" | "shifted";
+  new_subject: string | null;
+  new_teacher: string | null;
+}
+
 interface RecentMessage {
   id: string;
   mailbox: string;
@@ -83,6 +94,8 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
   @state() private _errorKeys: Set<string> = new Set();
   @state() private _changes: LessonChange[] = [];
   @state() private _filter: ChangeKind | "all" = "all";
+  /** Whether the school year's history (Cancelled lessons sensor) is open. */
+  @state() private _yearOpen = false;
   private _fetchedFor?: string;
 
   public static getConfigElement(): LovelaceCardEditor {
@@ -172,6 +185,65 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
         ${c.detail ? html`<div class="cdet">${c.detail}</div>` : nothing}
       </div>
       <time>${this._when(c.event)}</time>
+    </div>`;
+  }
+
+  /** "This year: N cancelled · M substitutions · most often X" from the
+   * Cancelled lessons sensor (integration 0.12.10+); a tap opens the year's
+   * latest changes. Nothing on an older integration. */
+  private _renderYear(entityId: string | undefined): TemplateResult | typeof nothing {
+    const hass = this.hass!;
+    const entity = entityId ? hass.states[entityId] : undefined;
+    const cancelled = Number(entity?.state);
+    if (!entity || !Number.isFinite(cancelled)) return nothing;
+    const substitutions = Number(entity.attributes.substitutions ?? 0);
+    if (cancelled + substitutions === 0) return nothing;
+    const top = Object.keys((entity.attributes.by_subject as Record<string, unknown> | undefined) ?? {})[0];
+    const recent = (entity.attributes.recent as YearChange[] | undefined) ?? [];
+    const toggle = () => (this._yearOpen = !this._yearOpen);
+    return html`<div class="year">
+      <div
+        class="year-sum"
+        role="button"
+        tabindex="0"
+        aria-expanded=${this._yearOpen ? "true" : "false"}
+        @click=${toggle}
+        @keydown=${activateOnKey(toggle)}
+      >
+        <ha-icon icon="mdi:calendar-remove-outline"></ha-icon>
+        <span
+          >${t(hass, "card.changes.year", { cancelled, substitutions })}${top
+            ? html` · ${t(hass, "card.changes.year_top", { subject: top })}`
+            : nothing}</span
+        >
+        <ha-icon class="chev" icon=${this._yearOpen ? "mdi:chevron-up" : "mdi:chevron-down"}></ha-icon>
+      </div>
+      ${this._yearOpen
+        ? html`<div class="year-list">
+            ${recent.map((c) => {
+              const tag = c.kind === "cancelled" ? "cancelled" : "substitution";
+              const detail =
+                c.kind === "cancelled"
+                  ? c.teacher
+                  : [c.new_subject && c.new_subject !== c.subject ? c.new_subject : "", c.new_teacher]
+                      .filter(Boolean)
+                      .join(" · ");
+              return html`<div class="ychange">
+                <span class="ctag ${tag}"
+                  >${t(hass, c.kind === "cancelled" ? "card.changes.cancelled" : "card.changes.substitution")}</span
+                >
+                <span class="ybody"
+                  ><b>${c.subject ?? "?"}</b>${detail ? html` <span class="ydet">${detail}</span>` : nothing}</span
+                >
+                <time
+                  >${c.date ? formatShortDate(c.date, hass.language) : ""}${c.lesson_no
+                    ? ` · ${t(hass, "card.changes.lesson_no", { n: c.lesson_no })}`
+                    : ""}</time
+                >
+              </div>`;
+            })}
+          </div>`
+        : nothing}
     </div>`;
   }
 
@@ -346,6 +418,7 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
                 ${shownPast.map((c) => this._changeRow(c, true))}`
             : nothing}
         </div>
+        ${this._renderYear(map.cancelled_lessons)}
         ${hasMessages
           ? html`<div class="messages">
               ${this._renderSection(t(hass, "mailbox.substitutions"), substitutions)}
@@ -361,6 +434,57 @@ export class LibrusSubstitutionsCard extends LibrusBaseCard {
     librusTokens,
     librusSharedStyles,
     css`
+      .year {
+        display: grid;
+        gap: 8px;
+      }
+      .year-sum {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 9px;
+        padding: 7px 10px;
+        font-size: 0.78rem;
+        line-height: 1.35;
+        background: var(--lc-chip-bg);
+        color: var(--secondary-text-color);
+        cursor: pointer;
+      }
+      .year-sum:focus-visible {
+        outline: 2px solid var(--lc-brand);
+      }
+      .year-sum ha-icon {
+        --mdc-icon-size: 16px;
+        flex: none;
+      }
+      .year-sum span {
+        flex: 1;
+        min-width: 0;
+      }
+      .year-list {
+        display: grid;
+        gap: 6px;
+      }
+      .ychange {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: baseline;
+        font-size: 0.78rem;
+      }
+      .ychange .ctag {
+        margin-left: 0;
+        white-space: nowrap;
+      }
+      .ydet {
+        color: var(--secondary-text-color);
+      }
+      .ychange time {
+        font-size: 0.7rem;
+        color: var(--secondary-text-color);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
       .section-title {
         font-size: 0.65rem;
         color: var(--secondary-text-color);

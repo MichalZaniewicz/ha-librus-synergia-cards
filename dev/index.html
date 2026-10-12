@@ -516,6 +516,38 @@
           { id: "d4", name: "Kalendarz roku szkolnego", added: ago(37) + " 12:00:00", url: null },
         ],
       }, 4);
+      // Library books and the year's plan changes (integration 0.12.10+):
+      // made-up titles, authors and counts.
+      const books = [
+        ["Matematyka 7", "Nowak Anna"], ["Język polski 7", "Wiśniewska Ewa"], ["Historia 7", "Kowalski Jan"],
+        ["Biologia 7", "Zielińska Marta"], ["Chemia 7", "Lewandowski Piotr"], ["Fizyka 7", "Wójcik Adam"],
+        ["Geografia 7", "Kamińska Ola"], ["Język angielski B1", "Brown Kate"], ["Język niemiecki 1", "Schmidt Lena"],
+        ["Informatyka 7", "Dąbrowski Tomasz"], ["Muzyka 7", "Mazur Zofia"], ["Plastyka 7", "Krawczyk Iga"],
+      ];
+      addEntity("sensor.library_books", "library_books", {
+        books: books.map(([title, author], i) => ({
+          id: `b${i}`, title, author, kind: "BOOK", lent_on: "2026-09-04", due_date: "2026-09-18", extendable: false,
+        })),
+      }, books.length);
+      addEntity("sensor.cancelled_lessons", "cancelled_lessons", {
+        substitutions: 15, lessons_held: 240, cancelled_percent: 3.6, since: "2026-09-15",
+        by_subject: {
+          "Wychowanie fizyczne": { cancelled: 2, substitutions: 6 },
+          "Matematyka": { cancelled: 3, substitutions: 1 },
+          "Historia": { cancelled: 2, substitutions: 2 },
+          "Biologia": { cancelled: 1, substitutions: 3 },
+          "Chemia": { cancelled: 1, substitutions: 1 },
+          "Język angielski": { cancelled: 0, substitutions: 2 },
+        },
+        by_month: { "2026-09": { cancelled: 6, substitutions: 9 }, "2026-10": { cancelled: 3, substitutions: 6 } },
+        recent: [
+          { date: ago(1), lesson_no: 4, subject: "Historia", teacher: "Jan Kowalski", kind: "substitution", new_subject: "Historia", new_teacher: "Anna Nowak", classroom: "12" },
+          { date: ago(4), lesson_no: 2, subject: "Matematyka", teacher: "Jan Kowalski", kind: "cancelled", new_subject: null, new_teacher: null, classroom: "21" },
+          { date: ago(5), lesson_no: 6, subject: "Wychowanie fizyczne", teacher: "Piotr Lewandowski", kind: "substitution", new_subject: "Biologia", new_teacher: "Marta Zielińska", classroom: null },
+          { date: ago(13), lesson_no: 4, subject: "Biologia", teacher: "Marta Zielińska", kind: "substitution", new_subject: "Biologia", new_teacher: "Ewa Wiśniewska", classroom: "h1" },
+          { date: ago(20), lesson_no: 3, subject: "Historia", teacher: "Jan Kowalski", kind: "cancelled", new_subject: null, new_teacher: null, classroom: "12" },
+        ],
+      }, 9);
       addEntity("sensor.justifications", "justifications", {
         accepted: 2, rejected: 0, pending: 1,
         recent: [
@@ -1007,6 +1039,9 @@
       "librus-school-trips-card",
       "librus-exam-prep-card",
       "librus-school-documents-card",
+      "librus-library-card",
+      { tag: "librus-library-card", config: { type: "custom:librus-library-card", style: "shelf" } },
+      "librus-cancelled-lessons-card",
       "librus-justifications-card",
       "librus-catch-up-card",
       "librus-month-calendar-card",

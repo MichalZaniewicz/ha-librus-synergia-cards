@@ -5,6 +5,8 @@ import "./librus-lesson-topics-card";
 import "./librus-school-trips-card";
 import "./librus-exam-prep-card";
 import "./librus-school-documents-card";
+import "./librus-library-card";
+import "./librus-cancelled-lessons-card";
 import "./librus-justifications-card";
 import "./librus-catch-up-card";
 import "./librus-month-calendar-card";
@@ -109,6 +111,18 @@ window.customCards.push(
     type: "librus-school-documents-card",
     name: "Librus - Dokumenty szkoły",
     description: "Formularze i regulaminy udostępnione przez szkołę, z linkiem do otwarcia w Synergii.",
+    preview: true,
+  },
+  {
+    type: "librus-library-card",
+    name: "Librus - Biblioteka",
+    description: "Książki wypożyczone z biblioteki szkolnej: lista albo półka, z przypomnieniem o oddaniu przed końcem roku.",
+    preview: true,
+  },
+  {
+    type: "librus-cancelled-lessons-card",
+    name: "Librus - Odwołane lekcje",
+    description: "Odwołane lekcje i zastępstwa w tym roku szkolnym: według przedmiotów i miesięcy.",
     preview: true,
   },
   {
@@ -481,7 +495,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 66 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 68 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );
