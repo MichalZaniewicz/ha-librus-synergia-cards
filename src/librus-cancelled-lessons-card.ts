@@ -13,6 +13,15 @@ type Counts = { cancelled: number; substitutions: number };
 /** At most this many subjects in the ranking (editor: max_items). */
 const DEFAULT_SUBJECTS = 6;
 
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+
+/** A month column's label: Roman numerals in Polish (the school convention
+ * there - "IX", "X"), the short month name otherwise ("Sep"). */
+function monthLabel(month: string, language: string | undefined): string {
+  if ((language ?? "").toLowerCase().startsWith("pl")) return ROMAN[Number(month.slice(5, 7)) - 1] ?? month;
+  return formatDate(new Date(`${month}-01T00:00:00`), language, { month: "short" }).replace(".", "");
+}
+
 /** The school year's months as "YYYY-MM", from its first to its last month
  * (falls back to September-June around `since`). */
 function schoolMonths(startIso: string | undefined, endIso: string | undefined, since: string | undefined): string[] {
@@ -156,7 +165,7 @@ export class LibrusCancelledLessonsCard extends LibrusBaseCard {
                 <span class="seg c-bad" style="height:${pct(c.cancelled, maxMonth)}"></span>
                 <span class="seg c-amber" style="height:${pct(c.substitutions, maxMonth)}"></span>
               </div>
-              <span class="mlabel">${formatDate(new Date(`${m}-01T00:00:00`), hass.language, { month: "narrow" })}</span>
+              <span class="mlabel">${monthLabel(m, hass.language)}</span>
             </div>`;
           })}
         </div>
@@ -278,7 +287,7 @@ export class LibrusCancelledLessonsCard extends LibrusBaseCard {
       .mlabel {
         font-size: 0.62rem;
         color: var(--secondary-text-color);
-        text-transform: uppercase;
+        white-space: nowrap;
       }
       .mcol.now .mlabel {
         color: var(--lc-brand);
