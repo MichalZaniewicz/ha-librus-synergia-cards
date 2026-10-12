@@ -14,6 +14,79 @@ export interface FullMessage {
   read_date: string | null;
   has_attachment: boolean;
   attachments?: { id: string; filename: string | null }[];
+  /** Integration 0.12.12+: Librus doesn't take a reply to this message. */
+  no_reply?: boolean;
+  /** Integration 0.12.12+: a sent message that can still be withdrawn. */
+  can_withdraw?: boolean | null;
+}
+
+/** One entry of `librus_synergia.get_message_recipients` (integration 0.12.12+). */
+export interface MessageRecipient {
+  account_id: string;
+  name: string;
+  group: string;
+  group_name: string;
+  subjects: string[];
+  available: boolean | null;
+  return_at: string | null;
+}
+
+/** What `librus_synergia.send_message` returns. */
+export interface SentMessage {
+  sent: boolean;
+  message_id?: number;
+  to: string[];
+  topic?: string;
+}
+
+/** Who a message can go to - read-only. */
+export async function fetchRecipients(hass: LibrusHass, deviceId: string): Promise<MessageRecipient[]> {
+  const result = await hass.callWS<{ response: { recipients: MessageRecipient[] } }>({
+    type: "call_service",
+    domain: "librus_synergia",
+    service: "get_message_recipients",
+    service_data: { device_id: deviceId },
+    return_response: true,
+  });
+  return result.response.recipients ?? [];
+}
+
+/**
+ * **Sends a message** through `librus_synergia.send_message` - a new one
+ * (`recipient` = an account id, `topic`) or a reply in a received message's
+ * thread (`reply_to`). Only ever called from a person's second, confirming
+ * click. Rejects with the service's error (its message says whether the
+ * message may have gone out).
+ */
+export async function sendMessage(
+  hass: LibrusHass,
+  deviceId: string,
+  data: { recipient?: string; topic?: string; message: string; reply_to?: string }
+): Promise<SentMessage> {
+  const result = await hass.callWS<{ response: SentMessage }>({
+    type: "call_service",
+    domain: "librus_synergia",
+    service: "send_message",
+    service_data: { device_id: deviceId, ...data },
+    return_response: true,
+  });
+  return result.response;
+}
+
+/** Withdraws a message the parent sent, while Librus still allows it. */
+export async function withdrawMessage(hass: LibrusHass, deviceId: string, messageId: string): Promise<void> {
+  await hass.callWS({
+    type: "call_service",
+    domain: "librus_synergia",
+    service: "withdraw_message",
+    service_data: { device_id: deviceId, message_id: messageId },
+  });
+}
+
+/** A service call's error as text for the card. */
+export function serviceErrorText(err: unknown): string {
+  if (err && typeof err === "object" && "message" in err) return String((err as { message: unknown }).message);
+  return String(err);
 }
 
 /**

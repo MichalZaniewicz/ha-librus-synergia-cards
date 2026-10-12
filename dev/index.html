@@ -584,6 +584,9 @@
         justification_sent: [],
       }, 2);
     }
+    // The "Message sending (beta)" switch (integration 0.12.12+): on, so the
+    // Messages card shows Write / Reply.
+    addEntity("switch.message_sending", "message_sending", {}, "on");
     addEntity("sensor.school_class", "school_class", {
       homeroom_teacher: "Anna Nowak",
       student_number: 25,
@@ -963,6 +966,33 @@
               status: window.__todoDone.has(uid) ? "completed" : "needs_action",
             })),
           };
+        }
+        // Writing (integration 0.12.12+) - made-up recipients; nothing leaves the page.
+        if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "get_message_recipients") {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          const r = (account_id, name, group, group_name, subjects = [], available = true) =>
+            ({ account_id, name, group, group_name, subjects, available, return_at: null });
+          return { response: { recipients: [
+            r("11", "Nowak Anna", "tutors", "Wychowawcy", ["Biologia"]),
+            r("12", "Kowalski Jan", "teachers", "Nauczyciele", ["Matematyka"]),
+            r("14", "Wiśniewska Ewa", "teachers", "Nauczyciele", ["Język polski"]),
+            r("15", "Brown Kate", "teachers", "Nauczyciele", ["Język angielski"]),
+            r("16", "Lewandowski Piotr", "teachers", "Nauczyciele", ["Wychowanie fizyczne"], false),
+            r("17", "Zielińska Marta", "teachers", "Nauczyciele"),
+            r("18", "Mazur Zofia", "teachers", "Nauczyciele"),
+            r("13", "sekretariat", "secretary", "Sekretariat"),
+            r("19", "Jakubowski Marek", "headteachers", "Dyrektorzy"),
+          ] } };
+        }
+        if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "send_message") {
+          await new Promise((resolve) => setTimeout(resolve, 600));
+          const names = { "11": "Nowak Anna", "12": "Kowalski Jan", "13": "sekretariat", "14": "Wiśniewska Ewa" };
+          const to = msg.service_data.reply_to ? ["Nowak Anna"] : [names[msg.service_data.recipient] ?? msg.service_data.recipient];
+          return { response: { sent: true, message_id: 700001, to, topic: msg.service_data.topic ?? "Re: Zebranie z rodzicami" } };
+        }
+        if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "withdraw_message") {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          return {};
         }
         if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "get_message") {
           await new Promise((resolve) => setTimeout(resolve, 500));
