@@ -7,7 +7,6 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { daysBetween, formatShortDate } from "./utils/format";
-import { activateOnKey } from "./utils/render-helpers";
 
 /** One book in the Library books sensor's `books` attribute. */
 interface LibraryBook {
@@ -19,23 +18,19 @@ interface LibraryBook {
 
 /** The return reminder turns amber this many days before the year ends. */
 const REMIND_DAYS = 30;
-/** Spine colors - the 16-color chart palette, picked per title so a book
+/** Dot colors - the 16-color chart palette, picked per title so a book
  * keeps its color between refreshes. */
-const SPINES = 16;
-/** Spine heights (% of the shelf), cycled so the row looks like real books. */
-const HEIGHTS = [88, 80, 92, 76, 84, 90, 78, 86, 74, 82, 70, 88];
+const COLORS = 16;
 
-function spineColor(title: string): string {
+function bookColor(title: string): string {
   let hash = 0;
   for (const ch of title) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-  return `var(--lc-chart-${(hash % SPINES) + 1})`;
+  return `var(--lc-chart-${(hash % COLORS) + 1})`;
 }
 
 /**
- * Books the school library lent to the student (integration 0.12.10+).
- * Two styles, picked in the editor: a list (`style: list`, default) or
- * book spines on a shelf (`style: shelf`) that a tap opens into the same
- * list. Librus's own due date is left out on purpose - for the textbooks
+ * Books the school library lent to the student (integration 0.12.10+),
+ * with author and lending date. Librus's own due date is left out on purpose - for the textbooks
  * lent for the whole year it's a nominal date that has usually passed -
  * the card counts down to the end of the school year (Class sensor)
  * instead and turns amber in its last REMIND_DAYS days.
@@ -43,8 +38,6 @@ function spineColor(title: string): string {
 @customElement("librus-library-card")
 export class LibrusLibraryCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
-  /** Shelf style: whether the full list is open below the shelf. */
-  @state() private _open = false;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -92,16 +85,12 @@ export class LibrusLibraryCard extends LibrusBaseCard {
       : undefined;
     const soon = daysLeft !== undefined && daysLeft <= REMIND_DAYS;
     const lentDates = books.map((b) => b.lent_on).filter((d): d is string => !!d).sort();
-    const shelf = this._config.style === "shelf";
-
-    const subtitle = shelf
-      ? t(hass, "card.library.subtitle_shelf")
-      : lentDates.length
-        ? t(hass, "card.library.subtitle", {
-            count: books.length,
-            date: formatShortDate(lentDates[0], hass.language),
-          })
-        : t(hass, "card.library.count", { count: books.length });
+    const subtitle = lentDates.length
+      ? t(hass, "card.library.subtitle", {
+          count: books.length,
+          date: formatShortDate(lentDates[0], hass.language),
+        })
+      : t(hass, "card.library.count", { count: books.length });
 
     return html`
       <ha-card class="static">
@@ -112,44 +101,9 @@ export class LibrusLibraryCard extends LibrusBaseCard {
             <div class="subtitle">${subtitle}</div>
           </div>
         </div>
-        ${shelf ? this._renderShelf(books, lentDates, daysLeft) : nothing}
-        ${daysLeft !== undefined && (!shelf || soon) ? this._renderReminder(books.length, daysLeft, yearEndIso!, soon) : nothing}
-        ${!shelf || this._open ? this._renderList(books) : nothing}
+        ${daysLeft !== undefined ? this._renderReminder(books.length, daysLeft, yearEndIso!, soon) : nothing}
+        ${this._renderList(books)}
       </ha-card>
-    `;
-  }
-
-  private _renderShelf(books: LibraryBook[], lentDates: string[], daysLeft: number | undefined): TemplateResult {
-    const hass = this.hass!;
-    const toggle = () => (this._open = !this._open);
-    return html`
-      <div
-        class="shelf"
-        role="button"
-        tabindex="0"
-        aria-expanded=${this._open ? "true" : "false"}
-        aria-label=${t(hass, "card.library.toggle")}
-        @click=${toggle}
-        @keydown=${activateOnKey(toggle)}
-      >
-        ${books.map(
-          (b, i) => html`<span
-            class="spine"
-            title=${b.author ? `${b.title} · ${b.author}` : b.title}
-            style="background:${spineColor(b.title)};height:${HEIGHTS[i % HEIGHTS.length]}%"
-            ><span>${b.title}</span></span
-          >`
-        )}
-      </div>
-      <div class="shelf-stats">
-        <span>${t(hass, "card.library.count", { count: books.length })}</span>
-        ${lentDates.length
-          ? html`<span>${t(hass, "card.library.lent", { date: formatShortDate(lentDates[0], hass.language) })}</span>`
-          : nothing}
-        ${daysLeft !== undefined
-          ? html`<span>${t(hass, "card.library.year_ends_in", { days: daysLeft })}</span>`
-          : nothing}
-      </div>
     `;
   }
 
@@ -173,7 +127,7 @@ export class LibrusLibraryCard extends LibrusBaseCard {
     return html`<div class="books scroll-list">
       ${books.map(
         (b) => html`<div class="book">
-          <span class="dot" style="background:${spineColor(b.title)}"></span>
+          <span class="dot" style="background:${bookColor(b.title)}"></span>
           <div class="body">
             <div class="book-title">${b.title}</div>
             <div class="meta">
@@ -244,56 +198,6 @@ export class LibrusLibraryCard extends LibrusBaseCard {
         font-size: 0.72rem;
         color: var(--secondary-text-color);
         margin-top: 1px;
-      }
-      .shelf {
-        display: flex;
-        align-items: flex-end;
-        gap: 3px;
-        height: 92px;
-        padding: 0 4px;
-        border-bottom: 4px solid color-mix(in srgb, var(--lc-amber) 55%, var(--divider-color));
-        cursor: pointer;
-        border-radius: 4px 4px 0 0;
-      }
-      .shelf:focus-visible {
-        outline: 2px solid var(--lc-brand);
-        outline-offset: 3px;
-      }
-      .spine {
-        flex: 1;
-        min-width: 0;
-        max-width: 34px;
-        border-radius: 3px 3px 1px 1px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-      }
-      .spine span {
-        writing-mode: vertical-rl;
-        transform: rotate(180deg);
-        font-size: 0.58rem;
-        font-weight: 700;
-        color: #fff;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-height: 92%;
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-      }
-      /* The dark theme's chart colors are light pastels - dark text there. */
-      :host(.dark) .spine span {
-        color: #17161f;
-        text-shadow: none;
-      }
-      .shelf-stats {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 4px 12px;
-        font-size: 0.76rem;
-        color: var(--secondary-text-color);
-        font-variant-numeric: tabular-nums;
       }
     `,
   ];

@@ -116,7 +116,7 @@ window.customCards.push(
   {
     type: "librus-library-card",
     name: "Librus - Biblioteka",
-    description: "Książki wypożyczone z biblioteki szkolnej: lista albo półka, z przypomnieniem o oddaniu przed końcem roku.",
+    description: "Książki wypożyczone z biblioteki szkolnej, z przypomnieniem o oddaniu przed końcem roku.",
     preview: true,
   },
   {
