@@ -8,6 +8,9 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE, studentNumberOf } from "./utils/entities";
 import { t } from "./utils/localize";
 import { tapAction } from "./utils/actions";
+import { numOrNull } from "./utils/format";
+import { heroSubjectStat } from "./utils/forecast";
+import { overallWithPoints } from "./utils/hero-archetypes";
 
 interface Score {
   key: string;
@@ -81,21 +84,29 @@ export class LibrusStudentCard extends LibrusBaseCard {
       });
     }
 
+    const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average");
+    // Point-graded subjects count with their forecast grade (integration
+    // point grade thresholds) - the Overall average sensor covers 1-6 grades only.
     const overall = map.overall_average ? hass.states[map.overall_average] : undefined;
-    if (overall && !UNAVAILABLE.has(overall.state)) {
+    const overallValue = overallWithPoints(
+      overall && !UNAVAILABLE.has(overall.state) ? numOrNull(overall.state) : null,
+      subjects.map((s) => heroSubjectStat(s.subject, hass.states[s.entityId]))
+    );
+    if (overallValue !== null) {
       scores.push({
         key: "grades",
         label: t(hass, "stat.grades_score"),
-        value: Math.round((Number(overall.state) / 6) * 100),
+        value: Math.round((overallValue / 6) * 100),
         colorVar: "var(--lc-amber)",
       });
     }
 
-    const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average");
     if (subjects.length) {
       const graded = subjects.filter((s) => {
-        const count = hass.states[s.entityId]?.attributes.grade_count as number | undefined;
-        return count && count > 0;
+        const attributes = hass.states[s.entityId]?.attributes;
+        const count = attributes?.grade_count as number | undefined;
+        const points = attributes?.point_grades as unknown[] | undefined;
+        return (count && count > 0) || (Array.isArray(points) && points.length > 0);
       }).length;
       scores.push({
         key: "activity",

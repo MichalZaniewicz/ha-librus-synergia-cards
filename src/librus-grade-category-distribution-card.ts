@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { hBarChart, type HBarRow } from "./utils/render-helpers";
 import { t } from "./utils/localize";
+import { pointGradeEntries } from "./utils/grade-filters";
 
 interface GradeLogEntry {
   category: string | null;
@@ -57,7 +58,12 @@ export class LibrusGradeCategoryDistributionCard extends LibrusBaseCard {
 
     const counts = new Map<string, number>();
     for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
-      const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
+      const attributes = hass.states[s.entityId]?.attributes;
+      // Point grades (schools grading in points) have categories too.
+      const grades = [
+        ...((attributes?.grades as GradeLogEntry[] | undefined) ?? []),
+        ...pointGradeEntries(attributes),
+      ];
       for (const g of grades) {
         const key = g.category ?? "__uncategorized";
         counts.set(key, (counts.get(key) ?? 0) + 1);

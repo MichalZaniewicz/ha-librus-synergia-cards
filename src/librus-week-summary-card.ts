@@ -62,6 +62,9 @@ export class LibrusWeekSummaryCard extends LibrusBaseCard {
       const grades = attrs?.grades as { date?: string | null }[] | undefined;
       if (Array.isArray(grades)) newGrades += grades.filter((g) => recentDate(g.date)).length;
       else if (recentDate(attrs?.latest_grade_date)) newGrades += 1;
+      // Point grades (schools grading in points) count as grades too.
+      const points = attrs?.point_grades as { date?: string | null }[] | undefined;
+      if (Array.isArray(points)) newGrades += points.filter((g) => recentDate(g.date)).length;
     }
 
     // Days with an absence in the last 7 days, from the per-day map; an older

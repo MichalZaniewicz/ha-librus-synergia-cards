@@ -7,6 +7,8 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { progressRing } from "./utils/render-helpers";
 import { t } from "./utils/localize";
+import { pointGradeEntries } from "./utils/grade-filters";
+import { pointThresholdsOf, predictedGrade } from "./utils/forecast";
 
 interface GradeLogEntry {
   value: string;
@@ -74,12 +76,23 @@ export class LibrusLevelCard extends LibrusBaseCard {
 
     let gradeCount = 0;
     let goodGradeCount = 0;
+    // A point grade earns XP like any grade; it's a good one when its
+    // percentage maps to a 4 or better on the integration's point grade
+    // thresholds (no thresholds set: no bonus, since there's no scale).
+    const pointThresholds = pointThresholdsOf(hass, map);
     for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
-      const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
+      const attributes = hass.states[s.entityId]?.attributes;
+      const grades = (attributes?.grades as GradeLogEntry[] | undefined) ?? [];
       for (const g of grades) {
         gradeCount += 1;
         const digit = /^([1-6])/.exec(g.value.trim())?.[1];
         if (digit && Number(digit) >= 4) goodGradeCount += 1;
+      }
+      for (const p of pointGradeEntries(attributes)) {
+        gradeCount += 1;
+        if (pointThresholds && typeof p.percentage === "number" && predictedGrade(p.percentage, pointThresholds) >= 4) {
+          goodGradeCount += 1;
+        }
       }
     }
 

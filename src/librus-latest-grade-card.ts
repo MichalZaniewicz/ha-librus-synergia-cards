@@ -8,6 +8,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import type { SubjectEntity } from "./utils/entities";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
+import { pointGradeEntries } from "./utils/grade-filters";
 
 interface LatestGradeAttrs {
   subject?: string;
@@ -23,15 +24,21 @@ function findLatestGrade(
 ): { subject: string; grade: string; date: string; comments: string[] } | null {
   let best: { subject: string; grade: string; date: string; comments: string[] } | null = null;
   for (const s of subjects) {
-    const attrs = hass.states[s.entityId]?.attributes as LatestGradeAttrs | undefined;
-    if (!attrs?.latest_grade || !attrs.latest_grade_date) continue;
-    if (!best || attrs.latest_grade_date > best.date) {
+    const attributes = hass.states[s.entityId]?.attributes;
+    const attrs = attributes as LatestGradeAttrs | undefined;
+    if (attrs?.latest_grade && attrs.latest_grade_date && (!best || attrs.latest_grade_date > best.date)) {
       best = {
         subject: s.subject,
         grade: attrs.latest_grade,
         date: attrs.latest_grade_date,
         comments: attrs.latest_grade_comments ?? [],
       };
+    }
+    // A point grade (schools grading in points) can be the latest one too.
+    for (const p of pointGradeEntries(attributes)) {
+      if (p.date && (!best || p.date > best.date)) {
+        best = { subject: s.subject, grade: p.value, date: p.date, comments: [] };
+      }
     }
   }
   return best;

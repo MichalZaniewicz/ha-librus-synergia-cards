@@ -10,18 +10,13 @@ import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { applyListOptions } from "./utils/list-options";
 import { librusCardEditor } from "./utils/card-editor";
+import { pointGradeEntries, type GradeLogEntry } from "./utils/grade-filters";
 
 interface FeedItem {
   date: string;
   icon: string;
   title: string;
   text: string;
-}
-
-interface GradeLogEntry {
-  value: string;
-  category: string | null;
-  date: string | null;
 }
 
 interface RecentNote {
@@ -72,13 +67,19 @@ function buildFeed(
 ): FeedItem[] {
   const items: FeedItem[] = [];
   for (const s of subjects) {
-    const grades = (hass.states[s.entityId]?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
+    const attributes = hass.states[s.entityId]?.attributes;
+    // Point grades too (schools grading in points), as "17/20 (85%)".
+    const grades: GradeLogEntry[] = [
+      ...((attributes?.grades as GradeLogEntry[] | undefined) ?? []),
+      ...pointGradeEntries(attributes),
+    ];
     for (const g of grades) {
       if (!g.date) continue;
+      const value = g.points && typeof g.percentage === "number" ? `${g.value} (${Math.round(g.percentage)}%)` : g.value;
       items.push({
         date: g.date,
         icon: "mdi:notebook-outline",
-        title: `${g.value} · ${s.subject}`,
+        title: `${value} · ${s.subject}`,
         text: g.category ?? "",
       });
     }
