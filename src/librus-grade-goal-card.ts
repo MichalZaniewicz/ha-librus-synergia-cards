@@ -8,7 +8,7 @@ import { progressRing } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { tapAction } from "./utils/actions";
-import { sixesToReach, subjectForecast } from "./utils/forecast";
+import { pointSubjectOf, predictedGrade, sixesToReach, subjectForecast, type PointSubject } from "./utils/forecast";
 import { formatNumber } from "./utils/format";
 
 interface GradeLogEntry {
@@ -67,6 +67,8 @@ export class LibrusGradeGoalCard extends LibrusBaseCard {
 
     const entityId = subjectMatch ? subjectMatch.entityId : map.overall_average;
     const entityState = entityId ? hass.states[entityId] : undefined;
+    const points = subjectMatch ? pointSubjectOf(hass, map, entityState) : undefined;
+    if (subjectMatch && points && entityId) return this._renderPoints(subjectMatch.subject, points, entityId);
     const current = Number(entityState?.state);
 
     if (!entityState || Number.isNaN(current)) {
@@ -154,6 +156,78 @@ export class LibrusGradeGoalCard extends LibrusBaseCard {
                 </div>
               </div>`
             : nothing}
+        </div>
+      </ha-card>
+    `;
+  }
+
+  /**
+   * A subject graded in points: the goal is a grade (the `target` rounded
+   * up, 2-6), its threshold comes from the subject's scale, and the hint
+   * says how many full-score tests of the usual size would get there.
+   */
+  private _renderPoints(subject: string, p: PointSubject, entityId: string): TemplateResult {
+    const hass = this.hass!;
+    const one = (v: number) => formatNumber(v, hass.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const goal = Math.min(6, Math.max(2, Math.ceil(this._config?.target ?? DEFAULT_TARGET)));
+    const need = p.thresholds?.[goal - 2];
+    const now = p.percentage;
+    const reached = need !== undefined && now >= need;
+    let needed: number | null = null;
+    if (need !== undefined && !reached && need < 100) {
+      let earned = p.earned;
+      let possible = p.possible;
+      for (let n = 1; n <= 50; n++) {
+        earned += p.typicalMax;
+        possible += p.typicalMax;
+        if ((100 * earned) / possible >= need) {
+          needed = n;
+          break;
+        }
+      }
+    }
+    const ring = need ? Math.max(0, Math.min(100, (now / need) * 100)) : 0;
+    const predicted = p.thresholds ? predictedGrade(now, p.thresholds) : undefined;
+    return html`
+      <ha-card ${tapAction(this, this._config?.tap_action, entityId)}>
+        <div class="header">
+          <div class="icon-badge ${reached ? "good" : ""}">
+            <ha-icon icon=${reached ? "mdi:flag-checkered" : "mdi:target"}></ha-icon>
+          </div>
+          <div class="title-block">
+            <div class="title">${this._config?.title ?? subject}</div>
+            <div class="subtitle">${t(hass, "card.grade_goal.target_grade", { grade: goal })}</div>
+          </div>
+        </div>
+        <div class="ring-row">
+          ${progressRing(Math.round(ring), reached ? "var(--lc-good)" : "var(--lc-brand)", 68, 7)}
+          <div>
+            <div class="ring-num">${one(now)}%</div>
+            <div class="ring-label">${t(hass, "label.current")}</div>
+          </div>
+        </div>
+        <hr />
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value">${need !== undefined ? `${need}%` : "—"}</div>
+            <div class="stat-label">
+              ${need !== undefined ? t(hass, "label.threshold_for", { grade: goal }) : t(hass, "label.no_point_scale")}
+            </div>
+          </div>
+          <div class="stat ${reached ? "good" : ""}">
+            <div class="stat-value">
+              ${reached
+                ? t(hass, "card.grade_goal.reached")
+                : needed !== null
+                  ? t(hass, "label.full_scores_needed", { n: needed, score: `${p.typicalMax}/${p.typicalMax}` })
+                  : "—"}
+            </div>
+            <div class="stat-label">${reached || needed === null ? "" : t(hass, "label.to_go")}</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">${predicted ?? "—"}</div>
+            <div class="stat-label">${t(hass, "label.forecast")}</div>
+          </div>
         </div>
       </ha-card>
     `;

@@ -5,6 +5,37 @@ export interface HistoryPoint {
   value: number;
 }
 
+/**
+ * Daily means of one long-term statistic over [start, end] - for a
+ * point-graded subject's percentage series, which the integration writes as
+ * external statistics (`points_statistic_id` on the subject sensor).
+ */
+export async function fetchStatisticMeans(
+  hass: LibrusHass,
+  statisticId: string,
+  start: Date,
+  end: Date
+): Promise<HistoryPoint[]> {
+  const result = await hass.callWS<Record<string, { start: number | string; mean?: number | null }[]>>({
+    type: "recorder/statistics_during_period",
+    start_time: start.toISOString(),
+    end_time: end.toISOString(),
+    statistic_ids: [statisticId],
+    period: "day",
+    types: ["mean"],
+  });
+  const points: HistoryPoint[] = [];
+  for (const row of result?.[statisticId] ?? []) {
+    const value = row.mean;
+    const timestamp = typeof row.start === "number" ? row.start : new Date(row.start).getTime();
+    if (typeof value !== "number" || !Number.isFinite(value) || Number.isNaN(timestamp)) continue;
+    const prev = points[points.length - 1];
+    if (prev && prev.value === value) continue;
+    points.push({ timestamp, value });
+  }
+  return points;
+}
+
 interface RawHistoryEntry {
   state: string;
   last_changed: string;

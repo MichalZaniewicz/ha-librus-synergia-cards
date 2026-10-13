@@ -4,7 +4,7 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { numOrNull } from "./utils/format";
+import { formatNumber, numOrNull } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 
@@ -12,6 +12,8 @@ interface SubjectRow {
   subject: string;
   s1: number | null;
   s2: number | null;
+  /** Graded in points: s1/s2 are percentages. */
+  points: boolean;
 }
 
 /**
@@ -54,11 +56,19 @@ export class LibrusSemesterComparisonCard extends LibrusBaseCard {
     const rows: SubjectRow[] = this._resolveAllByTranslationKey(deviceId, "subject_average")
       .map((s) => {
         const attrs = hass.states[s.entityId]?.attributes ?? {};
-        return {
-          subject: s.subject,
-          s1: numOrNull(attrs.average_semester_1),
-          s2: numOrNull(attrs.average_semester_2),
-        };
+        const s1 = numOrNull(attrs.average_semester_1);
+        const s2 = numOrNull(attrs.average_semester_2);
+        // A subject graded in points (integration 0.12.19+): each
+        // semester's percentage instead of an average.
+        if (s1 === null && s2 === null && "points_percentage" in attrs) {
+          return {
+            subject: s.subject,
+            s1: numOrNull(attrs.points_percentage_semester_1),
+            s2: numOrNull(attrs.points_percentage_semester_2),
+            points: true,
+          };
+        }
+        return { subject: s.subject, s1, s2, points: false };
       })
       .filter((r) => r.s1 !== null || r.s2 !== null)
       .sort((a, b) => a.subject.localeCompare(b.subject));
@@ -86,17 +96,25 @@ export class LibrusSemesterComparisonCard extends LibrusBaseCard {
           ${rows.map((r) => {
             const delta = r.s1 !== null && r.s2 !== null ? Math.round((r.s2 - r.s1) * 100) / 100 : null;
             const cls = delta === null ? "" : delta > 0 ? "good" : delta < 0 ? "bad" : "";
+            // Averages with two decimals; a point-graded subject's
+            // percentages with one, and the change in percentage points.
+            const fmt = (v: number) =>
+              r.points ? `${formatNumber(v, hass.language, { maximumFractionDigits: 1, minimumFractionDigits: 1 })}%` : v.toFixed(2);
+            const fmtDelta = (v: number) =>
+              r.points ? formatNumber(v, hass.language, { maximumFractionDigits: 1, minimumFractionDigits: 1 }) : v.toFixed(2);
             return html`
               <div class="row">
-                <span class="subj" title=${r.subject}>${r.subject}</span>
-                <span class="val">${r.s1 !== null ? r.s1.toFixed(2) : "—"}</span>
-                <span class="val strong">${r.s2 !== null ? r.s2.toFixed(2) : "—"}</span>
+                <span class="subj" title=${r.subject}
+                  >${r.subject}${r.points ? html` <span class="pt">${t(hass, "card.semester_comparison.points")}</span>` : nothing}</span
+                >
+                <span class="val">${r.s1 !== null ? fmt(r.s1) : "—"}</span>
+                <span class="val strong">${r.s2 !== null ? fmt(r.s2) : "—"}</span>
                 <span class="delta ${cls}">
                   ${delta === null
                     ? ""
                     : html`<ha-icon
                           icon=${delta > 0 ? "mdi:menu-up" : delta < 0 ? "mdi:menu-down" : "mdi:minus"}
-                        ></ha-icon>${delta !== 0 ? Math.abs(delta).toFixed(2) : ""}`}
+                        ></ha-icon>${delta !== 0 ? fmtDelta(Math.abs(delta)) : ""}`}
                 </span>
               </div>
             `;
@@ -117,7 +135,7 @@ export class LibrusSemesterComparisonCard extends LibrusBaseCard {
       }
       .row {
         display: grid;
-        grid-template-columns: 1fr 3.2rem 3.2rem 3.2rem;
+        grid-template-columns: 1fr 3.6rem 3.6rem 3.4rem;
         align-items: center;
         gap: 6px;
         font-size: 0.82rem;
@@ -134,6 +152,10 @@ export class LibrusSemesterComparisonCard extends LibrusBaseCard {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+      .subj .pt {
+        font-size: 0.66rem;
+        color: var(--secondary-text-color);
       }
       .val {
         text-align: right;

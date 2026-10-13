@@ -6,7 +6,8 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
-import { predictedGrade, subjectForecast, thresholdsOf } from "./utils/forecast";
+import { pointSubjectOf, predictedGrade, subjectForecast, thresholdsOf, type PointSubject } from "./utils/forecast";
+import { formatNumber } from "./utils/format";
 
 const GRADES = [1, 2, 3, 4, 5, 6];
 const MAX_WEIGHT = 5;
@@ -26,6 +27,8 @@ export class LibrusGradeSimulatorCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _grade = 5;
   @state() private _weight = 1;
+  // A point-graded subject: the next score, in percent of its maximum.
+  @state() private _percent = 60;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -60,6 +63,8 @@ export class LibrusGradeSimulatorCard extends LibrusBaseCard {
         : subjects[0];
 
     const subjectState = match ? hass.states[match.entityId] : undefined;
+    const points = pointSubjectOf(hass, map, subjectState);
+    if (match && points) return this._renderPoints(match.subject, points);
     const current = Number(subjectState?.state);
     const count = Number(subjectState?.attributes.grade_count) || 0;
 
@@ -146,10 +151,82 @@ export class LibrusGradeSimulatorCard extends LibrusBaseCard {
     `;
   }
 
+  /** A subject graded in points: "what if the next test went N %". */
+  private _renderPoints(subject: string, p: PointSubject): TemplateResult {
+    const hass = this.hass!;
+    const one = (v: number) => formatNumber(v, hass.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const scored = Math.round((this._percent / 100) * p.typicalMax * 2) / 2;
+    const before = p.percentage;
+    const after = (100 * (p.earned + scored)) / (p.possible + p.typicalMax);
+    const delta = Math.round((after - before) * 10) / 10;
+    const cls = delta > 0 ? "good" : delta < 0 ? "bad" : "";
+    const gradeBefore = p.thresholds ? predictedGrade(before, p.thresholds) : undefined;
+    const gradeAfter = p.thresholds ? predictedGrade(after, p.thresholds) : undefined;
+    return html`
+      <ha-card>
+        <div class="header">
+          <div class="icon-badge"><ha-icon icon="mdi:calculator-variant-outline"></ha-icon></div>
+          <div class="title-block">
+            <div class="title">${this._config?.title ?? subject}</div>
+            <div class="subtitle">${t(hass, "card.grade_simulator.subtitle_points")}</div>
+          </div>
+        </div>
+        <div class="projection">
+          <span class="from">${one(before)}%</span>
+          <ha-icon icon="mdi:arrow-right-thin"></ha-icon>
+          <span class="to ${cls}">${one(after)}%</span>
+          ${delta !== 0 ? html`<span class="delta ${cls}">${delta > 0 ? "+" : ""}${one(delta)} pp</span>` : nothing}
+        </div>
+        ${gradeBefore !== undefined && gradeAfter !== undefined
+          ? html`<div class="report">
+              ${t(hass, "card.grade_simulator.report")}
+              <b>${gradeBefore}</b>
+              <ha-icon icon="mdi:arrow-right-thin"></ha-icon>
+              <b class=${gradeAfter > gradeBefore ? "good" : gradeAfter < gradeBefore ? "bad" : ""}>${gradeAfter}</b>
+            </div>`
+          : nothing}
+        <div class="score-row">
+          <span class="wlabel">${t(hass, "card.grade_simulator.score")}</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="5"
+            .value=${String(this._percent)}
+            aria-label=${t(hass, "card.grade_simulator.score")}
+            @input=${(ev: Event) => {
+              this._percent = Number((ev.target as HTMLInputElement).value);
+            }}
+          />
+          <span class="wval">${this._percent}%</span>
+        </div>
+        <div class="hint">
+          ${t(hass, "card.grade_simulator.score_hint", { points: one(scored).replace(/[,.]0$/, ""), max: p.typicalMax })}${p.thresholds
+            ? ` · ${t(hass, "card.grade_simulator.thresholds")}: ${p.thresholds.map((v, i) => `${i + 2}: ${v}%`).join(", ")}`
+            : ""}
+        </div>
+      </ha-card>
+    `;
+  }
+
   static styles = [
     librusTokens,
     librusSharedStyles,
     css`
+      .score-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .score-row input {
+        flex: 1;
+        min-width: 0;
+        accent-color: var(--lc-brand);
+      }
+      .hint {
+        font-size: 0.72rem;
+        color: var(--secondary-text-color);
+      }
       .projection {
         display: flex;
         align-items: baseline;

@@ -42,6 +42,50 @@ export function pointThresholdsFor(
   return Array.isArray(own) && own.length === 5 ? own.map(Number) : pointThresholdsOf(hass, map);
 }
 
+/** What the point-grade cards need about one subject graded in points. */
+export interface PointSubject {
+  /** Weighted points earned / possible - on the forecast's basis when the
+   * integration gives it (this semester or the year), else all of them. */
+  earned: number;
+  possible: number;
+  percentage: number;
+  /** The most common maximum among its scores: what "one more test" is out of. */
+  typicalMax: number;
+  /** Its percentage scale for a 2..6, when the integration has one. */
+  thresholds?: number[];
+}
+
+/**
+ * A subject graded in points (integration 0.12.19+: `points_earned` /
+ * `points_possible` on its average sensor), or undefined for a 1-6 subject
+ * or an older integration.
+ */
+export function pointSubjectOf(
+  hass: LibrusHass,
+  map: Record<string, string>,
+  state: HassEntity | undefined
+): PointSubject | undefined {
+  if (!state || Number.isFinite(Number(state.state))) return undefined;
+  const a = state.attributes;
+  const num = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
+  const earned = num(a.forecast_points_earned) ?? num(a.points_earned);
+  const possible = num(a.forecast_points_possible) ?? num(a.points_possible);
+  if (earned === undefined || possible === undefined || possible <= 0) return undefined;
+  const maxima = new Map<number, number>();
+  for (const g of (a.point_grades as { max_points?: number | null }[] | undefined) ?? []) {
+    if (typeof g.max_points === "number" && g.max_points > 0) maxima.set(g.max_points, (maxima.get(g.max_points) ?? 0) + 1);
+  }
+  let typicalMax = 20;
+  let seen = 0;
+  for (const [max, count] of maxima) {
+    if (count > seen) {
+      typicalMax = max;
+      seen = count;
+    }
+  }
+  return { earned, possible, percentage: (100 * earned) / possible, typicalMax, thresholds: pointThresholdsFor(hass, map, state) };
+}
+
 /** A point-graded subject's percentage (`points_percentage`) - only when the
  * sensor has no 1-6 average of its own (its state isn't a number). */
 export function pointsPercentage(state: HassEntity | undefined): number | undefined {

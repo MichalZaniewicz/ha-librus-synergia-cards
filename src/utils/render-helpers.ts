@@ -104,7 +104,15 @@ export function progressRing(pct: number, colorVar: string, size = 64, stroke = 
  */
 export function lineChart(
   points: HistoryPoint[],
-  opts: { width?: number; height?: number; colorVar?: string; min?: number; max?: number } = {}
+  opts: {
+    width?: number;
+    height?: number;
+    colorVar?: string;
+    min?: number;
+    max?: number;
+    /** A dashed horizontal line, e.g. the next grade's threshold. */
+    guide?: number;
+  } = {}
 ): TemplateResult {
   const width = opts.width ?? 280;
   const height = opts.height ?? 72;
@@ -119,8 +127,9 @@ export function lineChart(
   const ys = points.map((p) => p.value);
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);
-  const minY = opts.min ?? Math.min(...ys);
-  const maxY = opts.max ?? Math.max(...ys);
+  const guide = opts.guide;
+  const minY = opts.min ?? Math.min(...ys, ...(guide !== undefined ? [guide] : []));
+  const maxY = opts.max ?? Math.max(...ys, ...(guide !== undefined ? [guide] : []));
   const rangeX = maxX - minX || 1;
   const rangeY = maxY - minY || 1;
 
@@ -137,6 +146,9 @@ export function lineChart(
 
   return html`
     <svg width=${width} height=${height} viewBox="0 0 ${width} ${height}" class="line-chart">
+      ${guide !== undefined
+        ? svg`<line x1=${pad} x2=${width - pad} y1=${toY(guide)} y2=${toY(guide)} stroke="var(--lc-warn)" stroke-width="1.5" stroke-dasharray="4 4"></line>`
+        : nothing}
       <polygon points=${areaPoints} fill=${colorVar} opacity="0.12"></polygon>
       <polyline
         points=${linePoints}

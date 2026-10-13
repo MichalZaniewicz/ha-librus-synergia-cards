@@ -711,6 +711,15 @@
       grade_count: 0,
       grades: [],
       points_percentage: 84.1,
+      // Integration 0.12.19+: the weighted sums behind it, each semester's
+      // percentage and the daily percentage series in statistics.
+      points_earned: 115.6,
+      points_possible: 137.4,
+      forecast_points_earned: 115.6,
+      forecast_points_possible: 137.4,
+      points_percentage_semester_1: 78.5,
+      points_percentage_semester_2: 84.1,
+      points_statistic_id: "librus_synergia:dev_average_points_99",
       point_grades: [
         { value: "17", points: 17, max_points: 20, percentage: 85, category: "Kartkówka", date: iso(new Date(today.getTime() - 3 * 86400000)) },
         { value: "85", points: 85, max_points: 100, percentage: 85, category: "Sprawdzian", date: iso(new Date(today.getTime() - 9 * 86400000)) },
@@ -979,6 +988,18 @@
         });
       },
       callWS: async (msg) => {
+        // Long-term statistics: a point-graded subject's daily percentage
+        // (Grade trend card), rising from ~72 % to today's 84.1 %.
+        if (msg.type === "recorder/statistics_during_period") {
+          const id = msg.statistic_ids[0];
+          const rows = [];
+          for (let i = 59; i >= 0; i--) {
+            const day = new Date(today.getTime() - i * 86400000);
+            const value = Math.round((72 + (59 - i) * 0.2 + (i % 9 === 0 ? -1.5 : 0)) * 10) / 10;
+            rows.push({ start: day.getTime(), mean: i === 0 ? 84.1 : value });
+          }
+          return { [id]: rows };
+        }
         if (msg.type === "todo/item/list") {
           return {
             items: ["101", "102", "103", "104", "105"].map((uid) => ({

@@ -3,7 +3,9 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchNumericHistory, type HistoryPoint } from "./utils/history";
+import { fetchNumericHistory, fetchStatisticMeans, type HistoryPoint } from "./utils/history";
+import { pointThresholdsFor, pointsPercentage } from "./utils/forecast";
+import { formatNumber } from "./utils/format";
 import { lineChart } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 import type { LibrusCardConfig } from "./utils/types";
@@ -66,22 +68,35 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
     return map.overall_average;
   }
 
+  /** A point-graded subject's daily percentage series (integration
+   * 0.12.19+), when the chosen subject is one. */
+  private _statisticId(entityId: string): string | undefined {
+    const state = this.hass?.states[entityId];
+    const id = state?.attributes.points_statistic_id;
+    return typeof id === "string" && pointsPercentage(state) !== undefined ? id : undefined;
+  }
+
   private async _fetch(force = false): Promise<void> {
     const entityId = this._resolveEntityId();
     if (!this.hass || !entityId) return;
 
     const end = new Date();
     const start = new Date(end.getTime() - this._historyDays * 86_400_000);
-    const range = `${entityId}:${end.toDateString()}:${this._historyDays}`;
+    const statisticId = this._statisticId(entityId);
+    const range = `${statisticId ?? entityId}:${end.toDateString()}:${this._historyDays}`;
     // The history only grows when this sensor's value changes, so its
-    // last_changed is the key - not every Librus refresh.
-    const cacheKey = `${range}:${this.hass.states[entityId]?.last_changed ?? ""}`;
+    // last_changed is the key - not every Librus refresh. A point series
+    // grows with its percentage.
+    const state = this.hass.states[entityId];
+    const cacheKey = `${range}:${statisticId ? String(state?.attributes.points_percentage) : (state?.last_changed ?? "")}`;
     if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
     this._fetchedFor = cacheKey;
 
     const generation = this._beginFetch();
     try {
-      const points = await fetchNumericHistory(this.hass, entityId, start, end);
+      const points = statisticId
+        ? await fetchStatisticMeans(this.hass, statisticId, start, end)
+        : await fetchNumericHistory(this.hass, entityId, start, end);
       if (this._isCurrentFetch(generation)) {
         this._points = points;
         this._fetchSucceeded(range);
@@ -102,7 +117,8 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
   private _withLivePoint(entityId: string): HistoryPoint[] {
     const live = this.hass?.states[entityId];
     return this._memo("points", [this._points, live], () => {
-      const value = Number(live?.state);
+      // A point-graded subject's live value is its percentage.
+      const value = pointsPercentage(live) ?? Number(live?.state);
       if (!live || live.state === "" || !Number.isFinite(value)) return this._points;
       const last = this._points[this._points.length - 1];
       if (last && last.value === value) return this._points;
@@ -137,7 +153,14 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
 
     const first = points[0];
     const last = points[points.length - 1];
-    const delta = Math.round((last.value - first.value) * 100) / 100;
+    const subjectState = entityId ? hass.states[entityId] : undefined;
+    const isPoints = !!entityId && this._statisticId(entityId) !== undefined;
+    const delta = Math.round((last.value - first.value) * (isPoints ? 10 : 100)) / (isPoints ? 10 : 100);
+    const one = (v: number) => formatNumber(v, hass.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    // A point-graded subject: the next grade's threshold as a dashed line.
+    const guide = isPoints
+      ? pointThresholdsFor(hass, resolved.map, subjectState)?.find((v) => v > last.value)
+      : undefined;
     const trendIcon = delta > 0 ? "mdi:trending-up" : delta < 0 ? "mdi:trending-down" : "mdi:trending-neutral";
     const trendClass = delta > 0 ? "good" : delta < 0 ? "bad" : "";
 
@@ -151,12 +174,12 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
           </div>
           <div class="trend ${trendClass}">
             <ha-icon icon=${trendIcon}></ha-icon>
-            <span>${delta > 0 ? "+" : ""}${delta}</span>
+            <span>${delta > 0 ? "+" : ""}${isPoints ? `${one(delta)} pp` : delta}</span>
           </div>
         </div>
         <div class="chart-row">
-          <div class="current-value">${last.value.toFixed(2)}</div>
-          ${lineChart(points, { colorVar: "var(--lc-brand)" })}
+          <div class="current-value">${isPoints ? `${one(last.value)}%` : last.value.toFixed(2)}</div>
+          ${lineChart(points, { colorVar: "var(--lc-brand)", guide })}
         </div>
       </ha-card>
     `;
