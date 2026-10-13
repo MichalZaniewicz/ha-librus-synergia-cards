@@ -8,7 +8,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { progressRing } from "./utils/render-helpers";
 import { t } from "./utils/localize";
 import { pointGradeEntries } from "./utils/grade-filters";
-import { pointThresholdsOf, predictedGrade } from "./utils/forecast";
+import { pointThresholdsFor, predictedGrade } from "./utils/forecast";
 
 interface GradeLogEntry {
   value: string;
@@ -79,9 +79,9 @@ export class LibrusLevelCard extends LibrusBaseCard {
     // A point grade earns XP like any grade; it's a good one when its
     // percentage maps to a 4 or better on the integration's point grade
     // thresholds (no thresholds set: no bonus, since there's no scale).
-    const pointThresholds = pointThresholdsOf(hass, map);
     for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
       const attributes = hass.states[s.entityId]?.attributes;
+      const pointThresholds = pointThresholdsFor(hass, map, hass.states[s.entityId]);
       const grades = (attributes?.grades as GradeLogEntry[] | undefined) ?? [];
       for (const g of grades) {
         gradeCount += 1;

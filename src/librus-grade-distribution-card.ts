@@ -6,7 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
-import { pointThresholdsOf, predictedGrade } from "./utils/forecast";
+import { pointThresholdsFor, predictedGrade } from "./utils/forecast";
 
 interface GradeLogEntry {
   value: string;
@@ -61,11 +61,9 @@ export class LibrusGradeDistributionCard extends LibrusBaseCard {
     if ("error" in resolved) return resolved.error;
     const { deviceId, map } = resolved;
     const hass = this.hass;
-    // Point grades count too once the integration knows the school's
-    // percentage thresholds ("Point grade forecast thresholds") - each
-    // score lands in the grade its percentage maps to.
-    const pointThresholds = pointThresholdsOf(hass, map);
-
+    // Point grades count too once the integration knows a percentage scale
+    // ("Point grade forecast thresholds", or the subject's own one) - each
+    // score lands in the grade its percentage maps to on its subject's scale.
     const counts: Record<string, number> = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, other: 0 };
     let total = 0;
     for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
@@ -75,6 +73,7 @@ export class LibrusGradeDistributionCard extends LibrusBaseCard {
         counts[digit ?? "other"] += 1;
         total += 1;
       }
+      const pointThresholds = pointThresholdsFor(hass, map, hass.states[s.entityId]);
       if (!pointThresholds) continue;
       const points = (hass.states[s.entityId]?.attributes.point_grades as { percentage?: number | null }[] | undefined) ?? [];
       for (const p of points) {

@@ -28,6 +28,20 @@ export function pointThresholdsOf(hass: LibrusHass, map: Record<string, string>)
   return Array.isArray(raw) && raw.length === 5 ? raw.map(Number) : undefined;
 }
 
+/**
+ * The point-grade scale for one subject: its own (the subject sensor's
+ * `point_thresholds`, integration 0.12.19+ - per-subject scales from the
+ * options) or the general one. Undefined when neither is set.
+ */
+export function pointThresholdsFor(
+  hass: LibrusHass,
+  map: Record<string, string>,
+  state: HassEntity | undefined
+): number[] | undefined {
+  const own = state?.attributes.point_thresholds;
+  return Array.isArray(own) && own.length === 5 ? own.map(Number) : pointThresholdsOf(hass, map);
+}
+
 /** A point-graded subject's percentage (`points_percentage`) - only when the
  * sensor has no 1-6 average of its own (its state isn't a number). */
 export function pointsPercentage(state: HassEntity | undefined): number | undefined {
