@@ -688,10 +688,26 @@
 
     // A subject graded in points (backend: schools with PointGrades) - no
     // 1-6 average, so the state is unknown and the cards use
-    // points_percentage / point_grades instead.
+    // points_percentage / point_grades instead. With the integration's
+    // "Point grade forecast thresholds" (0.12.17+) it also gets a forecast
+    // grade from its percentage.
+    const MOCK_POINT_THRESHOLDS = [40, 55, 75, 90, 98];
+    const pointsPredicted = 1 + MOCK_POINT_THRESHOLDS.filter((t) => 84.1 >= t).length;
+    MOCK_FORECASTS.push({
+      subject_id: 99, subject: "Technika", average: 84.1, percentage: 84.1,
+      predicted: pointsPredicted, next_grade_at: MOCK_POINT_THRESHOLDS[pointsPredicted - 1],
+      sixes_to_next: null, ones_to_drop: null, declining: false, at_risk: false, proposed: null,
+    });
     addEntity("sensor.subject_99_average", "subject_average", {
       subject_id: 99,
       subject: "Technika",
+      forecast_average: 84.1,
+      forecast_weight: 0,
+      predicted_grade: pointsPredicted,
+      next_grade_at: MOCK_POINT_THRESHOLDS[pointsPredicted - 1],
+      sixes_to_next_grade: null,
+      ones_to_drop_grade: null,
+      forecast_declining: false,
       grade_count: 0,
       grades: [],
       points_percentage: 84.1,
@@ -760,6 +776,7 @@
     addEntity("sensor.grade_forecast", "grade_forecast", {
       basis: "semester_1",
       thresholds: MOCK_THRESHOLDS,
+      point_thresholds: MOCK_POINT_THRESHOLDS,
       honours_average: reportAverage >= 4.75,
       at_risk: MOCK_FORECASTS.filter((f) => f.at_risk).map((f) => f.subject),
       declining: MOCK_FORECASTS.filter((f) => f.declining).map((f) => f.subject),
