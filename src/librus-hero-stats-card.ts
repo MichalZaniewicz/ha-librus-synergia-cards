@@ -9,6 +9,7 @@ import { computeHeroStats, type HeroStat } from "./utils/hero-stats";
 import type { SubjectStat } from "./utils/hero-archetypes";
 import { numOrNull as num } from "./utils/format";
 import { t } from "./utils/localize";
+import { heroSubjectStat } from "./utils/forecast";
 
 const SCALE_MAX = 10;
 const PALETTE = ["1", "2", "3", "4", "5", "7"]; // --lc-chart-N, skipping 6 (a low-contrast neutral)
@@ -121,11 +122,10 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
     const { deviceId, map } = resolved;
     const hass = this.hass;
 
-    const subjects: SubjectStat[] = this._resolveAllByTranslationKey(deviceId, "subject_average").map((s) => {
-      const state = hass.states[s.entityId];
-      const gradeCount = ((state?.attributes.grades as { value: string }[] | undefined) ?? []).length;
-      return { subject: s.subject, average: state ? num(state.state) : null, gradeCount };
-    });
+    // Point-graded subjects count with their forecast grade (see heroSubjectStat).
+    const subjects: SubjectStat[] = this._resolveAllByTranslationKey(deviceId, "subject_average").map((s) =>
+      heroSubjectStat(s.subject, hass.states[s.entityId])
+    );
 
     const attendanceStreak = map.attendance_streak ? hass.states[map.attendance_streak] : undefined;
     const behaviourGrade = map.behaviour_grade ? hass.states[map.behaviour_grade] : undefined;

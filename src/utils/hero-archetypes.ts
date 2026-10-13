@@ -8,6 +8,34 @@ export interface SubjectStat {
    * subject has no counted grades yet (state is "unknown"). */
   average: number | null;
   gradeCount: number;
+  /** Point-graded subject: `average` is its forecast grade (from the
+   * integration's point grade thresholds) and `gradeCount` its number of
+   * point grades. */
+  points?: boolean;
+}
+
+/**
+ * The overall average with point-graded subjects folded in. The Overall
+ * average sensor only covers 1-6 grades; each point-graded subject adds its
+ * forecast grade, weighted by how many point grades it has - the same
+ * weighting `weightedClusterAverage` uses. No point-graded subjects: the
+ * sensor's value, unchanged.
+ */
+export function overallWithPoints(overall: number | null, subjects: SubjectStat[]): number | null {
+  const points = subjects.filter((s) => s.points && s.average !== null && s.gradeCount > 0);
+  if (points.length === 0) return overall;
+  let sum = 0;
+  let count = 0;
+  for (const s of points) {
+    sum += s.average! * s.gradeCount;
+    count += s.gradeCount;
+  }
+  const graded = subjects.filter((s) => !s.points).reduce((n, s) => n + s.gradeCount, 0);
+  if (overall !== null && graded > 0) {
+    sum += overall * graded;
+    count += graded;
+  }
+  return count > 0 ? sum / count : overall;
 }
 
 /** Everything the archetype computation needs, already pulled out of raw
