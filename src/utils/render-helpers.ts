@@ -215,7 +215,10 @@ export function radarChart(
       ${axes.map((a, i) => {
         const [lx, ly] = point(i, max * 1.18);
         const cosA = Math.cos(angle(i));
-        const anchor = Math.abs(cosA) < 0.3 ? "middle" : cosA > 0 ? "start" : "end";
+        // Centred only right at the top/bottom: with many axes (11+) the two
+        // labels either side of the bottom point sit close together and,
+        // both centred, ran into each other.
+        const anchor = Math.abs(cosA) < 0.15 ? "middle" : cosA > 0 ? "start" : "end";
         return svg`<text x=${lx} y=${ly + 3} text-anchor=${anchor} class="radar-label">${a.title ? svg`<title>${a.title}</title>` : ""}${a.label}</text>`;
       })}
     </svg>

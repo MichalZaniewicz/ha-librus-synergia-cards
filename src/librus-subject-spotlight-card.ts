@@ -48,7 +48,11 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
 
     const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average")
       .map((s) => ({ subject: s.subject, state: hass.states[s.entityId] }))
-      .filter((s) => s.state && !UNAVAILABLE.has(s.state.state))
+      // A point-graded subject's sensor is "unknown" (no 1-6 average) but
+      // still has its percentage - keep it.
+      .filter(
+        (s) => s.state && (!UNAVAILABLE.has(s.state.state) || pointsPercentage(s.state) !== undefined)
+      )
       .map((s) => {
         const average = Number(s.state!.state);
         return {
