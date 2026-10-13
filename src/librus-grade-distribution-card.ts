@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
+import { pointThresholdsOf, predictedGrade } from "./utils/forecast";
 
 interface GradeLogEntry {
   value: string;
@@ -58,8 +59,12 @@ export class LibrusGradeDistributionCard extends LibrusBaseCard {
 
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
-    const { deviceId } = resolved;
+    const { deviceId, map } = resolved;
     const hass = this.hass;
+    // Point grades count too once the integration knows the school's
+    // percentage thresholds ("Point grade forecast thresholds") - each
+    // score lands in the grade its percentage maps to.
+    const pointThresholds = pointThresholdsOf(hass, map);
 
     const counts: Record<string, number> = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, other: 0 };
     let total = 0;
@@ -68,6 +73,13 @@ export class LibrusGradeDistributionCard extends LibrusBaseCard {
       for (const g of grades) {
         const digit = /^([1-6])/.exec(g.value.trim())?.[1];
         counts[digit ?? "other"] += 1;
+        total += 1;
+      }
+      if (!pointThresholds) continue;
+      const points = (hass.states[s.entityId]?.attributes.point_grades as { percentage?: number | null }[] | undefined) ?? [];
+      for (const p of points) {
+        if (typeof p.percentage !== "number") continue;
+        counts[String(predictedGrade(p.percentage, pointThresholds))] += 1;
         total += 1;
       }
     }

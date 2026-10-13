@@ -16,6 +16,25 @@ export function thresholdsOf(hass: LibrusHass, map: Record<string, string>): num
   return Array.isArray(raw) && raw.length === 5 ? raw.map(Number) : DEFAULT_THRESHOLDS;
 }
 
+/**
+ * Minimum percentages for a 2..6 in point-graded subjects - the Grade
+ * forecast sensor's `point_thresholds` (integration option "Point grade
+ * forecast thresholds"). Undefined when not set or on an older integration:
+ * point-graded subjects then have no grade to compare.
+ */
+export function pointThresholdsOf(hass: LibrusHass, map: Record<string, string>): number[] | undefined {
+  const raw = map.grade_forecast ? hass.states[map.grade_forecast]?.attributes.point_thresholds : undefined;
+  return Array.isArray(raw) && raw.length === 5 ? raw.map(Number) : undefined;
+}
+
+/** A point-graded subject's percentage (`points_percentage`) - only when the
+ * sensor has no 1-6 average of its own (its state isn't a number). */
+export function pointsPercentage(state: HassEntity | undefined): number | undefined {
+  if (!state || Number.isFinite(Number(state.state))) return undefined;
+  const raw = state.attributes.points_percentage;
+  return typeof raw === "number" && Number.isFinite(raw) ? raw : undefined;
+}
+
 export function predictedGrade(average: number, thresholds: number[]): number {
   return 1 + thresholds.filter((t) => average >= t).length;
 }

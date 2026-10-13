@@ -7,7 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
 import { t } from "./utils/localize";
-import { subjectForecast } from "./utils/forecast";
+import { pointsPercentage, subjectForecast } from "./utils/forecast";
 import { formatNumber } from "./utils/format";
 
 /**
@@ -48,21 +48,45 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
 
     const subjects = this._resolveAllByTranslationKey(deviceId, "subject_average")
       .map((s) => ({ subject: s.subject, state: hass.states[s.entityId] }))
-      .filter((s) => s.state && !UNAVAILABLE.has(s.state.state))
-      .map((s) => ({
-        subject: s.subject,
-        value: Number(s.state!.state),
-        forecast: subjectForecast(s.state)?.predicted,
-      }))
-      .filter((s) => !Number.isNaN(s.value));
+      // A point-graded subject's sensor is "unknown" (no 1-6 average) but
+      // still has its percentage - keep it.
+      .filter(
+        (s) => s.state && (!UNAVAILABLE.has(s.state.state) || pointsPercentage(s.state) !== undefined)
+      )
+      .map((s) => {
+        const average = Number(s.state!.state);
+        return {
+          subject: s.subject,
+          value: Number.isNaN(average) ? undefined : average,
+          percentage: pointsPercentage(s.state),
+          forecast: subjectForecast(s.state)?.predicted,
+        };
+      })
+      .filter((s) => s.value !== undefined || s.percentage !== undefined);
 
-    if (subjects.length < 2) {
+    // A 1-6 average and a percentage can't be compared directly, so with
+    // forecasts for every subject (point-graded ones get theirs from the
+    // integration's "Point grade forecast thresholds") they're ranked by the
+    // forecast grade first, then by how high the average/percentage sits on
+    // its own scale. Without them (an older integration, or no point
+    // thresholds set) it's the 1-6 averages only, as before.
+    const byForecast = subjects.every((s) => s.forecast !== undefined);
+    const ranked = byForecast ? subjects : subjects.filter((s) => s.value !== undefined);
+    const score = (s: (typeof subjects)[number]): number =>
+      byForecast
+        ? s.forecast! + 0.999 * (s.value !== undefined ? s.value / 6 : s.percentage! / 100)
+        : s.value!;
+
+    if (ranked.length < 2) {
       return this._message("mdi:podium-gold", t(hass, "card.subject_spotlight.empty"));
     }
 
-    const best = subjects.reduce((a, b) => (b.value > a.value ? b : a));
-    const weakest = subjects.reduce((a, b) => (b.value < a.value ? b : a));
-    const fmt = (v: number) => formatNumber(v, hass.language, { maximumFractionDigits: 2 });
+    const best = ranked.reduce((a, b) => (score(b) > score(a) ? b : a));
+    const weakest = ranked.reduce((a, b) => (score(b) < score(a) ? b : a));
+    const fmt = (s: (typeof subjects)[number]) =>
+      s.value !== undefined
+        ? formatNumber(s.value, hass.language, { maximumFractionDigits: 2 })
+        : `${formatNumber(s.percentage!, hass.language, { maximumFractionDigits: 1 })} %`;
 
     return html`
       <ha-card>
@@ -76,7 +100,7 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
         <div class="spotlight-row">
           <div class="spotlight-tile good">
             <ha-icon icon="mdi:trophy-outline"></ha-icon>
-            <div class="spotlight-value">${fmt(best.value)}</div>
+            <div class="spotlight-value">${fmt(best)}</div>
             <div class="spotlight-subject">${best.subject}</div>
             <div class="spotlight-label">${t(hass, "card.subject_spotlight.best")}</div>
             ${best.forecast !== undefined
@@ -85,7 +109,7 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
           </div>
           <div class="spotlight-tile warn">
             <ha-icon icon="mdi:book-open-page-variant-outline"></ha-icon>
-            <div class="spotlight-value">${fmt(weakest.value)}</div>
+            <div class="spotlight-value">${fmt(weakest)}</div>
             <div class="spotlight-subject">${weakest.subject}</div>
             <div class="spotlight-label">${t(hass, "card.subject_spotlight.weakest")}</div>
             ${weakest.forecast !== undefined
