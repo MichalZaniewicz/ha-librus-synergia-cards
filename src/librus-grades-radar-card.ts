@@ -8,6 +8,8 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { radarChart, type RadarAxis } from "./utils/render-helpers";
 import { abbreviate } from "./utils/subjects";
 import { t } from "./utils/localize";
+import { pointsPercentage, subjectForecast } from "./utils/forecast";
+import { formatNumber } from "./utils/format";
 
 const MIN_SUBJECTS = 3; // fewer than 3 axes degenerates to a line, not a shape
 const SCALE_MAX = 6; // Polish grading scale
@@ -50,10 +52,23 @@ export class LibrusGradesRadarCard extends LibrusBaseCard {
 
     const axes: RadarAxis[] = [];
     for (const s of this._resolveAllByTranslationKey(deviceId, "subject_average")) {
-      const raw = hass.states[s.entityId]?.state;
-      const value = raw !== undefined ? Number(raw) : NaN;
-      if (Number.isFinite(value)) axes.push({ label: abbreviate(s.subject), title: s.subject, value });
+      const state = hass.states[s.entityId];
+      const value = state !== undefined ? Number(state.state) : NaN;
+      if (Number.isFinite(value)) {
+        axes.push({ label: abbreviate(s.subject), title: s.subject, value });
+        continue;
+      }
+      // A point-graded subject has no 1-6 average - it goes on the chart
+      // with the grade its percentage forecasts (integration option
+      // "Point grade forecast thresholds"), the percentage in the tooltip.
+      const percentage = pointsPercentage(state);
+      const predicted = subjectForecast(state)?.predicted;
+      if (percentage !== undefined && predicted !== undefined) {
+        const pct = formatNumber(percentage, hass.language, { maximumFractionDigits: 1 });
+        axes.push({ label: abbreviate(s.subject), title: `${s.subject}: ${pct} % → ${predicted}`, value: predicted });
+      }
     }
+    distinctLabels(axes);
 
     if (axes.length < MIN_SUBJECTS) {
       return this._message("mdi:chart-timeline-variant", t(hass, "card.grades_radar.empty"));
@@ -82,6 +97,22 @@ export class LibrusGradesRadarCard extends LibrusBaseCard {
   }
 
   static styles = [librusTokens, librusSharedStyles];
+}
+
+/** Two subjects can shorten to the same label ("język angielski" and
+ * "język angielski zawodowy" are both "Ang") and then overlap on the chart -
+ * each repeat gets the start of the word that tells it apart ("Ang zaw"). */
+function distinctLabels(axes: RadarAxis[]): void {
+  const byLabel = new Map<string, RadarAxis[]>();
+  for (const axis of axes) byLabel.set(axis.label, [...(byLabel.get(axis.label) ?? []), axis]);
+  for (const group of byLabel.values()) {
+    if (group.length < 2) continue;
+    const names = group.map((a) => (a.title ?? a.label).split(":")[0].trim().split(/\s+/));
+    group.forEach((axis, i) => {
+      const extra = names[i].find((word, j) => names.some((other, k) => k !== i && other[j] !== word));
+      if (extra && extra.length) axis.label = `${axis.label} ${extra.slice(0, 3).toLowerCase()}`;
+    });
+  }
 }
 
 declare global {

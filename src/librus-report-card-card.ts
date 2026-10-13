@@ -17,6 +17,9 @@ interface ForecastRow {
   ones_to_drop: number | null;
   declining: boolean;
   at_risk: boolean;
+  /** Point-graded subject (integration 0.12.17+): its percentage - `average`
+   * is then a percentage too. */
+  percentage?: number | null;
 }
 
 const HONOURS = 4.75;
@@ -83,6 +86,11 @@ export class LibrusReportCardCard extends LibrusBaseCard {
     const barPct = Math.max(0, Math.min(100, ((average - barFrom) / (honoursLine - barFrom)) * 100));
     const fmt = (v: number) =>
       formatNumber(v, hass.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // A point-graded subject's tile shows its percentage instead of an average.
+    const fmtRow = (r: ForecastRow) =>
+      typeof r.percentage === "number"
+        ? `${formatNumber(r.percentage, hass.language, { maximumFractionDigits: 1 })} %`
+        : fmt(r.average);
     const basis = sensor.attributes.basis === "school_year" ? "school_year" : "semester_1";
 
     return html`
@@ -127,11 +135,11 @@ export class LibrusReportCardCard extends LibrusBaseCard {
             (r) => html`
               <div
                 class="tile g${r.predicted} ${r.at_risk ? "bad" : r.declining ? "warn" : ""}"
-                title=${`${r.subject}: ${fmt(r.average)}`}
+                title=${`${r.subject}: ${fmtRow(r)}`}
               >
                 <div class="g">${r.predicted}${r.declining ? "↓" : ""}</div>
                 <div class="n">${r.subject}</div>
-                <div class="a">${fmt(r.average)}</div>
+                <div class="a">${fmtRow(r)}</div>
               </div>
             `
           )}
