@@ -1,5 +1,6 @@
 import type { HassEntity } from "home-assistant-js-websocket";
 import type { LibrusHass } from "./types";
+import type { SubjectStat } from "./hero-archetypes";
 
 /**
  * Helpers for the integration's grade forecast (0.12.0+): the Grade
@@ -33,6 +34,25 @@ export function pointsPercentage(state: HassEntity | undefined): number | undefi
   if (!state || Number.isFinite(Number(state.state))) return undefined;
   const raw = state.attributes.points_percentage;
   return typeof raw === "number" && Number.isFinite(raw) ? raw : undefined;
+}
+
+/**
+ * One subject-average sensor as a hero-card subject: its 1-6 average and
+ * grade count - or, for a point-graded subject with a forecast, the forecast
+ * grade and its number of point grades (`points: true`).
+ */
+export function heroSubjectStat(subject: string, state: HassEntity | undefined): SubjectStat {
+  const raw = state ? Number(state.state) : NaN;
+  const gradeCount = ((state?.attributes.grades as unknown[] | undefined) ?? []).length;
+  if (Number.isFinite(raw) || pointsPercentage(state) === undefined) {
+    return { subject, average: Number.isFinite(raw) ? raw : null, gradeCount };
+  }
+  const predicted = subjectForecast(state)?.predicted;
+  const pointCount = ((state?.attributes.point_grades as { percentage?: number | null }[] | undefined) ?? []).filter(
+    (g) => typeof g.percentage === "number"
+  ).length;
+  if (predicted === undefined || pointCount === 0) return { subject, average: null, gradeCount };
+  return { subject, average: predicted, gradeCount: pointCount, points: true };
 }
 
 export function predictedGrade(average: number, thresholds: number[]): number {

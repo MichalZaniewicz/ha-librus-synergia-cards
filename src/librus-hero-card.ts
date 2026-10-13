@@ -7,8 +7,10 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { numOrNull as num } from "./utils/format";
 import { t } from "./utils/localize";
+import { heroSubjectStat } from "./utils/forecast";
 import {
   computeHeroResult,
+  overallWithPoints,
   readAchievementCount,
   recordHeroHistory,
   type HeroMode,
@@ -79,15 +81,10 @@ export class LibrusHeroCard extends LibrusBaseCard {
     const hass = this.hass;
     const mode: HeroMode = this._config.mode === "hero" ? "hero" : "archetype";
 
-    const subjects: SubjectStat[] = this._resolveAllByTranslationKey(deviceId, "subject_average").map((s) => {
-      const state = hass.states[s.entityId];
-      const gradeList = (state?.attributes.grades as GradeLogEntry[] | undefined) ?? [];
-      return {
-        subject: s.subject,
-        average: state ? num(state.state) : null,
-        gradeCount: gradeList.length,
-      };
-    });
+    // Point-graded subjects count with their forecast grade (see heroSubjectStat).
+    const subjects: SubjectStat[] = this._resolveAllByTranslationKey(deviceId, "subject_average").map((s) =>
+      heroSubjectStat(s.subject, hass.states[s.entityId])
+    );
 
     const overall = map.overall_average ? hass.states[map.overall_average] : undefined;
     const attendance = map.attendance ? hass.states[map.attendance] : undefined;
@@ -101,7 +98,7 @@ export class LibrusHeroCard extends LibrusBaseCard {
 
     const result = computeHeroResult({
       subjects,
-      overallAverage: num(overall?.state),
+      overallAverage: overallWithPoints(num(overall?.state), subjects),
       overallSemester1: num(overall?.attributes.average_semester_1),
       overallSemester2: num(overall?.attributes.average_semester_2),
       attendanceStreak: num(attendanceStreak?.state),
