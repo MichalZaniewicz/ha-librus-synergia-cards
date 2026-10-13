@@ -24,6 +24,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   max_items?: number;
   /** Forward-looking window, in days (Agenda). */
   days_ahead?: number;
+  /** Announcements card: opening an unread notice doesn't mark it read in Librus. */
+  keep_unread?: boolean;
   /** Timetable changes card: hide the last few changes (shown by default). */
   hide_past?: boolean;
   /** Older spelling of `hide_past` (`show_past: false`), still honoured from YAML. */

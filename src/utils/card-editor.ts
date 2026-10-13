@@ -67,6 +67,7 @@ type EditorField =
         | "summary_only"
         | "hide_generate"
         | "hide_past"
+        | "keep_unread"
         | "hide_changes";
       label: TranslationKey;
     }
@@ -218,7 +219,11 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   ],
   "custom:librus-school-day-card": [TITLE_FIELD],
   "custom:librus-homework-checklist-card": [TITLE_FIELD, MAX_ITEMS_FIELD(30)],
-  "custom:librus-announcements-card": [TITLE_FIELD, MAX_ITEMS_FIELD(20)],
+  "custom:librus-announcements-card": [
+    TITLE_FIELD,
+    MAX_ITEMS_FIELD(20),
+    { kind: "boolean", key: "keep_unread", label: "editor.keep_unread" },
+  ],
   "custom:librus-agenda-card": [
     TITLE_FIELD,
     { kind: "number", key: "days_ahead", label: "editor.days_ahead", min: 1, max: 60 },
@@ -226,7 +231,8 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-messages-card": [
     TITLE_FIELD,
     { kind: "select", key: "mailbox", label: "editor.mailbox", options: MAILBOX_OPTIONS },
-    MAX_ITEMS_FIELD(20),
+    // Up to the integration's "Messages to fetch per mailbox" maximum.
+    MAX_ITEMS_FIELD(50),
   ],
   "custom:librus-grade-trend-card": [
     { kind: "subject" },

@@ -288,6 +288,7 @@ export const en = {
   "card.changes.chip_room": "Rooms",
   "card.changes.chip_moved": "Moved",
   "editor.hide_past": "Hide recent changes",
+  "editor.keep_unread": "Don't mark read in Librus when opened",
   "mailbox.inbox": "Inbox",
   "mailbox.notes": "Notes",
   "mailbox.alerts": "Alerts",
@@ -302,6 +303,8 @@ export const en = {
   "card.announcements.empty": "No announcements",
   "card.announcements.unread": "{n} unread",
   "card.announcements.all_read": "All read",
+  "card.announcements.mark_all": "Mark all read",
+  "card.announcements.mark_failed": "Couldn't mark it read: {error}",
 
   "card.homework_assignments.title": "Homework assignments",
   "card.homework_assignments.empty": "No homework assignments",

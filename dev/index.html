@@ -392,9 +392,9 @@
       notices: [
         { id: "LID-NBOARD-NOTICE-1", subject: "Kandydaci do Rady Samorządu Uczniowskiego", content: "Zgłoszenia przyjmujemy do końca miesiąca. Kandydaci powinni złożyć krótki opis swojego programu wyborczego u wychowawcy klasy najpóźniej do piątku.", start_date: iso(today), end_date: iso(new Date(today.getTime() + 29 * 86400000)), creation_date: iso(today), read: false },
         { id: "LID-NBOARD-NOTICE-2", subject: "Dzień Edukacji Narodowej - dzień wolny", content: "14 października zajęcia dydaktyczne się nie odbywają. Świetlica czynna 7:00-16:00.", start_date: iso(new Date(today.getTime() - 4 * 86400000)), end_date: iso(new Date(today.getTime() + 6 * 86400000)), creation_date: iso(new Date(today.getTime() - 4 * 86400000)), read: true },
-        { id: "LID-NBOARD-NOTICE-3", subject: "Zbiórka makulatury", content: "Zbieramy makulaturę do końca miesiąca, punkt przy sali gimnastycznej.", start_date: iso(new Date(today.getTime() - 12 * 86400000)), end_date: iso(new Date(today.getTime() + 18 * 86400000)), creation_date: iso(new Date(today.getTime() - 12 * 86400000)), read: true },
+        { id: "LID-NBOARD-NOTICE-3", subject: "Zbiórka makulatury", content: "Zbieramy makulaturę do końca miesiąca, punkt przy sali gimnastycznej.", start_date: iso(new Date(today.getTime() - 12 * 86400000)), end_date: iso(new Date(today.getTime() + 18 * 86400000)), creation_date: iso(new Date(today.getTime() - 12 * 86400000)), read: false },
       ],
-    }, 1);
+    }, 2);
     addEntity("sensor.behaviour_notices", "behaviour_notices", {
       recent: [
         { date: iso(new Date(today.getTime() - 3 * 86400000)), sentiment: "positive", category: "Praca na lekcji", text: "Aktywnie uczestniczył w dyskusji na lekcji przyrody." },
@@ -957,6 +957,9 @@
       },
       // Mocks librus_synergia.get_message (see utils/services.ts) with
       // made-up messages - never put real people's data in this file.
+      // Services the cards look for before offering an action (integration
+      // 0.12.17+: mark_announcement_read).
+      services: { librus_synergia: { mark_announcement_read: {}, get_message: {}, send_message: {}, withdraw_message: {} } },
       // Mocks the AI summary card's "Generate now" (button.press).
       callService: async (domain, service, data) => {
         if (domain === "todo" && service === "update_item") {
@@ -1005,6 +1008,10 @@
           const names = { "11": "Nowak Anna", "12": "Kowalski Jan", "13": "sekretariat", "14": "Wiśniewska Ewa" };
           const to = msg.service_data.reply_to ? ["Nowak Anna"] : [names[msg.service_data.recipient] ?? msg.service_data.recipient];
           return { response: { sent: true, message_id: 700001, to, topic: msg.service_data.topic ?? "Re: Zebranie z rodzicami" } };
+        }
+        if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "mark_announcement_read") {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          return { response: { marked: msg.service_data.announcement_id ?? [] } };
         }
         if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "withdraw_message") {
           await new Promise((resolve) => setTimeout(resolve, 300));

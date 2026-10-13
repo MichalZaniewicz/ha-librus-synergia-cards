@@ -83,6 +83,26 @@ export async function withdrawMessage(hass: LibrusHass, deviceId: string, messag
   });
 }
 
+/**
+ * Marks school notices read in Librus through
+ * `librus_synergia.mark_announcement_read` (integration 0.12.17+) - the given
+ * ids, or every unread notice when `ids` is left out. Same as opening them in
+ * Librus; only ever called from a person's click.
+ */
+export async function markAnnouncementsRead(hass: LibrusHass, deviceId: string, ids?: string[]): Promise<void> {
+  await hass.callWS({
+    type: "call_service",
+    domain: "librus_synergia",
+    service: "mark_announcement_read",
+    service_data: ids ? { device_id: deviceId, announcement_id: ids } : { device_id: deviceId },
+  });
+}
+
+/** Whether the installed integration offers this `librus_synergia` service. */
+export function hasLibrusService(hass: LibrusHass, service: string): boolean {
+  return Boolean(hass.services?.librus_synergia?.[service]);
+}
+
 /** A service call's error as text for the card. */
 export function serviceErrorText(err: unknown): string {
   if (err && typeof err === "object" && "message" in err) return String((err as { message: unknown }).message);

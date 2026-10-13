@@ -289,6 +289,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.changes.chip_room": "Sale",
   "card.changes.chip_moved": "Przeniesione",
   "editor.hide_past": "Ukryj ostatnie zmiany",
+  "editor.keep_unread": "Nie oznaczaj w Librusie jako przeczytane po otwarciu",
   "mailbox.inbox": "Odebrane",
   "mailbox.notes": "Uwagi",
   "mailbox.alerts": "Alerty",
@@ -303,6 +304,8 @@ export const pl: Record<keyof typeof en, string> = {
   "card.announcements.empty": "Brak ogłoszeń",
   "card.announcements.unread": "Nieprzeczytane: {n}",
   "card.announcements.all_read": "Wszystkie przeczytane",
+  "card.announcements.mark_all": "Oznacz wszystkie",
+  "card.announcements.mark_failed": "Nie udało się oznaczyć: {error}",
 
   "card.homework_assignments.title": "Zadania domowe",
   "card.homework_assignments.empty": "Brak zadań domowych",
