@@ -65,6 +65,9 @@ function coveredDays(ev: LibrusCalendarEvent): string[] {
  * homework due dates and free days as coloured dots. Arrows switch the
  * month; tapping a day lists its entries under the grid.
  */
+/** The integration's title for a free day that frees only some lessons. */
+const PARTIAL_FREE_DAY = /\(lekcje [\d–-]+\)$/;
+
 @customElement("librus-month-calendar-card")
 export class LibrusMonthCalendarCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
@@ -152,14 +155,14 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     changes: ChangesByDate;
     month: string;
     language: string;
-    result: { entries: Map<string, DayEntry[]>; free: Map<string, string> };
+    result: { entries: Map<string, DayEntry[]>; free: Map<string, string>; partial: Set<string> };
   };
 
   /** date -> entries, and date -> free-day name, for the shown month. */
   private _index(
     homework: HomeworkItem[],
     changes: ChangesByDate
-  ): { entries: Map<string, DayEntry[]>; free: Map<string, string> } {
+  ): { entries: Map<string, DayEntry[]>; free: Map<string, string>; partial: Set<string> } {
     const hass = this.hass!;
     const month = isoDate(this._shownMonth);
     const c = this._indexCache;
@@ -182,7 +185,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
   private _buildIndex(
     homework: HomeworkItem[],
     changes: ChangesByDate
-  ): { entries: Map<string, DayEntry[]>; free: Map<string, string> } {
+  ): { entries: Map<string, DayEntry[]>; free: Map<string, string>; partial: Set<string> } {
     const hass = this.hass!;
     const entries = new Map<string, DayEntry[]>();
     const add = (day: string, entry: DayEntry) => entries.set(day, [...(entries.get(day) ?? []), entry]);
@@ -227,8 +230,17 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
       }
     }
     const free = new Map<string, string>();
-    for (const ev of this._free) for (const day of coveredDays(ev)) free.set(day, ev.summary);
-    return { entries, free };
+    // A free day that frees only some lessons (integration 0.12.19+:
+    // "Rekolekcje (lekcje 3–4)") is listed but the day isn't shaded as off.
+    const partial = new Set<string>();
+    for (const ev of this._free) {
+      for (const day of coveredDays(ev)) {
+        free.set(day, ev.summary);
+        if (PARTIAL_FREE_DAY.test(ev.summary)) partial.add(day);
+        else partial.delete(day);
+      }
+    }
+    return { entries, free, partial };
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -247,7 +259,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const changesEntity =
       !this._config.hide_changes && map.cancelled_lessons ? hass.states[map.cancelled_lessons] : undefined;
     const changes = (changesEntity?.attributes.by_date as ChangesByDate | undefined) ?? NO_CHANGES;
-    const { entries, free } = this._index(homework, changes);
+    const { entries, free, partial } = this._index(homework, changes);
 
     const shownMonth = this._shownMonth;
     const year = shownMonth.getFullYear();
@@ -281,7 +293,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
       const weekend = date.getDay() === 0 || date.getDay() === 6;
       const dayEntries = entries.get(iso) ?? [];
       cells.push(html`<button
-        class="day ${free.has(iso) || weekend ? "free" : ""} ${iso === todayIso ? "today" : ""} ${iso === selected
+        class="day ${(free.has(iso) && !partial.has(iso)) || weekend ? "free" : ""} ${iso === todayIso ? "today" : ""} ${iso === selected
           ? "sel"
           : ""}"
         @click=${() => (this._selected = iso)}
