@@ -1,7 +1,9 @@
 /** Canonical key list - every other language file must match these keys exactly. */
 export const en = {
-  "error.device_missing": "Device {device} not found",
-  "error.multiple_devices": "Multiple students found - set device_id",
+  "error.device_missing": "Student “{device}” not found",
+  "error.multiple_devices": "Which student should this card show?",
+  "error.pick_student": "Pick one in the card editor (Student field) or add device_id: <student name> to the YAML. Students: {names}",
+  "error.students": "device_id takes a student name or the device id. Students: {names}",
   "error.no_device": "No Librus Synergia device found",
   "empty.loading": "Loading…",
   "empty.generic_error": "Something went wrong",

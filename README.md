@@ -111,10 +111,13 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Weekly AI summary | `custom:librus-ai-summary-card` | The weekly AI summary written for the parent or the student: headline and status, one tab per section (grades, attendance, behaviour, next week, optionally news from the school) with its own status dot, the to-dos for the coming week, and a **Generate now** button. Requires `ha-librus-synergia` 0.10+ with the weekly AI summary turned on - see [how to set it up](https://github.com/MichalZaniewicz/ha-librus-synergia/wiki/Weekly-AI-summary) |
 
 Each card auto-detects your child's device - **zero YAML required** for the common case of one student.
-If you ever have more than one, the card's visual editor shows a device picker.
+If you ever have more than one, the card's visual editor shows a student picker. In YAML, `device_id`
+takes the student's name (or just the first name, if only one child has it) as well as Home Assistant's
+device id:
 
 ```yaml
 type: custom:librus-grades-card
+device_id: Zosia
 ```
 
 **Subject grades** needs one extra field, editable from its own visual editor (a subject picker):
@@ -157,7 +160,7 @@ card supports:
 
 | Option | Cards | |
 |---|---|---|
-| Student | all except First lesson | Only shown when more than one child's e-dziennik is configured |
+| Student (`device_id`) | all except First lesson | Only shown when more than one child's e-dziennik is configured. In YAML: the student's name (`Zosia`, `Zosia Kowalska` - case and Polish letters don't matter) or the device id |
 | Names | First lesson | The name shown for each child (default: the first name from the device name) |
 | `hide_room` / `only_tomorrow` | First lesson | Hide the classroom; show only the next school day (e.g. for an evening dashboard) |
 | `title` | every card with a header (all except the tiles and the Student card) | Header title override |

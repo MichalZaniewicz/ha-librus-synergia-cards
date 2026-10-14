@@ -1,8 +1,10 @@
 import type { en } from "./en";
 
 export const pl: Record<keyof typeof en, string> = {
-  "error.device_missing": "Nie znaleziono urządzenia {device}",
-  "error.multiple_devices": "Znaleziono kilkoro uczniów - ustaw device_id",
+  "error.device_missing": "Nie znaleziono ucznia „{device}”",
+  "error.multiple_devices": "Którego ucznia pokazać na tej karcie?",
+  "error.pick_student": "Wybierz ucznia w edytorze karty (pole Uczeń) albo dopisz w YAML device_id: <imię ucznia>. Uczniowie: {names}",
+  "error.students": "device_id to imię ucznia albo identyfikator urządzenia. Uczniowie: {names}",
   "error.no_device": "Nie znaleziono urządzenia Librus Synergia",
   "empty.loading": "Wczytywanie…",
   "empty.generic_error": "Coś poszło nie tak",

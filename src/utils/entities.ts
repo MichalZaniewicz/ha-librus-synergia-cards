@@ -106,19 +106,65 @@ export function deviceName(hass: LibrusHass, deviceId: string): string {
   return device?.name_by_user || device?.name || deviceId;
 }
 
+/** Lower-case, no Polish letters, single spaces - for name matching. */
+function normalizeName(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/ł/g, "l")
+    .replace(/Ł/g, "L")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** The device name without the integration's "E-dziennik " prefix. */
+function studentPart(name: string): string {
+  return name.replace(/^e-dziennik\s+/i, "");
+}
+
+/**
+ * Finds a device by what a person would type in YAML: the HA device id, the
+ * device's name ("E-dziennik Zosia Kowalska", or the user's rename), the
+ * student's name without the prefix, or just the first name when only one
+ * student has it.
+ */
+function matchDevice(hass: LibrusHass, devices: string[], wanted: string): string | undefined {
+  if (devices.includes(wanted)) return wanted;
+  const target = normalizeName(String(wanted));
+  if (!target) return undefined;
+  const names = (id: string): string[] => {
+    const device = hass.devices?.[id];
+    const all = [device?.name_by_user, device?.name].filter((n): n is string => !!n);
+    return all.flatMap((n) => [normalizeName(n), normalizeName(studentPart(n))]);
+  };
+  const exact = devices.filter((id) => names(id).includes(target));
+  if (exact.length === 1) return exact[0];
+  if (exact.length > 1) return undefined;
+  const byFirstWord = devices.filter((id) => names(id).some((n) => n.split(" ")[0] === target));
+  return byFirstWord.length === 1 ? byFirstWord[0] : undefined;
+}
+
+/** "Zosia Kowalska, Ola Kowalska" - every student's name, for error messages. */
+export function studentNames(hass: LibrusHass): string {
+  return findLibrusDeviceIds(hass)
+    .map((id) => studentPart(deviceName(hass, id)))
+    .join(", ");
+}
+
 /**
  * Resolves which Librus device (student) a card instance should read from.
  * Zero-config works for the common case (one child's e-dziennik); a second
- * child only requires `device_id` once it's actually ambiguous.
+ * child only requires `device_id` once it's actually ambiguous. `device_id`
+ * takes the HA device id or the student's name (see `matchDevice`).
  */
 export function resolveLibrusDevice(hass: LibrusHass, configuredDeviceId?: string): string {
   const devices = findLibrusDeviceIds(hass);
 
-  if (configuredDeviceId) {
-    if (!devices.includes(configuredDeviceId)) {
-      throw new LibrusConfigError("device_missing", configuredDeviceId);
-    }
-    return configuredDeviceId;
+  if (configuredDeviceId !== undefined && configuredDeviceId !== null && String(configuredDeviceId) !== "") {
+    const match = matchDevice(hass, devices, String(configuredDeviceId));
+    if (!match) throw new LibrusConfigError("device_missing", String(configuredDeviceId));
+    return match;
   }
 
   if (devices.length === 1) return devices[0];

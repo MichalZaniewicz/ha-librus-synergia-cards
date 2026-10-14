@@ -415,7 +415,7 @@ export class LibrusCardEditor extends LitElement {
           ? html`
               <ha-select
                 label=${t(hass, "editor.student")}
-                .value=${config.device_id ?? ""}
+                .value=${config.device_id ? (subjectDeviceId ?? config.device_id) : ""}
                 .options=${devices.map((id) => {
                   const device = hass.devices?.[id];
                   return { value: id, label: device?.name_by_user || device?.name || id };

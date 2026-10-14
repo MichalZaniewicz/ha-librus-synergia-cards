@@ -7,6 +7,7 @@ import {
   mapAllByTranslationKey,
   registryIndex,
   LibrusConfigError,
+  studentNames,
   type SubjectEntity,
 } from "./entities";
 import { t } from "./localize";
@@ -55,6 +56,7 @@ export abstract class LibrusBaseCard extends LitElement {
   // added/removed) - far rarer than state updates.
   private _resolvedCache?: {
     entities: LibrusHass["entities"];
+    devices: LibrusHass["devices"];
     configuredDeviceId: string | undefined;
     result: ResolvedEntities;
   };
@@ -486,7 +488,9 @@ export abstract class LibrusBaseCard extends LitElement {
       return { error: this._message("mdi:alert-circle-outline", t(this.hass, "empty.loading")) };
     }
     const cached = this._resolvedCache;
-    if (cached && cached.entities === this.hass.entities && cached.configuredDeviceId === this._configuredDeviceId) {
+    if (cached && cached.entities === this.hass.entities &&
+      cached.devices === this.hass.devices &&
+      cached.configuredDeviceId === this._configuredDeviceId) {
       return cached.result;
     }
     let result: ResolvedEntities;
@@ -494,21 +498,31 @@ export abstract class LibrusBaseCard extends LitElement {
       const deviceId = resolveLibrusDevice(this.hass, this._configuredDeviceId);
       result = { deviceId, map: mapByTranslationKey(this.hass, deviceId) };
     } catch (err) {
-      result = { error: this._message("mdi:alert-circle-outline", this._configErrorMessage(err)) };
+      result = { error: this._message("mdi:alert-circle-outline", ...this._configErrorMessage(err)) };
     }
-    this._resolvedCache = { entities: this.hass.entities, configuredDeviceId: this._configuredDeviceId, result };
+    this._resolvedCache = {
+      entities: this.hass.entities,
+      devices: this.hass.devices,
+      configuredDeviceId: this._configuredDeviceId, result };
     return result;
   }
 
-  private _configErrorMessage(err: unknown): string {
+  /** [title, hint] for a configuration problem. */
+  private _configErrorMessage(err: unknown): [string, string?] {
     if (err instanceof LibrusConfigError) {
+      const names = this.hass ? studentNames(this.hass) : "";
       if (err.code === "device_missing") {
-        return t(this.hass, "error.device_missing", { device: err.deviceId ?? "" });
+        return [
+          t(this.hass, "error.device_missing", { device: err.deviceId ?? "" }),
+          names ? t(this.hass, "error.students", { names }) : undefined,
+        ];
       }
-      if (err.code === "multiple_devices") return t(this.hass, "error.multiple_devices");
-      return t(this.hass, "error.no_device");
+      if (err.code === "multiple_devices") {
+        return [t(this.hass, "error.multiple_devices"), t(this.hass, "error.pick_student", { names })];
+      }
+      return [t(this.hass, "error.no_device")];
     }
-    return t(this.hass, "empty.generic_error");
+    return [t(this.hass, "empty.generic_error")];
   }
 
   protected _message(icon: string, title: string, subtitle?: string): TemplateResult {
