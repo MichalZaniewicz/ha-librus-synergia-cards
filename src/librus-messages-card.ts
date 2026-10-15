@@ -14,6 +14,8 @@ import {
   fetchRecipients,
   sendMessage,
   withdrawMessage,
+  markMessagesRead,
+  hasLibrusService,
   serviceErrorText,
   type MessageRecipient,
 } from "./utils/services";
@@ -76,6 +78,9 @@ export class LibrusMessagesCard extends LibrusBaseCard {
   @state() private _fullById: Record<string, FullMessage> = {};
   @state() private _pendingIds: Set<string> = new Set();
   @state() private _errorIds: Set<string> = new Set();
+  /** Shown read here already: opened, or marked read with the button. */
+  @state() private _markedRead: Set<string> = new Set();
+  @state() private _markError?: string;
   /** Mailbox picked by tapping a chip; overrides the configured one. */
   @state() private _viewMailbox?: string;
 
@@ -153,12 +158,44 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     try {
       const full = await fetchFullMessage(this.hass, resolved.deviceId, m.id, mailbox);
       this._fullById = { ...this._fullById, [m.id]: full };
+      this._markedRead = new Set(this._markedRead).add(m.id);
     } catch {
       this._errorIds = new Set(this._errorIds).add(m.id);
     } finally {
       const stillPending = new Set(this._pendingIds);
       stillPending.delete(m.id);
       this._pendingIds = stillPending;
+    }
+  }
+
+  /** The mailbox name the integration's services take for a message. */
+  private _serviceMailbox(m?: RecentMessage): string {
+    return m?.mailbox ?? SERVICE_MAILBOX[this._mailbox] ?? this._mailbox;
+  }
+
+  private _isUnread(m: RecentMessage): boolean {
+    return m.unread && !m.receiver && !this._markedRead.has(m.id);
+  }
+
+  /** Marks the given messages (or every unread one on the list, `ids`
+   * undefined) read; they show read at once and go back if Librus refuses. */
+  private async _markRead(ev: Event | undefined, shown: RecentMessage[], all: boolean): Promise<void> {
+    ev?.stopPropagation();
+    const deviceId = this._deviceId();
+    if (!this.hass || !deviceId || shown.length === 0) return;
+    const before = this._markedRead;
+    this._markedRead = new Set([...before, ...shown.map((m) => m.id)]);
+    this._markError = undefined;
+    try {
+      await markMessagesRead(
+        this.hass,
+        deviceId,
+        this._serviceMailbox(shown[0]),
+        all ? undefined : shown.map((m) => m.id)
+      );
+    } catch (err) {
+      this._markedRead = before;
+      this._markError = serviceErrorText(err);
     }
   }
 
@@ -581,8 +618,9 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     const recent =
       (entity.attributes[RECENT_ATTR[mailbox]] as RecentMessage[] | undefined) ?? [];
     const missing = new Set((entity.attributes.missing_mailboxes as string[] | undefined) ?? []);
-    const unread = Number(entity.state) || 0;
     const max = this._config.max_items ?? 6;
+    const unreadHere = recent.filter((m) => this._isUnread(m));
+    const canMark = hasLibrusService(hass, "mark_message_read");
 
     return html`
       <ha-card>
@@ -632,6 +670,14 @@ export class LibrusMessagesCard extends LibrusBaseCard {
             }
           )}
         </div>
+        ${canMark && unreadHere.length > 1
+          ? html`<button class="link-btn mark-all" type="button" @click=${(ev: Event) => this._markRead(ev, unreadHere, true)}>
+              <ha-icon icon="mdi:email-open-multiple-outline"></ha-icon>${t(hass, "card.messages.mark_all")}
+            </button>`
+          : nothing}
+        ${this._markError
+          ? html`<div class="mark-error">${t(hass, "card.messages.mark_failed", { error: this._markError })}</div>`
+          : nothing}
         ${recent.length
           ? html`
               <hr />
@@ -646,7 +692,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
                       @click=${() => this._onMessageClick(m)}
                       @keydown=${activateOnKey(() => void this._onMessageClick(m))}
                     >
-                      <span class="dot ${m.unread && !m.receiver ? "good" : "neutral"}"></span>
+                      <span class="dot ${this._isUnread(m) ? "good" : "neutral"}"></span>
                       <div class="body">
                         <div class="row1">
                           <span class="sender"
@@ -656,6 +702,18 @@ export class LibrusMessagesCard extends LibrusBaseCard {
                               ? html`<ha-icon class="clip" icon="mdi:paperclip"></ha-icon>`
                               : nothing}</span
                           >
+                          ${canMark && this._isUnread(m)
+                            ? html`<button
+                                class="mark-one"
+                                type="button"
+                                title=${t(hass, "card.messages.mark_read")}
+                                aria-label=${t(hass, "card.messages.mark_read")}
+                                @click=${(ev: Event) => this._markRead(ev, [m], false)}
+                                @keydown=${(ev: KeyboardEvent) => ev.stopPropagation()}
+                              >
+                                <ha-icon icon="mdi:email-open-outline"></ha-icon>
+                              </button>`
+                            : nothing}
                           ${m.date ? html`<time>${formatShortDate(m.date, hass.language)}</time>` : nothing}
                         </div>
                         ${this._renderReadState(m)}
@@ -827,6 +885,43 @@ export class LibrusMessagesCard extends LibrusBaseCard {
         padding: 2px 4px;
         text-decoration: underline;
         text-underline-offset: 2px;
+      }
+      .link-btn.mark-all {
+        align-self: flex-end;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: -6px;
+        color: var(--lc-brand);
+        text-decoration: none;
+      }
+      .link-btn.mark-all ha-icon {
+        --mdc-icon-size: 15px;
+      }
+      /* Before the date in an unread message's first line; the auto margin
+         keeps it next to the date instead of in the middle of the row. */
+      .mark-one {
+        margin-left: auto;
+        border: 0;
+        background: none;
+        padding: 0 2px;
+        line-height: 0;
+        color: var(--secondary-text-color);
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .mark-one:hover {
+        color: var(--lc-brand);
+      }
+      .mark-one:focus-visible {
+        outline: 2px solid var(--lc-brand);
+      }
+      .mark-one ha-icon {
+        --mdc-icon-size: 15px;
+      }
+      .mark-error {
+        font-size: 0.7rem;
+        color: var(--lc-bad);
       }
       .link-btn.close {
         text-decoration: none;

@@ -311,8 +311,18 @@
     for (const [name, [present, total]] of Object.entries(subjAtt)) {
       subjAttAttr[name] = { total, present, absent: total - present, percentage: Math.round(present / total * 1000) / 10 };
     }
+    // Absences still allowed this semester (integration 0.12.21+, made up).
+    const leftBy = { Fizyka: -1, Religia: 2, "Wychowanie fizyczne": 3 };
+    const absenceBudget = {};
+    for (const name of Object.keys(subjAttAttr)) {
+      const left = leftBy[name] ?? 5 + (name.length % 7);
+      absenceBudget[name] = { left, absent: subjAttAttr[name].absent, allowed: subjAttAttr[name].absent + left, held: subjAttAttr[name].total, remaining: 30 };
+    }
     addEntity("sensor.subject_attendance", "subject_attendance", {
       subject: "Fizyka", subjects: subjAttAttr, at_risk: ["Fizyka"],
+      absence_budget: absenceBudget, absence_budget_semester: 1,
+      absence_budget_until: `${today.getFullYear() + (today.getMonth() >= 8 ? 1 : 0)}-01-31`,
+      fewest_absences_left: -1, fewest_absences_left_subject: "Fizyka",
     }, 40.0);
     // New (ha-librus-synergia 0.6.0): gamification sensors - streaks and a
     // cosmetic rank tier. attendance_streak intentionally matches
@@ -467,6 +477,11 @@
       lesson_no: 4, start: bellSlots[3].start.toISOString(), end: bellSlots[3].end.toISOString(),
       date: iso(today), teacher: "A. Nowak", classroom: "sala 22", is_substitution: false,
     }, "Język polski");
+    // School day today (integration 0.11.0+) - for the Family card's status pill.
+    addEntity("binary_sensor.school_day_today", "school_day_today", {
+      first_lesson_start: bellSlots[0].start.toISOString(),
+      last_lesson_end: bellSlots[bellSlots.length - 1].end.toISOString(),
+    }, "on");
     addEntity("sensor.next_exam", "next_exam", {
       days_until: Math.round((tomorrowDay.getTime() - today.getTime()) / 86400000),
       subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne",
@@ -592,7 +607,7 @@
       school_year_start: iso(new Date(2026, 8, 1)),
       first_semester_end: iso(new Date(2027, 0, 31)),
       school_year_end: iso(new Date(2027, 5, 26)),
-    }, "7d");
+    }, "7a");
     addEntity("sensor.homework_assignments", "homework_assignments", {
       recent: [
         { id: 101, topic: "Matematyka", text: "Zadania 1-5, strona 42 - ułamki dziesiętne.", due_date: tomorrowIso, date: iso(today), teacher: "Jan Kowalski", category: "ćwiczenia", attachments: [{ id: "31", filename: "karta-pracy-ulamki.pdf" }] },
@@ -970,7 +985,7 @@
       // made-up messages - never put real people's data in this file.
       // Services the cards look for before offering an action (integration
       // 0.12.17+: mark_announcement_read).
-      services: { librus_synergia: { mark_announcement_read: {}, get_message: {}, send_message: {}, withdraw_message: {} } },
+      services: { librus_synergia: { mark_announcement_read: {}, mark_message_read: {}, get_message: {}, send_message: {}, withdraw_message: {} } },
       // Mocks the AI summary card's "Generate now" (button.press).
       callService: async (domain, service, data) => {
         if (domain === "todo" && service === "update_item") {
@@ -1036,6 +1051,10 @@
           await new Promise((resolve) => setTimeout(resolve, 300));
           return { response: { marked: msg.service_data.announcement_id ?? [] } };
         }
+        if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "mark_message_read") {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          return { response: { marked: msg.service_data.message_id ?? [] } };
+        }
         if (msg.type === "call_service" && msg.domain === "librus_synergia" && msg.service === "withdraw_message") {
           await new Promise((resolve) => setTimeout(resolve, 300));
           return {};
@@ -1060,7 +1079,7 @@
             "substitutions:9001": {
               sender: "System zastępstw",
               topic: "Zmiana w planie lekcji",
-              content: "Jutro (7 wrz) lekcja fizyki o 11:40 zostanie odwołana z powodu nieobecności nauczyciela.\n\nUczniowie klasy 7d w tym czasie mają zajęcia świetlicowe w sali 15.",
+              content: "Jutro (7 wrz) lekcja fizyki o 11:40 zostanie odwołana z powodu nieobecności nauczyciela.\n\nUczniowie klasy 7a w tym czasie mają zajęcia świetlicowe w sali 15.",
             },
             "alerts:9002": {
               sender: "Dyrekcja",
@@ -1151,6 +1170,7 @@
       "librus-subject-time-card", "librus-school-card",
       "librus-school-year-card",
       "librus-today-card", "librus-tomorrow-card",
+      { tag: "librus-family-card", family: true },
       { tag: "librus-first-lesson-card", family: true },
       { tag: "librus-first-lesson-card", family: true, config: { type: "custom:librus-first-lesson-card", only_tomorrow: true, hide_room: true, title: "Jutro rano" } },
       "librus-week-summary-card", "librus-lucky-number-card",
@@ -1193,6 +1213,34 @@
       }));
       familyCalendars[entityId] = [...toEvents(today, kid.today), ...toEvents(tomorrowDay, kid.next)];
     }
+    // The Family card's sensors for the two extra students (made up).
+    const addKid = (deviceId, key, state, attrs = {}) => {
+      const entityId = `sensor.${key}_${deviceId}`;
+      familyEntities[entityId] = { entity_id: entityId, device_id: deviceId, platform: "librus_synergia", translation_key: key };
+      familyStates[entityId] = { entity_id: entityId, state: String(state), attributes: attrs, last_updated: lastPolled, last_reported: lastPolled, last_changed: lastPolled };
+    };
+    const at = (hhmm, day = today) => new Date(`${iso(day)}T${hhmm}:00`).toISOString();
+    const inDays = (n) => iso(new Date(today.getTime() + n * 86400000));
+    addKid("dev_ala", "school_class", "4a");
+    addKid("dev_ala", "school_day_today", "on", { first_lesson_start: at("07:10"), last_lesson_end: at("08:45") });
+    addKid("dev_ala", "lucky_number", 7, { is_yours: true, is_today: true });
+    addKid("dev_ala", "unread_messages", 0);
+    addKid("dev_ala", "unexcused_absences", 0);
+    addKid("dev_ala", "homework_assignments", 2, {
+      recent: [{ id: "h1", subject: "Język polski", topic: "Opis przyrody", due_date: iso(tomorrowDay) }],
+    });
+    const examDay = iso(nextSchoolDay(tomorrowDay));
+    addKid("dev_ala", "next_exam", examDay, {
+      upcoming: [{ date: examDay, subject: "Przyroda", category: "Kartkówka" }],
+    });
+    addKid("dev_ola", "school_class", "1c");
+    addKid("dev_ola", "school_day_today", "off");
+    addKid("dev_ola", "unread_messages", 1);
+    addKid("dev_ola", "unexcused_absences", 0);
+    addKid("dev_ola", "subject_average", 6, {
+      subject: "Plastyka", subject_id: 501,
+      grades: [{ value: "6", date: inDays(-1), category: "Praca plastyczna" }],
+    });
     const familyHass = {
       ...hass,
       devices: familyDevices,

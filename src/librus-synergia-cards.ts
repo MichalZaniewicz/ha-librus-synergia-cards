@@ -54,6 +54,7 @@ import "./librus-school-year-card";
 import "./librus-today-card";
 import "./librus-tomorrow-card";
 import "./librus-first-lesson-card";
+import "./librus-family-card";
 import "./librus-week-summary-card";
 import "./librus-lucky-number-card";
 import "./librus-student-card";
@@ -414,6 +415,12 @@ window.customCards.push(
     preview: false,
   },
   {
+    type: "librus-family-card",
+    name: "Librus - Rodzina",
+    description: "Wszystkie dzieci na jednej karcie: status dnia i tylko to, co dziś ważne - sprawdziany, zadania, nieobecności, nowe oceny, wiadomości.",
+    preview: false,
+  },
+  {
     type: "librus-week-summary-card",
     name: "Librus - Tydzień w skrócie",
     description: "Nowe oceny, nieobecności, uwagi i najbliższe wydarzenie w tym tygodniu.",
@@ -495,7 +502,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 68 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 69 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

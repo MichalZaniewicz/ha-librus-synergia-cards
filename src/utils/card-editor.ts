@@ -42,6 +42,7 @@ import { t, type TranslationKey } from "./localize";
 type EditorField =
   | { kind: "subject" }
   | { kind: "names" }
+  | { kind: "links" }
   | { kind: "action" }
   | { kind: "color" }
   | {
@@ -68,7 +69,13 @@ type EditorField =
         | "hide_generate"
         | "hide_past"
         | "keep_unread"
-        | "hide_changes";
+        | "hide_changes"
+        | "hide_exams"
+        | "hide_homework"
+        | "hide_absences"
+        | "hide_grades"
+        | "hide_messages"
+        | "hide_lucky";
       label: TranslationKey;
     }
   | {
@@ -258,6 +265,19 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     { kind: "boolean", key: "hide_room", label: "editor.hide_room" },
     { kind: "boolean", key: "only_tomorrow", label: "editor.only_tomorrow" },
     { kind: "names" },
+  ],
+  "custom:librus-family-card": [
+    TITLE_FIELD,
+    { kind: "number", key: "days_ahead", label: "editor.family_exam_days", min: 0, max: 30 },
+    { kind: "number", key: "days", label: "editor.family_grade_days", min: 1, max: 14 },
+    { kind: "boolean", key: "hide_exams", label: "editor.hide_exams" },
+    { kind: "boolean", key: "hide_homework", label: "editor.hide_homework" },
+    { kind: "boolean", key: "hide_absences", label: "editor.hide_absences" },
+    { kind: "boolean", key: "hide_grades", label: "editor.hide_grades" },
+    { kind: "boolean", key: "hide_messages", label: "editor.hide_messages" },
+    { kind: "boolean", key: "hide_lucky", label: "editor.hide_lucky" },
+    { kind: "names" },
+    { kind: "links" },
   ],
   "custom:librus-grade-simulator-card": [{ kind: "subject" }],
   "custom:librus-semester-comparison-card": [TITLE_FIELD],
@@ -531,6 +551,18 @@ export class LibrusCardEditor extends LitElement {
         `;
       })}`;
     }
+    if (field.kind === "links") {
+      return html`${findLibrusDeviceIds(hass).map((id) => {
+        const device = hass.devices?.[id];
+        return html`
+          ${this._input(
+            t(hass, "editor.student_link", { device: device?.name_by_user || device?.name || id }),
+            config.links?.[id] ?? "",
+            (value) => this._onLink(id, value)
+          )}
+        `;
+      })}`;
+    }
     if (field.kind === "text") {
       return this._input(t(hass, field.label), (config[field.key] as string | undefined) ?? "", (value) =>
         this._onText(field.key, value)
@@ -707,6 +739,13 @@ export class LibrusCardEditor extends LitElement {
     if (value.trim()) names[deviceId] = value.trim();
     else delete names[deviceId];
     this._patch({ names: Object.keys(names).length ? names : undefined });
+  }
+
+  private _onLink(deviceId: string, value: string): void {
+    const links = { ...(this._config?.links ?? {}) };
+    if (value.trim()) links[deviceId] = value.trim();
+    else delete links[deviceId];
+    this._patch({ links: Object.keys(links).length ? links : undefined });
   }
 
   private _onText(

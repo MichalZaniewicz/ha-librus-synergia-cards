@@ -87,6 +87,15 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   names?: Record<string, string>;
   /** First-lesson card: which students to show, in this order (YAML only). */
   devices?: string[];
+  /** Family card: device_id -> dashboard path opened when that child's row is tapped. */
+  links?: Record<string, string>;
+  /** Family card: leave these out of every child's row. */
+  hide_exams?: boolean;
+  hide_homework?: boolean;
+  hide_absences?: boolean;
+  hide_grades?: boolean;
+  hide_messages?: boolean;
+  hide_lucky?: boolean;
   /** First-lesson card: hide the classroom. */
   hide_room?: boolean;
   /** First-lesson card: show only the next school day. */

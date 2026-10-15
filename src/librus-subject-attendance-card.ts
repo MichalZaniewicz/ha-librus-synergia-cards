@@ -7,7 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { abbreviate } from "./utils/subjects";
-import { formatNumber } from "./utils/format";
+import { formatNumber, formatShortDate } from "./utils/format";
 
 interface SubjectAttendance {
   total: number;
@@ -75,6 +75,10 @@ export class LibrusSubjectAttendanceCard extends LibrusBaseCard {
       );
     }
     const subjects = (sensor.attributes.subjects as Record<string, SubjectAttendance> | undefined) ?? {};
+    // Absences still allowed this semester (integration 0.12.21+, an estimate).
+    const budget = (sensor.attributes.absence_budget as Record<string, { left: number }> | null | undefined) ?? undefined;
+    const budgetUntil = sensor.attributes.absence_budget_until as string | undefined;
+    const leftOf = (name: string): number | undefined => budget?.[name]?.left;
     const rows = Object.entries(subjects)
       .map(([name, s]) => ({ name, ...s, level: levelOf(s, this._config?.bad_below, this._config?.good_above) }))
       .sort(
@@ -120,11 +124,15 @@ export class LibrusSubjectAttendanceCard extends LibrusBaseCard {
                   subject: r.name,
                   present: r.present,
                   total: r.total,
-                })}
+                }) +
+                (leftOf(r.name) !== undefined
+                  ? "\n" + t(hass, "card.subject_attendance.left_tooltip", { n: leftOf(r.name)! })
+                  : "")}
               >
                 <div class="ab">${abbreviate(r.name)}</div>
                 <div class="v">${r.level === "few" ? "–" : `${Math.round(r.percentage)}%`}</div>
                 <div class="n">${r.present}/${r.total}</div>
+                ${this._left(leftOf(r.name))}
               </div>
             `
           )}
@@ -135,8 +143,22 @@ export class LibrusSubjectAttendanceCard extends LibrusBaseCard {
           <span class="legend-item"><span class="dot" style="background:var(--lc-bad)"></span>${t(hass, "card.subject_attendance.legend_bad")}</span>
           <span class="legend-item"><span class="dot" style="background:var(--lc-neutral-dot)"></span>${t(hass, "card.subject_attendance.legend_few")}</span>
         </div>
+        ${budget && budgetUntil
+          ? html`<div class="budget-note">
+              ${t(hass, "card.subject_attendance.left_note", { date: formatShortDate(budgetUntil, hass.language) })}
+            </div>`
+          : nothing}
       </ha-card>
     `;
+  }
+
+  /** "3 left" under a tile: amber at 3 or fewer, red at none or over half. */
+  private _left(left: number | undefined): TemplateResult | typeof nothing {
+    if (left === undefined) return nothing;
+    const hass = this.hass!;
+    const tone = left <= 0 ? "bad" : left <= 3 ? "warn" : "";
+    const text = left < 0 ? t(hass, "card.subject_attendance.left_over") : t(hass, "card.subject_attendance.left", { n: left });
+    return html`<div class="left ${tone}">${text}</div>`;
   }
 
   static styles = [
@@ -206,6 +228,24 @@ export class LibrusSubjectAttendanceCard extends LibrusBaseCard {
       }
       .tile.bad .v {
         color: var(--lc-bad);
+      }
+      .tile .left {
+        font-size: 0.62rem;
+        font-weight: 700;
+        margin-top: 2px;
+        color: var(--secondary-text-color);
+        white-space: nowrap;
+      }
+      .tile .left.warn {
+        color: var(--lc-warn);
+      }
+      .tile .left.bad {
+        color: var(--lc-bad);
+      }
+      .budget-note {
+        font-size: 0.7rem;
+        color: var(--secondary-text-color);
+        line-height: 1.35;
       }
       .tile.few .v {
         color: var(--secondary-text-color);

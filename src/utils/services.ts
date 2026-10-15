@@ -98,6 +98,25 @@ export async function markAnnouncementsRead(hass: LibrusHass, deviceId: string, 
   });
 }
 
+/**
+ * Marks Wiadomości messages read (`mark_message_read`, integration 0.12.21+):
+ * the given ids, or every unread one on the mailbox's list. The
+ * integration opens each one - Wiadomości has no other way to mark read.
+ */
+export async function markMessagesRead(
+  hass: LibrusHass,
+  deviceId: string,
+  mailbox: string,
+  ids?: string[]
+): Promise<void> {
+  await hass.callWS({
+    type: "call_service",
+    domain: "librus_synergia",
+    service: "mark_message_read",
+    service_data: ids ? { device_id: deviceId, mailbox, message_id: ids } : { device_id: deviceId, mailbox },
+  });
+}
+
 /** Whether the installed integration offers this `librus_synergia` service. */
 export function hasLibrusService(hass: LibrusHass, service: string): boolean {
   return Boolean(hass.services?.librus_synergia?.[service]);
