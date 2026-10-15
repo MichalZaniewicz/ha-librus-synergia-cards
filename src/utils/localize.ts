@@ -15,15 +15,25 @@ function dictFor(hass: LibrusHass | undefined): Record<TranslationKey, string> {
   return LANGUAGES[base] ?? en;
 }
 
-/** Plain `{name}` substitution - no ICU plural rules, matches this card family's scope. */
+/** Plain `{name}` substitution - no ICU plural rules, matches this card family's scope.
+ * One exception: Polish "{x} dni" with x = 1 reads "1 dzień" ("w ciągu 1 dnia",
+ * "w najbliższym 1 dniu"),
+ * every other count keeps "dni". */
 export function t(
   hass: LibrusHass | undefined,
   key: TranslationKey,
   vars?: Record<string, string | number>
 ): string {
-  let str = dictFor(hass)[key] ?? en[key];
+  const dict = dictFor(hass);
+  let str = dict[key] ?? en[key];
   if (vars) {
     for (const [k, v] of Object.entries(vars)) {
+      if (dict === pl && Number(v) === 1) {
+        str = str
+          .replace(`w ciągu {${k}} dni`, "w ciągu 1 dnia")
+          .replace(`najbliższych {${k}} dniach`, "najbliższym 1 dniu")
+          .replace(new RegExp(`\\{${k}\\} dni\\b`), "1 dzień");
+      }
       str = str.replace(`{${k}}`, String(v));
     }
   }
