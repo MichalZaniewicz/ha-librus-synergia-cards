@@ -4,7 +4,7 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, isoDate, lessonInfo, lessonMeta, nextSchoolDay, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, freePeriods, isoDate, lessonInfo, lessonMeta, nextSchoolDay, type LibrusCalendarEvent } from "./utils/calendar";
 import { lessonTag } from "./utils/render-helpers";
 import { formatTime, formatDate } from "./utils/format";
 import { t } from "./utils/localize";
@@ -131,6 +131,7 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
     const held = this._lessons.filter((ev) => !lessonInfo(ev).cancelled);
     const first = held[0];
     const last = held[held.length - 1];
+    const gaps = freePeriods(this._lessons);
 
     return html`
       <ha-card>
@@ -167,7 +168,7 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
               </div>
             `
           : nothing}
-        ${exams.length || homeworkDue.length
+        ${exams.length || homeworkDue.length || gaps.length
           ? html`
               <div class="alerts">
                 ${exams.map(
@@ -186,6 +187,14 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
                       </div>
                     `
                   : nothing}
+                ${gaps.map(
+                  (g) => html`
+                    <div class="alert-row">
+                      <span class="dot neutral"></span>
+                      <span>${t(hass, "label.free_period")} ${formatTime(g.start)}–${formatTime(g.end)}</span>
+                    </div>
+                  `
+                )}
               </div>
             `
           : nothing}

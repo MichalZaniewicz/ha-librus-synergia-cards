@@ -483,7 +483,22 @@
       first_lesson_start: bellSlots[0].start.toISOString(),
       last_lesson_end: bellSlots[bellSlots.length - 1].end.toISOString(),
     }, "on");
+    // Tests this week and the next one (integration 0.12.23+, made up).
+    const weekOf = (offset) => {
+      const monday = new Date(today);
+      monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7) + offset * 7);
+      const day = (n) => iso(new Date(monday.getTime() + n * 86400000));
+      return {
+        from: day(0), to: day(6), tests: 2, quizzes: 1, total: 3,
+        items: [
+          { date: day(0), subject: "Matematyka", category: "Sprawdzian", kind: "test" },
+          { date: day(2), subject: "Biologia", category: "Kartkówka", kind: "quiz" },
+          { date: day(4), subject: "Historia", category: "Sprawdzian", kind: "test" },
+        ],
+      };
+    };
     addEntity("sensor.next_exam", "next_exam", {
+      this_week: weekOf(0), next_week: weekOf(1),
       days_until: Math.round((tomorrowDay.getTime() - today.getTime()) / 86400000),
       subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne",
       // Topics to revise (integration 0.12.1+): made-up lessons since the
@@ -889,7 +904,8 @@
       // (librus-school-day-card outlines / strikes them through).
       // Plus a room change (lesson 2) - backend 0.12.0+ titles and details.
       summary: LESSON_SUBJECTS[(i + today.getDay()) % LESSON_SUBJECTS.length]
-        + (i === 1 ? " (zmiana sali)" : i === 3 ? " (zastępstwo)" : i === bellSlots.length - 1 ? " (odwołane)" : ""),
+        // Lesson 3 cancelled too: a free period ("okienko") in the middle.
+        + (i === 1 ? " (zmiana sali)" : i === 2 ? " (odwołane)" : i === 3 ? " (zastępstwo)" : i === bellSlots.length - 1 ? " (odwołane)" : ""),
       location: `sala ${10 + i}`,
       description: "Nauczyciel " + String.fromCharCode(65 + i)
         + (i === 1 ? `\nZmiana sali: ${4 + i} → ${10 + i}` : i === 3 ? "\nZastępstwo za: Chemia, Nauczyciel X" : ""),

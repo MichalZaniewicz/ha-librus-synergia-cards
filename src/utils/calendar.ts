@@ -198,6 +198,37 @@ export function splitOngoing(
 }
 
 /** True if the event has already ended relative to `now`. */
+/** A gap between two lessons that take place, longer than a break. */
+export interface FreePeriod {
+  start: string;
+  end: string;
+  minutes: number;
+}
+
+/** Breaks between lessons are 5-20 minutes; this long or more is a free period ("okienko"). */
+export const FREE_PERIOD_MINUTES = 30;
+
+/**
+ * Free periods ("okienka") in one day's lessons: gaps of at least
+ * FREE_PERIOD_MINUTES between lessons that take place. A cancelled lesson
+ * in the middle of the day leaves one too.
+ */
+export function freePeriods(events: LibrusCalendarEvent[]): FreePeriod[] {
+  const held = events
+    .filter((e) => !e.allDay && !lessonInfo(e).cancelled)
+    .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  const out: FreePeriod[] = [];
+  let lastEnd: string | undefined;
+  for (const lesson of held) {
+    if (lastEnd) {
+      const minutes = Math.round((new Date(lesson.start).getTime() - new Date(lastEnd).getTime()) / 60_000);
+      if (minutes >= FREE_PERIOD_MINUTES) out.push({ start: lastEnd, end: lesson.start, minutes });
+    }
+    if (!lastEnd || new Date(lesson.end).getTime() > new Date(lastEnd).getTime()) lastEnd = lesson.end;
+  }
+  return out;
+}
+
 export function hasEnded(event: LibrusCalendarEvent, now: Date): boolean {
   const end = event.allDay ? new Date(`${event.end}T23:59:59`) : new Date(event.end);
   return end.getTime() < now.getTime();

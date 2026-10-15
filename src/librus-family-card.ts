@@ -20,6 +20,15 @@ const AVATAR_COLORS = [
   "var(--lc-chart-10)",
 ];
 
+/** This many tests and short tests in a week or more: a heavy week. */
+const HEAVY_WEEK = 3;
+
+/** "3 sprawdziany" / "5 sprawdzianów" - `base` + "_one" / "_few" / "_many". */
+function countText(hass: LibrusHass, n: number, base: string): string {
+  const form = n === 1 ? "one" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "few" : "many";
+  return t(hass, `${base}_${form}` as TranslationKey, { n });
+}
+
 /** At or below this many absences left in a subject, the row says so. */
 const ABSENCES_LEFT_WARNING = 3;
 
@@ -226,6 +235,23 @@ export class LibrusFamilyCard extends LibrusBaseCard {
                   subject,
                 });
         chips.push({ tone: days <= 1 ? "warn" : "", icon: "mdi:file-document-alert-outline", text });
+      }
+
+      // A heavy week (integration 0.12.23+): this week on a weekday, the
+      // coming one at the weekend.
+      const weekend = now.getDay() === 0 || now.getDay() === 6;
+      const load = attrs("next_exam")[weekend ? "next_week" : "this_week"] as
+        | { tests?: number; quizzes?: number; total?: number }
+        | undefined;
+      if (load && (load.total ?? 0) >= HEAVY_WEEK) {
+        const parts: string[] = [];
+        if (load.tests) parts.push(countText(hass, load.tests, "card.family.tests"));
+        if (load.quizzes) parts.push(countText(hass, load.quizzes, "card.family.quizzes"));
+        chips.push({
+          tone: "warn",
+          icon: "mdi:weight",
+          text: t(hass, weekend ? "card.family.heavy_week_next" : "card.family.heavy_week", { list: parts.join(", ") }),
+        });
       }
     }
 

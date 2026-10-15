@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, isHappeningNow, hasEnded, lessonInfo, lessonMeta, type LibrusCalendarEvent } from "./utils/calendar";
+import { fetchCalendarEvents, freePeriods, isHappeningNow, hasEnded, lessonInfo, lessonMeta, type FreePeriod, type LibrusCalendarEvent } from "./utils/calendar";
 import { lessonTag } from "./utils/render-helpers";
 import { formatTime } from "./utils/format";
 import { t } from "./utils/localize";
@@ -87,6 +87,10 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
     }
 
     const now = new Date();
+    // Lessons and free periods ("okienka") in time order.
+    const rows: (LibrusCalendarEvent | FreePeriod)[] = [...this._events, ...freePeriods(this._events)].sort(
+      (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+    );
 
     return html`
       <ha-card>
@@ -98,7 +102,9 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="timeline">
-          ${this._events.map((ev) => {
+          ${rows.map((row) => {
+            if ("minutes" in row) return this._freeRow(row, now);
+            const ev = row;
             const info = lessonInfo(ev);
             const now_ = !info.cancelled && isHappeningNow(ev, now);
             const done = hasEnded(ev, now);
@@ -119,6 +125,22 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
           })}
         </div>
       </ha-card>
+    `;
+  }
+
+  private _freeRow(period: FreePeriod, now: Date): TemplateResult {
+    const hass = this.hass!;
+    const current = now >= new Date(period.start) && now < new Date(period.end);
+    const done = now >= new Date(period.end);
+    return html`
+      <div class="tl-item free ${current ? "now" : ""} ${done ? "done" : ""}">
+        <span class="tl-time">${formatTime(period.start)}</span>
+        <span class="tl-dot"></span>
+        <div class="tl-body">
+          <div class="subj free-label">${t(hass, "label.free_period")}</div>
+          <div class="meta">${formatTime(period.start)}–${formatTime(period.end)} · ${t(hass, "label.minutes", { n: period.minutes })}</div>
+        </div>
+      </div>
     `;
   }
 
@@ -183,6 +205,14 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
       }
       .meta {
         font-size: 0.68rem;
+        color: var(--secondary-text-color);
+      }
+      .tl-item.free .tl-dot {
+        border-style: dashed;
+      }
+      .free-label {
+        font-weight: 600;
+        font-style: italic;
         color: var(--secondary-text-color);
       }
       .pill-now {
