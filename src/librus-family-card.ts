@@ -235,7 +235,7 @@ export class LibrusFamilyCard extends LibrusBaseCard {
       if (open > 0) chips.push({ tone: "bad", icon: "mdi:account-alert-outline", text: t(hass, "card.family.unexcused", { n: open }) });
 
       // Few lessons of some subject left to miss this semester (integration
-      // 0.12.21+: the Lowest subject attendance sensor's estimate).
+      // 0.12.22+: the Lowest subject attendance sensor's estimate).
       const budget = attrs("subject_attendance");
       const left = budget.fewest_absences_left;
       const subject = budget.fewest_absences_left_subject;

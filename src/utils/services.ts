@@ -99,7 +99,7 @@ export async function markAnnouncementsRead(hass: LibrusHass, deviceId: string, 
 }
 
 /**
- * Marks Wiadomości messages read (`mark_message_read`, integration 0.12.21+):
+ * Marks Wiadomości messages read (`mark_message_read`, integration 0.12.22+):
  * the given ids, or every unread one on the mailbox's list. The
  * integration opens each one - Wiadomości has no other way to mark read.
  */

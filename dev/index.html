@@ -311,7 +311,7 @@
     for (const [name, [present, total]] of Object.entries(subjAtt)) {
       subjAttAttr[name] = { total, present, absent: total - present, percentage: Math.round(present / total * 1000) / 10 };
     }
-    // Absences still allowed this semester (integration 0.12.21+, made up).
+    // Absences still allowed this semester (integration 0.12.22+, made up).
     const leftBy = { Fizyka: -1, Religia: 2, "Wychowanie fizyczne": 3 };
     const absenceBudget = {};
     for (const name of Object.keys(subjAttAttr)) {

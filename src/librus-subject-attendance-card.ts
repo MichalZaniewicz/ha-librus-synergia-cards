@@ -75,7 +75,7 @@ export class LibrusSubjectAttendanceCard extends LibrusBaseCard {
       );
     }
     const subjects = (sensor.attributes.subjects as Record<string, SubjectAttendance> | undefined) ?? {};
-    // Absences still allowed this semester (integration 0.12.21+, an estimate).
+    // Absences still allowed this semester (integration 0.12.22+, an estimate).
     const budget = (sensor.attributes.absence_budget as Record<string, { left: number }> | null | undefined) ?? undefined;
     const budgetUntil = sensor.attributes.absence_budget_until as string | undefined;
     const leftOf = (name: string): number | undefined => budget?.[name]?.left;
