@@ -49,6 +49,12 @@ const RECENT_ATTR: Record<string, string> = {
   archive: "archive_recent",
 };
 
+/**
+ * A message the sender withdrew: Librus replaces its topic and text with
+ * "Wiadomość usunięta przez nadawcę w dniu 2026-10-14 17:47:59" (seen live).
+ */
+const WITHDRAWN = /^\s*Wiadomość usunięta przez nadawcę(?:\s+w dniu\s+(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}))?)?/i;
+
 /** Mailboxes without an unread count. */
 const NO_COUNT = new Set(["outbox", "archive"]);
 
@@ -174,7 +180,17 @@ export class LibrusMessagesCard extends LibrusBaseCard {
   }
 
   private _isUnread(m: RecentMessage): boolean {
-    return m.unread && !m.receiver && !this._markedRead.has(m.id);
+    return m.unread && !m.receiver && !this._markedRead.has(m.id) && !WITHDRAWN.test(m.topic ?? "");
+  }
+
+  /** "Withdrawn by the sender on 14 Oct, 17:47", or undefined for an ordinary message. */
+  private _withdrawnText(m: RecentMessage): string | undefined {
+    const match = WITHDRAWN.exec(m.topic ?? "") ?? WITHDRAWN.exec(m.content ?? "");
+    if (!match) return undefined;
+    const hass = this.hass!;
+    if (!match[1]) return t(hass, "card.messages.withdrawn_by_sender");
+    const when = `${formatShortDate(match[1], hass.language)}${match[2] ? `, ${match[2]}` : ""}`;
+    return t(hass, "card.messages.withdrawn_by_sender_on", { when });
   }
 
   /** Marks the given messages (or every unread one on the list, `ids`
@@ -683,14 +699,16 @@ export class LibrusMessagesCard extends LibrusBaseCard {
               <hr />
               <div class="scroll-list">
                 ${applyListOptions(recent, { sort: this._config.sort, max_items: max }).map(
-                  (m) => html`
+                  (m) => {
+                    const withdrawn = this._withdrawnText(m);
+                    return html`
                     <div
-                      class="list-item clickable"
-                      role="button"
-                      tabindex="0"
-                      aria-expanded=${this._expandedId === m.id ? "true" : "false"}
-                      @click=${() => this._onMessageClick(m)}
-                      @keydown=${activateOnKey(() => void this._onMessageClick(m))}
+                      class="list-item ${withdrawn ? "withdrawn" : "clickable"}"
+                      role=${withdrawn ? nothing : "button"}
+                      tabindex=${withdrawn ? nothing : "0"}
+                      aria-expanded=${withdrawn ? nothing : this._expandedId === m.id ? "true" : "false"}
+                      @click=${withdrawn ? nothing : () => this._onMessageClick(m)}
+                      @keydown=${withdrawn ? nothing : activateOnKey(() => void this._onMessageClick(m))}
                     >
                       <span class="dot ${this._isUnread(m) ? "good" : "neutral"}"></span>
                       <div class="body">
@@ -717,10 +735,13 @@ export class LibrusMessagesCard extends LibrusBaseCard {
                           ${m.date ? html`<time>${formatShortDate(m.date, hass.language)}</time>` : nothing}
                         </div>
                         ${this._renderReadState(m)}
-                        ${this._renderMessageBody(m)}
+                        ${withdrawn
+                          ? html`<div class="item-text withdrawn-text">${withdrawn}</div>`
+                          : this._renderMessageBody(m)}
                       </div>
                     </div>
-                  `
+                  `;
+                  }
                 )}
               </div>
             `
@@ -885,6 +906,13 @@ export class LibrusMessagesCard extends LibrusBaseCard {
         padding: 2px 4px;
         text-decoration: underline;
         text-underline-offset: 2px;
+      }
+      .list-item.withdrawn {
+        opacity: 0.6;
+      }
+      .withdrawn-text {
+        font-style: italic;
+        color: var(--secondary-text-color);
       }
       .link-btn.mark-all {
         align-self: flex-end;

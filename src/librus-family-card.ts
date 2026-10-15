@@ -20,6 +20,9 @@ const AVATAR_COLORS = [
   "var(--lc-chart-10)",
 ];
 
+/** At or below this many absences left in a subject, the row says so. */
+const ABSENCES_LEFT_WARNING = 3;
+
 /** How many new grades a row shows before "+N". */
 const MAX_GRADES = 4;
 
@@ -230,6 +233,29 @@ export class LibrusFamilyCard extends LibrusBaseCard {
     if (!config.hide_absences) {
       const open = Number(value("unexcused_absences") ?? 0);
       if (open > 0) chips.push({ tone: "bad", icon: "mdi:account-alert-outline", text: t(hass, "card.family.unexcused", { n: open }) });
+
+      // Few lessons of some subject left to miss this semester (integration
+      // 0.12.21+: the Lowest subject attendance sensor's estimate).
+      const budget = attrs("subject_attendance");
+      const left = budget.fewest_absences_left;
+      const subject = budget.fewest_absences_left_subject;
+      if (typeof left === "number" && typeof subject === "string" && left <= ABSENCES_LEFT_WARNING) {
+        const key: TranslationKey =
+          left < 0
+            ? "card.family.absences_left_over"
+            : left === 0
+              ? "card.family.absences_left_none"
+              : left === 1
+                ? "card.family.absences_left_one"
+                : left <= 4
+                  ? "card.family.absences_left_few"
+                  : "card.family.absences_left_many";
+        chips.push({
+          tone: left <= 0 ? "bad" : "warn",
+          icon: "mdi:calendar-alert-outline",
+          text: t(hass, key, { subject, n: left }),
+        });
+      }
     }
 
     // Homework due on the next school day.

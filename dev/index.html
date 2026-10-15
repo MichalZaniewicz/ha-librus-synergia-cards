@@ -417,6 +417,7 @@
       mailbox_breakdown: { inbox: 1, notes: 0, alerts: 1, substitutions: 1, absences: 0, justifications: 1, trash: 0 },
       recent: [
         { id: "100001", mailbox: "inbox", sender: "Nowak Anna", topic: "Zebranie z rodzicami", content: "Dzień dobry, zapraszam na zebranie z rodzicami w przyszłą środę o 17:00…", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: true, has_attachment: false },
+        { id: "100003", mailbox: "inbox", sender: "Mazur Zofia", topic: "Wiadomość usunięta przez nadawcę w dniu 2026-10-14 17:47:59", content: "Wiadomość usunięta przez nadawcę w dniu 2026-10-14 17:47:59", date: iso(new Date(today.getTime() - 2 * 86400000)), unread: false, has_attachment: false },
         { id: "100002", mailbox: "inbox", sender: "Zielińska Maria", topic: "Informacja dla rodziców", content: "Szanowni Państwo, w załączeniu przesyłam informację o organizacji roku szkolnego…", date: iso(new Date(today.getTime() - 3 * 86400000)), unread: false, has_attachment: true },
       ],
       substitutions_recent: [
@@ -1226,6 +1227,7 @@
     addKid("dev_ala", "lucky_number", 7, { is_yours: true, is_today: true });
     addKid("dev_ala", "unread_messages", 0);
     addKid("dev_ala", "unexcused_absences", 0);
+    addKid("dev_ala", "subject_attendance", 92.5, { fewest_absences_left: 2, fewest_absences_left_subject: "Muzyka" });
     addKid("dev_ala", "homework_assignments", 2, {
       recent: [{ id: "h1", subject: "Język polski", topic: "Opis przyrody", due_date: iso(tomorrowDay) }],
     });
