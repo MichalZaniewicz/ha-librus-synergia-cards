@@ -55,6 +55,7 @@ import "./librus-today-card";
 import "./librus-tomorrow-card";
 import "./librus-first-lesson-card";
 import "./librus-family-card";
+import "./librus-dashboard-strategy";
 import "./librus-week-summary-card";
 import "./librus-lucky-number-card";
 import "./librus-student-card";

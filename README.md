@@ -142,12 +142,30 @@ Every label follows your Home Assistant language automatically - English and Pol
 (`src/translations/`). Anything else falls back to English. Adding a language is one new typed
 file - see [Adding a language](#adding-a-language) below.
 
+## Ready-made dashboard
+
+Don't want to place cards one by one? After installing the cards, go to **Settings → Dashboards → Add dashboard** and pick **Szkoła (Librus)**. You get a finished dashboard:
+
+- with two or more children, a **Family** tab with the Family and First lesson cards,
+- a tab for every child, with six sections: **Today** (School day, Today's lessons, Tomorrow, the lucky number, the next lesson), **Grades** (Report card, Grade log), **Tests and homework** (Next exam, Test revision, Homework checklist), **Attendance** (Attendance, Attendance by subject, Justifications), **Messages** (Messages, Announcements) and **Timetable** (Week timetable, Timetable changes, Month calendar).
+
+The dashboard is built from the integration each time it opens, so a child added later, or a card added to this layout in a newer version, shows up by itself. It doesn't touch your other dashboards. To change it by hand, use **Take control** in the dashboard's menu: it turns into an ordinary dashboard you can edit. The same in YAML, with its two options:
+
+```yaml
+strategy:
+  type: custom:librus
+  family_view: true      # the Family tab (only shown with 2+ children)
+  students:              # optional: these children only, in this order
+    - <device id>
+```
+
 ## Installation
 
 1. HACS → ⋮ → **Custom repositories** → add this repo as category **Dashboard** (or use the
    badge above) → install **Librus Synergia Cards**.
 2. Add a card to any dashboard with `type: custom:librus-grades-card` (or any other type from the
-   table above) - no other configuration needed for a single student's account.
+   table above) - no other configuration needed for a single student's account. Or create the
+   [ready-made dashboard](#ready-made-dashboard) with every card already in place.
 
 Manual install: copy `dist/librus-synergia-cards.js` into `<config>/www/`, then Settings →
 Dashboards → Resources → add `/local/librus-synergia-cards.js` as a JavaScript module.
