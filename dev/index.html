@@ -644,6 +644,19 @@
       name: "bardzo dobre",
       comment: "Ocena zachowania miesiąc za IX/26.",
       recent: [{ grade: "bdb", name: "bardzo dobre", short_name: "", value: 0, category: "zachowanie", date: iso(today), text: "", comments: ["     Ocena zachowania miesiąc za IX/26.      "] }],
+      // Integration 0.12.23+: every grade of the year with the month it is for.
+      history: (() => {
+        const start = today.getMonth() >= 8 ? today.getFullYear() : today.getFullYear() - 1;
+        const grades = [["wz", "wzorowe"], ["bdb", "bardzo dobre"], ["db", "dobre"], ["bdb", "bardzo dobre"], ["popr", "poprawne"], ["bdb", "bardzo dobre"]];
+        const out = [];
+        for (let i = 0; i < grades.length; i++) {
+          const d = new Date(start, 8 + i, 1);
+          if (d > today) break;
+          const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          out.push({ month, grade: grades[i][0], name: grades[i][1], value: 0, category: "zachowanie", semester: 1, date: `${month}-28 08:00:00` });
+        }
+        return out;
+      })(),
     }, "bdb");
     // Shape of integration 0.12.3+ (seen live, #13): `value` is the grade
     // Synergia shows, `skill` the skill it is for.

@@ -95,6 +95,7 @@ export const en = {
   "editor.hide_icon": "Hide the icon",
   "editor.hide_subtitle": "Hide the subtitle",
   "editor.hide_legend": "Hide the legend",
+  "editor.hide_history": "Hide the month strip",
   "editor.hide_comments": "Hide comments",
   "editor.list_height": "List height (px)",
   "editor.more_items": "How many more to list",

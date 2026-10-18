@@ -6,6 +6,36 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
+import { monthLabel, schoolMonths } from "./utils/months";
+
+/** One grade of the year (integration 0.12.23+, `history`). */
+interface BehaviourHistoryEntry {
+  /** "YYYY-MM" the grade is for. */
+  month: string | null;
+  grade: string;
+  name: string | null;
+  value: number | null;
+  category: string | null;
+  date: string | null;
+}
+
+/** Colour of a grade: the classic scale by its short form, points by sign. */
+function gradeTone(entry: BehaviourHistoryEntry): "good" | "brand" | "warn" | "bad" {
+  switch (entry.grade.toLowerCase()) {
+    case "wz":
+    case "bdb":
+      return "good";
+    case "db":
+      return "brand";
+    case "popr":
+      return "warn";
+    case "ndp":
+    case "ng":
+      return "bad";
+  }
+  if (!entry.name && entry.value) return entry.value > 0 ? "good" : "bad";
+  return "brand";
+}
 
 interface RecentBehaviourGrade {
   /** Short form ("bdb", or the points) - integration 0.10.0-beta.2+. */
@@ -38,7 +68,7 @@ export class LibrusBehaviourGradeCard extends LibrusBaseCard {
   }
 
   public getCardSize(): number {
-    return 2;
+    return 3;
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -80,7 +110,49 @@ export class LibrusBehaviourGradeCard extends LibrusBaseCard {
           : nothing}
         ${latest.text ? html`<div class="quote">${latest.text}</div>` : nothing}
         ${comments.length ? html`<div class="comment">${comments.join(" · ")}</div>` : nothing}
+        ${this._renderHistory(entity?.attributes.history, map.school_class)}
       </ha-card>
+    `;
+  }
+
+  /** The school year month by month (September-June), each with the grade
+   * given for it. Shown from integration 0.12.23 on (`history`). */
+  private _renderHistory(raw: unknown, classEntity: string | undefined): TemplateResult | typeof nothing {
+    if (!this.hass || this._config?.hide_history || !Array.isArray(raw) || !raw.length) return nothing;
+    const hass = this.hass;
+    const history = raw as BehaviourHistoryEntry[];
+    // The latest grade wins a month that has more than one (e.g. a monthly
+    // and a semester grade); all of them go into the tooltip.
+    const byMonth = new Map<string, BehaviourHistoryEntry[]>();
+    for (const entry of history) {
+      if (!entry.month || !entry.grade) continue;
+      byMonth.set(entry.month, [...(byMonth.get(entry.month) ?? []), entry]);
+    }
+    if (!byMonth.size) return nothing;
+    const cls = classEntity ? hass.states[classEntity] : undefined;
+    const months = schoolMonths(
+      cls?.attributes.school_year_start as string | undefined,
+      cls?.attributes.school_year_end as string | undefined,
+      [...byMonth.keys()].sort()[0]
+    );
+    const now = new Date();
+    const current = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+    return html`
+      <div class="history" style="--months: ${months.length}">
+        ${months.map((m) => {
+          const entries = byMonth.get(m) ?? [];
+          const shown = entries[entries.length - 1];
+          const label = monthLabel(m, hass.language);
+          const tip = entries.map((e) => `${e.grade}${e.name ? ` (${e.name})` : ""}${e.category ? ` · ${e.category}` : ""}`).join("\n");
+          return html`
+            <div class="month ${m > current ? "future" : ""} ${m === current ? "current" : ""}" title=${tip || label}>
+              <span class="mgrade ${shown ? gradeTone(shown) : "none"}">${shown ? shown.grade : "·"}</span>
+              <span class="mlabel">${label}</span>
+            </div>
+          `;
+        })}
+      </div>
     `;
   }
 
@@ -106,6 +178,66 @@ export class LibrusBehaviourGradeCard extends LibrusBaseCard {
         font-size: 0.8rem;
         color: var(--secondary-text-color);
         line-height: 1.4;
+      }
+      .history {
+        display: grid;
+        grid-template-columns: repeat(var(--months), minmax(0, 1fr));
+        gap: 4px;
+        margin-top: 4px;
+      }
+      .month {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        min-width: 0;
+      }
+      .month.future {
+        opacity: 0.45;
+      }
+      .mgrade {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 5px 0;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 0.72rem;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: clip;
+        white-space: nowrap;
+        background: var(--lc-chip-bg);
+        color: var(--secondary-text-color);
+      }
+      .mgrade.good {
+        background: color-mix(in srgb, var(--lc-good) 18%, transparent);
+        color: var(--lc-good);
+      }
+      .mgrade.brand {
+        background: var(--lc-brand-bg);
+        color: var(--lc-brand-strong);
+      }
+      .mgrade.warn {
+        background: color-mix(in srgb, var(--lc-warn) 18%, transparent);
+        color: var(--lc-warn);
+      }
+      .mgrade.bad {
+        background: color-mix(in srgb, var(--lc-bad) 18%, transparent);
+        color: var(--lc-bad);
+      }
+      .mgrade.none {
+        background: transparent;
+        border: 1px dashed var(--divider-color, rgba(127, 127, 127, 0.3));
+      }
+      .month.current .mgrade {
+        outline: 2px solid var(--lc-brand);
+        outline-offset: -2px;
+      }
+      .mlabel {
+        font-size: 0.66rem;
+        font-weight: 700;
+        color: var(--secondary-text-color);
+        letter-spacing: 0.02em;
       }
     `,
   ];

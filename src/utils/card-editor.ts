@@ -75,7 +75,8 @@ type EditorField =
         | "hide_absences"
         | "hide_grades"
         | "hide_messages"
-        | "hide_lucky";
+        | "hide_lucky"
+        | "hide_history";
       label: TranslationKey;
     }
   | {
@@ -350,6 +351,7 @@ addField(["grade-log", "subject-grades", "descriptive-grades", "latest-grade", "
   label: "editor.hide_comments",
 });
 addField(["bell-schedule", "today-lessons", "tomorrow"], { kind: "boolean", key: "hide_room", label: "editor.hide_room" });
+addField(["behaviour-grade"], { kind: "boolean", key: "hide_history", label: "editor.hide_history" });
 addField(
   ["attendance", "attendance-heatmap", "attendance-subject", "attendance-weekday", "grades-radar", "subject-attendance"],
   { kind: "boolean", key: "hide_legend", label: "editor.hide_legend" }

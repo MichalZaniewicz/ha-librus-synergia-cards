@@ -96,6 +96,7 @@ export const pl: Record<keyof typeof en, string> = {
   "editor.hide_icon": "Ukryj ikonę",
   "editor.hide_subtitle": "Ukryj podtytuł",
   "editor.hide_legend": "Ukryj legendę",
+  "editor.hide_history": "Ukryj pasek miesięcy",
   "editor.hide_comments": "Ukryj komentarze",
   "editor.list_height": "Wysokość listy (px)",
   "editor.more_items": "Ile kolejnych pokazać",

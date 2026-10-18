@@ -81,6 +81,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   hide_legend?: boolean;
   /** Hides teachers' comments under grades and notes. */
   hide_comments?: boolean;
+  /** Behaviour grade card: hides the month strip. */
+  hide_history?: boolean;
   /** Hides the "Librus not responding" strip under the header. Universal - see `LibrusBaseCard`. */
   hide_outage_warning?: boolean;
   /** First-lesson card: device_id -> display name. */
