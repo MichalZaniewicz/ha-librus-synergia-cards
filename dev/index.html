@@ -483,7 +483,7 @@
       first_lesson_start: bellSlots[0].start.toISOString(),
       last_lesson_end: bellSlots[bellSlots.length - 1].end.toISOString(),
     }, "on");
-    // Tests this week and the next one (integration 0.12.23+, made up).
+    // Tests this week and the next one (integration 0.12.24+, made up).
     const weekOf = (offset) => {
       const monday = new Date(today);
       monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7) + offset * 7);
@@ -644,7 +644,7 @@
       name: "bardzo dobre",
       comment: "Ocena zachowania miesiąc za IX/26.",
       recent: [{ grade: "bdb", name: "bardzo dobre", short_name: "", value: 0, category: "zachowanie", date: iso(today), text: "", comments: ["     Ocena zachowania miesiąc za IX/26.      "] }],
-      // Integration 0.12.23+: every grade of the year with the month it is for.
+      // Integration 0.12.24+: every grade of the year with the month it is for.
       history: (() => {
         const start = today.getMonth() >= 8 ? today.getFullYear() : today.getFullYear() - 1;
         const grades = [["wz", "wzorowe"], ["bdb", "bardzo dobre"], ["db", "dobre"], ["bdb", "bardzo dobre"], ["popr", "poprawne"], ["bdb", "bardzo dobre"]];

@@ -8,7 +8,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { monthLabel, schoolMonths } from "./utils/months";
 
-/** One grade of the year (integration 0.12.23+, `history`). */
+/** One grade of the year (integration 0.12.24+, `history`). */
 interface BehaviourHistoryEntry {
   /** "YYYY-MM" the grade is for. */
   month: string | null;
@@ -116,7 +116,7 @@ export class LibrusBehaviourGradeCard extends LibrusBaseCard {
   }
 
   /** The school year month by month (September-June), each with the grade
-   * given for it. Shown from integration 0.12.23 on (`history`). */
+   * given for it. Shown from integration 0.12.24 on (`history`). */
   private _renderHistory(raw: unknown, classEntity: string | undefined): TemplateResult | typeof nothing {
     if (!this.hass || this._config?.hide_history || !Array.isArray(raw) || !raw.length) return nothing;
     const hass = this.hass;

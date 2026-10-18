@@ -237,7 +237,7 @@ export class LibrusFamilyCard extends LibrusBaseCard {
         chips.push({ tone: days <= 1 ? "warn" : "", icon: "mdi:file-document-alert-outline", text });
       }
 
-      // A heavy week (integration 0.12.23+): this week on a weekday, the
+      // A heavy week (integration 0.12.24+): this week on a weekday, the
       // coming one at the weekend.
       const weekend = now.getDay() === 0 || now.getDay() === 6;
       const load = attrs("next_exam")[weekend ? "next_week" : "this_week"] as
