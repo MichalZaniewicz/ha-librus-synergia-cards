@@ -54,6 +54,7 @@ type EditorField =
       kind: "boolean";
       key:
         | "show_saturday"
+        | "show_hours"
         | "show_descriptive"
         | "hide_teacher"
         | "hide_header"
@@ -284,6 +285,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-semester-comparison-card": [TITLE_FIELD],
   "custom:librus-week-timetable-card": [
     { kind: "boolean", key: "show_saturday", label: "editor.show_saturday" },
+    { kind: "boolean", key: "show_hours", label: "editor.show_hours" },
   ],
   "custom:librus-subject-time-card": [
     { kind: "boolean", key: "show_saturday", label: "editor.show_saturday" },
