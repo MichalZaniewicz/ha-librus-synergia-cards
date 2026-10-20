@@ -243,9 +243,51 @@
     // "Feniks" hero result stays inert in the default demo, matching the
     // real backend shape (both can be a genuine number, or null before a
     // semester has any counted grades yet) - see librus-hero-card.
+    // semester_summary (backend 0.12.25+) for librus-semester-card - made-up
+    // numbers for the first semester, counted up to today.
+    const semesterStart = new Date(2026, 8, 1);
+    const semesterEnd = new Date(2027, 0, 31);
+    const semesterDays = Math.round((semesterEnd - semesterStart) / 86400000) + 1;
+    const semesterElapsed = Math.max(1, Math.min(semesterDays, Math.round((today - semesterStart) / 86400000) + 1));
+    const averageSeries = [4.10, 4.25, 4.20, 4.38, 4.31, 4.44, 4.40, 4.52, 4.49, 4.58, 4.62].map((v, i, all) => [
+      iso(new Date(today.getTime() - (all.length - 1 - i) * 7 * 86400000)), v,
+    ]);
     addEntity("sensor.overall_average", "overall_average", {
       average_semester_1: 4.5,
       average_semester_2: 4.8,
+      average_mode: "weighted",
+      semester_summary: {
+        current: 1,
+        library_books: 3,
+        semesters: {
+          "1": {
+            semester: 1, start: iso(semesterStart), end: iso(semesterEnd),
+            days: semesterDays, days_elapsed: semesterElapsed, progress: semesterElapsed / semesterDays, finished: false,
+            grades: {
+              count: 34, distribution: { "1": 1, "2": 2, "3": 5, "4": 8, "5": 12, "6": 6 }, most_common: 5,
+              sixes: 6, ones: 1, plus: 5, minus: 1, tests: 6, tests_average: 4.33, corrections: 2, with_comments: 7,
+              per_week: 4.3, average: 4.62, average_change: 0.18, average_series: averageSeries,
+              best_week: { start: iso(new Date(today.getTime() - 7 * 86400000)), average: 5.67, count: 3 },
+              busiest_day: { date: iso(new Date(today.getTime() - 12 * 86400000)), count: 4 },
+            },
+            subjects: [
+              ["Biologia", 5.40, 5], ["Plastyka", 5.33, 3], ["Język angielski", 5.00, 6], ["Historia", 4.75, 4],
+              ["Język polski", 4.60, 5], ["Geografia", 4.50, 4], ["Fizyka", 3.80, 4], ["Matematyka", 3.25, 6],
+            ].map(([subject, average, count]) => ({ subject, average, count })),
+            attendance: {
+              records: 182, present: 175, percentage: 96.1, absences: 7, excused: 7, unexcused: 0, late: 2,
+              absences_by_weekday: [3, 1, 0, 2, 1], last_absence: iso(new Date(today.getTime() - 23 * 86400000)),
+            },
+            lessons: { held: 182, cancelled: 12, substitutions: 19 },
+            notes: { positive: 3, negative: 1, neutral: 0 },
+            homework: 18,
+            exams: { done: 6, upcoming: 4 },
+            trips: 1,
+            badges: 5,
+            latest_badge: "Hat-trick",
+          },
+        },
+      },
     }, "4.68");
     // New (2026-09-07): one status per calendar date, for the heatmap
     // card - mostly "good" school days over the last several weeks, with
@@ -1185,6 +1227,7 @@
       { tag: "librus-grade-goal-card", config: { type: "custom:librus-grade-goal-card", subject_id: 1, target: 4.5 } },
       { tag: "librus-grade-simulator-card", config: { type: "custom:librus-grade-simulator-card", subject_id: 2 } },
       "librus-semester-comparison-card",
+      "librus-semester-card",
       "librus-grade-distribution-card",
       "librus-grades-radar-card", "librus-grade-category-distribution-card",
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",

@@ -90,7 +90,7 @@ type EditorField =
     }
   | {
       kind: "select";
-      key: "mailbox" | "sort" | "mode";
+      key: "mailbox" | "sort" | "mode" | "semester";
       label: TranslationKey;
       options: { value: string; label: TranslationKey }[];
     };
@@ -160,6 +160,12 @@ const SORT_OPTIONS: { value: string; label: TranslationKey }[] = [
 const MODE_OPTIONS: { value: string; label: TranslationKey }[] = [
   { value: "archetype", label: "mode.archetype" },
   { value: "hero", label: "mode.hero" },
+];
+
+const SEMESTER_OPTIONS: { value: string; label: TranslationKey }[] = [
+  { value: "auto", label: "semester.auto" },
+  { value: "1", label: "semester.first" },
+  { value: "2", label: "semester.second" },
 ];
 
 const CATEGORY_FILTER_FIELD: EditorField = { kind: "text", key: "category_filter", label: "editor.category_filter" };
@@ -283,6 +289,10 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   ],
   "custom:librus-grade-simulator-card": [{ kind: "subject" }],
   "custom:librus-semester-comparison-card": [TITLE_FIELD],
+  "custom:librus-semester-card": [
+    TITLE_FIELD,
+    { kind: "select", key: "semester", label: "editor.semester", options: SEMESTER_OPTIONS },
+  ],
   "custom:librus-week-timetable-card": [
     { kind: "boolean", key: "show_saturday", label: "editor.show_saturday" },
     { kind: "boolean", key: "show_hours", label: "editor.show_hours" },
@@ -728,7 +738,7 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ subject_id: Number.isNaN(next as number) ? undefined : next });
   }
 
-  private _pickSelect(field: { key: "mailbox" | "sort" | "mode"; options: { value: string }[] }, ev: Event): void {
+  private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "semester"; options: { value: string }[] }, ev: Event): void {
     const value = LibrusCardEditor._selectValue(ev);
     if (!value) return;
     const current = (this._config?.[field.key] as string | undefined) ?? field.options[0].value;

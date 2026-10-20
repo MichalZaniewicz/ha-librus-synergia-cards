@@ -62,6 +62,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   hide_changes?: boolean;
   /** Which tone the Hero/Archetype card shows ("archetype" default). */
   mode?: "archetype" | "hero";
+  /** Semester in numbers card: which semester ("auto" = the current one). */
+  semester?: "auto" | "1" | "2";
   /** Tap behaviour for the glanceable cards (navigate / more-info / url / call-service).
    * Configured via YAML - see the README. */
   tap_action?: ActionConfig;

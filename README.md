@@ -29,7 +29,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
   <img src="https://raw.githubusercontent.com/MichalZaniewicz/ha-librus-synergia-cards/main/docs/trailer.webp" alt="Librus Synergia Cards trailer: 65 cards, light and dark, English and Polish, the visual editor">
 </p>
 
-69 cards built for one job: showing a child's school life from Librus on a Home Assistant dashboard. Today's lessons and what changed, grades with a report card forecast, attendance, messages, homework, tests and the lucky number. Every card follows your light or dark theme, speaks English or Polish, and is set up in the visual editor, without YAML. With more than one child, each card picks a student, and some show all of them at once.
+70 cards built for one job: showing a child's school life from Librus on a Home Assistant dashboard. Today's lessons and what changed, grades with a report card forecast, attendance, messages, homework, tests and the lucky number. Every card follows your light or dark theme, speaks English or Polish, and is set up in the visual editor, without YAML. With more than one child, each card picks a student, and some show all of them at once.
 
 The cards read the entities of the [Librus Synergia integration](https://github.com/MichalZaniewicz/ha-librus-synergia), so install that first.
 
@@ -56,6 +56,7 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Grade trend | `custom:librus-grade-trend-card` | How the overall (or one subject's) average has moved over the last 60 days, from its own state history For a subject graded in points (`ha-librus-synergia` 0.12.19+) it charts the daily percentage from long-term statistics, with the next grade's threshold as a dashed line. |
 | Grade goal | `custom:librus-grade-goal-card` | Progress ring toward a target average you pick (overall or one subject), plus a rough "how many more top grades" estimate For a subject graded in points (0.12.19+) the goal is a grade - `target` rounded up - whose threshold comes from the subject's scale, with a hint like "5× 20/20" (full-score tests of the usual size) to get there. |
 | Grade simulator | `custom:librus-grade-simulator-card` | Tap a grade + weight and see where the chosen subject's average would land (rough estimate) For a subject graded in points (0.12.19+) a slider sets the next score in percent instead, and the card shows the new percentage and the forecast grade on the subject's scale. |
+| Semester in numbers | `custom:librus-semester-card` | The whole semester on one card: the average with its change over the last 30 days, a week-by-week line and the distance to an honours average, the semester's progress, grades counted up (sixes, tests and their average, pluses, corrections, grades a week) with a 1-6 distribution, the best and weakest subjects, attendance with absences by weekday and the days since the last one, and lessons held and cancelled, praise and remarks, badges, homework, tests still to come, substitutions and library books. Shows the current semester (the second one also over the summer) or the one you pick. Options: title, semester. Needs `ha-librus-synergia` 0.12.25+ (`semester_summary`) |
 | Semester comparison | `custom:librus-semester-comparison-card` | Semester 1 vs 2 average per subject, side by side, with the change - fills in as semester 2 data lands A subject graded in points (0.12.19+) shows each semester's percentage. |
 | Grade distribution | `custom:librus-grade-distribution-card` | Histogram - how many 6s/5s/4s/... across every subject. With the integration's point grade forecast thresholds (`ha-librus-synergia` 0.12.17+), point grades count too, each in the grade its percentage maps to - on the subject's own scale when it has one (0.12.19+) |
 | Grade profile (radar) | `custom:librus-grades-radar-card` | Every subject's average on one spider/radar chart, so a strong or weak subject stands out at a glance. With the integration's point grade forecast thresholds (`ha-librus-synergia` 0.12.17+), a subject graded in points sits at its forecast grade (percentage in the tooltip). Subjects that shorten to the same label get the word that tells them apart ("Ang" / "Ang zaw") |
@@ -147,7 +148,7 @@ file - see [Adding a language](#adding-a-language) below.
 Don't want to place cards one by one? After installing the cards, go to **Settings → Dashboards → Add dashboard** and pick **Szkoła (Librus)**. You get a finished dashboard:
 
 - with two or more children, a **Family** tab with the Family and First lesson cards,
-- a tab for every child, with six sections: **Today** (School day, Today's lessons, Tomorrow, the lucky number, the next lesson), **Grades** (Report card, Grade log), **Tests and homework** (Next exam, Test revision, Homework checklist), **Attendance** (Attendance, Attendance by subject, Justifications), **Messages** (Messages, Announcements) and **Timetable** (Week timetable, Timetable changes, Month calendar).
+- a tab for every child, with six sections: **Today** (School day, Today's lessons, Tomorrow, the lucky number, the next lesson), **Grades** (Report card, Semester in numbers, Grade log), **Tests and homework** (Next exam, Test revision, Homework checklist), **Attendance** (Attendance, Attendance by subject, Justifications), **Messages** (Messages, Announcements) and **Timetable** (Week timetable, Timetable changes, Month calendar).
 
 The dashboard is built from the integration each time it opens, so a child added later, or a card added to this layout in a newer version, shows up by itself. It doesn't touch your other dashboards. To change it by hand, use **Take control** in the dashboard's menu: it turns into an ordinary dashboard you can edit. The same in YAML, with its two options:
 
@@ -203,6 +204,7 @@ card supports:
 | `mailbox` | Messages | The mailbox shown first: `inbox` / `substitutions` / `alerts` / `justifications` / `outbox` / `archive` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
 | `show_hours` | Weekly timetable | Bell times under each lesson number - off by default; needs the School sensor's `bell_schedule` |
+| `semester` | Semester in numbers | Which semester: `auto` (the current one, the default), `1` or `2` |
 | `hide_teacher` | Grade log, Descriptive grades | Don't show who gave each grade - off by default |
 | `hide_comments` | Grade log, Subject grades, Descriptive grades, Latest grade, Behaviour grade | Don't show teachers' comments - off by default. A text grade's own text and the behaviour grade's description stay |
 | `hide_room` | Today's lessons, Today's schedule, Tomorrow | Don't show the classroom - off by default |

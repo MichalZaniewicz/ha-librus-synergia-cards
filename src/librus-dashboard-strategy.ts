@@ -86,7 +86,7 @@ const CHILD_SECTIONS: [string, (string | [string, "half"])[]][] = [
       ["next-lesson-tile", "half"],
     ],
   ],
-  ["grades", ["report-card", "grade-log"]],
+  ["grades", ["report-card", "semester", "grade-log"]],
   ["tests", ["exam-countdown", "exam-prep", "homework-checklist"]],
   ["attendance", ["attendance", "subject-attendance", "justifications"]],
   ["messages", ["messages", "announcements"]],
