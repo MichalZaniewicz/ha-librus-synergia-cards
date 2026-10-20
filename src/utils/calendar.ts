@@ -85,6 +85,18 @@ function refreshStamp(hass: LibrusHass, entityId: string): string {
   return stampId ? (hass.states[stampId]?.state ?? "") : "";
 }
 
+/** An emoji (or flag) and the space after it at the start of a title. */
+const LEADING_EMOJI_RE =
+  /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator})[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}️‍]*\s+/u;
+
+/** "📐 Matematyka" -> "Matematyka". The integration's "Emoji in calendar
+ * titles" option (0.12.27+) puts one in front of timetable and Agenda
+ * titles for phones and watches; the cards show subjects and categories
+ * by name, so every title is read without it. */
+export function stripLeadingEmoji(summary: string): string {
+  return summary.replace(LEADING_EMOJI_RE, "");
+}
+
 async function loadCalendarEvents(hass: LibrusHass, path: string): Promise<LibrusCalendarEvent[]> {
   const raw = (await hass.callApi("GET", path)) as RawCalendarEvent[] | undefined;
   if (!Array.isArray(raw)) return [];
@@ -95,7 +107,7 @@ async function loadCalendarEvents(hass: LibrusHass, path: string): Promise<Libru
       start: s.value,
       end: e.value,
       allDay: s.allDay,
-      summary: item.summary ?? "",
+      summary: stripLeadingEmoji(item.summary ?? ""),
       description: item.description,
       location: item.location,
     };
