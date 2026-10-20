@@ -464,13 +464,13 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
         cursor: pointer;
         position: relative;
       }
-      /* Absences (integration 0.12.27+): a bar along the bottom of the day. */
+      /* Absences (integration 0.12.27+): a bar along the bottom of the day,
+         in the flow under the dots so the two never overlap. */
       .abs {
-        position: absolute;
-        left: 5px;
-        right: 5px;
-        bottom: 3px;
+        align-self: stretch;
+        margin: auto 1px 0;
         height: 3px;
+        flex: none;
         border-radius: 2px;
       }
       .abs-key {
