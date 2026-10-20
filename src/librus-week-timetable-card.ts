@@ -208,7 +208,11 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     const lessonNow = todayEvents.find((e) => isHappeningNow(e, now));
     const nextToday = todayEvents.find((e) => new Date(e.start) > now);
     const breakNow = !lessonNow && !!nextToday && todayEvents.some((e) => hasEnded(e, now));
-    const hoursByLesson = new Map(periods.map((period) => [period.lesson_no, `${period.start} - ${period.end}`]));
+    // show_hours: the bell times under each lesson number (only with real
+    // lesson-number rows - the fallback layout has no times to show).
+    const hoursByLesson = new Map(
+      showHours ? periods.map((period) => [period.lesson_no, `${period.start} - ${period.end}`]) : []
+    );
 
     return html`
       <ha-card>
@@ -237,7 +241,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
           <span class="h"></span>
           ${dayNames.map((n) => html`<span class="h">${n}</span>`)}
           ${rowLabels.map((label, row) => html`
-            <span class="n ${ showHours ? "with-hours" : ""}">
+            <span class="n ${showHours ? "with-hours" : ""}">
               ${label}
               ${showHours && hoursByLesson.has(label)
                 ? html`<span class="n-time">${hoursByLesson.get(label)}</span>`
@@ -297,7 +301,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
                 class="cell on ${current ? "current" : ""} ${next ? "next" : ""} ${cancelled ? "off" : ""} ${substitution && !cancelled ? "sub" : ""} ${extra && !cancelled ? "extra" : ""}"
                 title=${tip}
               >${abbreviate(firstName)}${parallel ? "+" : ""}</div>`;
-              })}
+            })}
           `)}
         </div>
       </ha-card>
@@ -336,6 +340,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         font-size: 0.48rem;
         font-weight: 500;
         white-space: nowrap;
+        font-variant-numeric: tabular-nums;
       }
       .cell {
         background: var(--divider-color);

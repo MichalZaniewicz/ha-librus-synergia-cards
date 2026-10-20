@@ -202,6 +202,7 @@ card supports:
 | `mode` | Hero, Hero History | `archetype` or `hero` - which set of names and descriptions to use |
 | `mailbox` | Messages | The mailbox shown first: `inbox` / `substitutions` / `alerts` / `justifications` / `outbox` / `archive` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
+| `show_hours` | Weekly timetable | Bell times under each lesson number - off by default; needs the School sensor's `bell_schedule` |
 | `hide_teacher` | Grade log, Descriptive grades | Don't show who gave each grade - off by default |
 | `hide_comments` | Grade log, Subject grades, Descriptive grades, Latest grade, Behaviour grade | Don't show teachers' comments - off by default. A text grade's own text and the behaviour grade's description stay |
 | `hide_room` | Today's lessons, Today's schedule, Tomorrow | Don't show the classroom - off by default |
