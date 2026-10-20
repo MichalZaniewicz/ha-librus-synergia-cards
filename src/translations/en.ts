@@ -82,6 +82,7 @@ export const en = {
   "editor.target": "Target average",
   "editor.mailbox": "Mailbox",
   "editor.show_saturday": "Show Saturday",
+  "editor.show_hours": "Show lesson hours",
   "editor.show_descriptive": "Show descriptive grades",
   "editor.hide_teacher": "Hide the teacher",
   "editor.accent_color": "Accent color (e.g. #e91e63 or teal)",

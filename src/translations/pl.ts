@@ -83,6 +83,7 @@ export const pl: Record<keyof typeof en, string> = {
   "editor.target": "Docelowa średnia",
   "editor.mailbox": "Skrzynka",
   "editor.show_saturday": "Pokaż sobotę",
+  "editor.show_hours": "Pokaż godziny lekcji",
   "editor.show_descriptive": "Pokaż oceny opisowe",
   "editor.hide_teacher": "Ukryj nauczyciela",
   "editor.accent_color": "Kolor akcentu (np. #e91e63 albo teal)",

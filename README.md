@@ -88,7 +88,7 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Next exam | `custom:librus-exam-countdown-card` | A countdown to the next test/exam - uses the integration's `next_exam` sensor when present, otherwise scans the Agenda feed for "[Sprawdzian]"-tagged items |
 | Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few. During a break it says it's on and until when |
 | Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break, or the break that's on now and its last day |
-| Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted; substitutions, room changes and moved lessons are outlined (details in the tooltip) |
+| Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted; substitutions, room changes and moved lessons are outlined (details in the tooltip). Options: show Saturday, show lesson hours (requires the school's `bell_schedule` attribute) |
 | Today's schedule | `custom:librus-bell-schedule-card` | The day's period grid (bell times) with each period's subject and room from the timetable, current period highlighted, past ones dimmed; once the day's lessons are over it shows the next school day - needs the integration's `bell_schedule` attribute |
 | Lesson time split | `custom:librus-subject-time-card` | A ranked horizontal bar chart of how the week's lesson slots split across subjects, from the timetable |
 | School & class | `custom:librus-school-card` | School name/address/head teacher, class, homeroom teacher, semester dates |
@@ -202,6 +202,7 @@ card supports:
 | `mode` | Hero, Hero History | `archetype` or `hero` - which set of names and descriptions to use |
 | `mailbox` | Messages | The mailbox shown first: `inbox` / `substitutions` / `alerts` / `justifications` / `outbox` / `archive` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
+| `show_hours` | Weekly timetable | Bell times under each lesson number - off by default; needs the School sensor's `bell_schedule` |
 | `hide_teacher` | Grade log, Descriptive grades | Don't show who gave each grade - off by default |
 | `hide_comments` | Grade log, Subject grades, Descriptive grades, Latest grade, Behaviour grade | Don't show teachers' comments - off by default. A text grade's own text and the behaviour grade's description stay |
 | `hide_room` | Today's lessons, Today's schedule, Tomorrow | Don't show the classroom - off by default |

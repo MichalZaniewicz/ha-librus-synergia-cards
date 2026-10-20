@@ -77,6 +77,10 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     return this._config?.show_saturday ? 6 : 5;
   }
 
+  private get _showHours(): boolean {
+    return this._config?.show_hours ?? false;
+  }
+
   public setConfig(config: LibrusCardConfig): void {
     this._config = config;
     this._configuredDeviceId = config.device_id;
@@ -154,6 +158,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     const periods = (school?.attributes.bell_schedule as BellPeriod[] | undefined) ?? [];
     const numbered = byDay.map((day) => day.map((ev) => lessonNoFor(ev, periods)));
     const allPlaced = periods.length > 0 && numbered.every((day) => day.every((n) => n !== undefined));
+    const showHours = this._showHours && allPlaced;
     let rowLabels: number[];
     let grid: LibrusCalendarEvent[][][]; // [row][day] -> events in that slot
     if (allPlaced) {
@@ -203,6 +208,11 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     const lessonNow = todayEvents.find((e) => isHappeningNow(e, now));
     const nextToday = todayEvents.find((e) => new Date(e.start) > now);
     const breakNow = !lessonNow && !!nextToday && todayEvents.some((e) => hasEnded(e, now));
+    // show_hours: the bell times under each lesson number (only with real
+    // lesson-number rows - the fallback layout has no times to show).
+    const hoursByLesson = new Map(
+      showHours ? periods.map((period) => [period.lesson_no, `${period.start} - ${period.end}`]) : []
+    );
 
     return html`
       <ha-card>
@@ -226,12 +236,17 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         </div>
         <div
           class="week-grid"
-          style="grid-template-columns: 24px repeat(${dayCount}, 1fr); grid-template-rows: auto repeat(${rowLabels.length}, 1fr);"
+          style="grid-template-columns: ${showHours ? "64px" : "24px"} repeat(${dayCount}, 1fr); grid-template-rows: auto repeat(${rowLabels.length}, 1fr);"
         >
           <span class="h"></span>
           ${dayNames.map((n) => html`<span class="h">${n}</span>`)}
           ${rowLabels.map((label, row) => html`
-            <span class="n">${label}</span>
+            <span class="n ${showHours ? "with-hours" : ""}">
+              ${label}
+              ${showHours && hoursByLesson.has(label)
+                ? html`<span class="n-time">${hoursByLesson.get(label)}</span>`
+                : nothing}
+            </span>
             ${grid[row].map((slot, dayIndex) => {
               const change = planChanges.get(`${columnDate(dayIndex)}|${label}`);
               if (!slot.length) {
@@ -299,7 +314,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     css`
       .week-grid {
         display: grid;
-        grid-template-columns: 24px repeat(5, 1fr); /* overridden inline per show_saturday */
+        grid-template-columns: 24px repeat(5, 1fr); /* overridden inline per card options */
         gap: 4px;
         font-size: 0.62rem;
       }
@@ -317,6 +332,15 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+      .n.with-hours {
+        flex-direction: column;
+      }
+      .n-time {
+        font-size: 0.48rem;
+        font-weight: 500;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
       }
       .cell {
         background: var(--divider-color);
