@@ -931,12 +931,15 @@
         ...weekdayEventsExToday,
         ...todayBellEvents,
         ...(tomorrowCovered ? [] : buildDayEvents(tomorrowDay, 5)),
-        // Upcoming changes (made-up) for the Timetable changes card.
-        ...[[2, 9, 50, "Matematyka (zastępstwo)", "Jan Wiśniewski\nZastępstwo za: Anna Nowak", "sala 204"],
-            [3, 8, 55, "Język polski (zmiana sali)", "Ewa Zielińska\nZmiana sali: 233 → 112", "sala 112"],
-            [4, 11, 40, "Chemia (przeniesiona)", "Maria Lewandowska\nPrzeniesiona z: 2026-10-16, lekcja 4", "sala 228"]]
-          .map(([days, h, m, summary, description, location]) => {
-            const s = new Date(); s.setDate(s.getDate() + days); s.setHours(h, m, 0, 0);
+        // Upcoming changes (made-up) for the Timetable changes card, on the
+        // bell schedule's times ([days ahead, lesson no, ...]) so the week
+        // card can still place every lesson and show its bell times.
+        ...[[2, 3, "Matematyka (zastępstwo)", "Jan Wiśniewski\nZastępstwo za: Anna Nowak", "sala 204"],
+            [3, 2, "Język polski (zmiana sali)", "Ewa Zielińska\nZmiana sali: 233 → 112", "sala 112"],
+            [4, 5, "Chemia (przeniesiona)", "Maria Lewandowska\nPrzeniesiona z: 2026-10-16, lekcja 4", "sala 228"]]
+          .map(([days, lessonNo, summary, description, location]) => {
+            const slot = bellSlots[lessonNo - 1];
+            const s = new Date(); s.setDate(s.getDate() + days); s.setHours(slot.start.getHours(), slot.start.getMinutes(), 0, 0);
             return { start: s.toISOString(), end: new Date(s.getTime() + 45 * 60000).toISOString(), allDay: false, summary, description, location };
           }),
       ],
