@@ -892,6 +892,8 @@
       message: "[Zebranie z Rodzicami] Zebranie z rodzicami. Organizacja roku szkolnego 2026/2027.",
       start_time: iso(agendaStart), end_time: iso(agendaStart), all_day: true, location: null, description: null,
     }, "off");
+    // Absences calendar (integration 0.12.27+): one all-day entry per day.
+    addEntity("calendar.absences", "absences", {}, "off");
     addEntity("calendar.free_days", "free_days", {
       message: "Zimowa przerwa świąteczna", start_time: iso(new Date(today.getTime() + 83 * 86400000)), end_time: iso(new Date(today.getTime() + 92 * 86400000)), all_day: true,
     }, "off");
@@ -994,6 +996,17 @@
         { start: iso(new Date(today.getTime() + 9 * 86400000)), end: iso(new Date(today.getTime() + 10 * 86400000)), allDay: true, summary: "[Inne] Konkurs matematyczny - zgłoszenia", description: null },
         { start: iso(new Date(today.getTime() + 1 * 86400000)), end: iso(new Date(today.getTime() + 2 * 86400000)), allDay: true, summary: "[Test] Język angielski: Unit 2", description: null },
       ],
+      // Made-up absences, a few school days back (the month card's bars).
+      "calendar.absences": [
+        [-3, "Nieobecność nieusprawiedliwiona (2 lekcje), spóźnienie", "1. Matematyka – Nieobecność\n2. Język polski – Nieobecność\n3. Biologia – Spóźnienie"],
+        [-6, "Nieobecność usprawiedliwiona (2 lekcje)", "1. Matematyka – Nieobecność uspr.\n2. Fizyka – Nieobecność uspr."],
+        [-8, "Spóźnienie (lekcja 3)", "3. Matematyka – Spóźnienie"],
+        [-10, "Nieobecność: 1 uspr., 1 nieuspr.", "1. Historia – Nieobecność\n2. Biologia – Nieobecność uspr.\nUsprawiedliwienie wysłane"],
+      ].map(([days, summary, description]) => ({
+        start: iso(new Date(today.getTime() + days * 86400000)),
+        end: iso(new Date(today.getTime() + (days + 1) * 86400000)),
+        allDay: true, summary, description,
+      })),
       "calendar.free_days": [
         // A break that's going on right now - the cards show "On now · until ..."
         // instead of counting down to a start that has passed.
@@ -1243,12 +1256,14 @@
       "librus-exam-countdown-card",
       "librus-free-days-card", "librus-free-days-tile-card",
       { tag: "librus-week-timetable-card", config: { type: "custom:librus-week-timetable-card", show_hours: true } },
+      { tag: "librus-week-timetable-card", config: { type: "custom:librus-week-timetable-card", layout: "timeline", title: "Tydzień (oś czasu)" } },
       "librus-bell-schedule-card",
       "librus-subject-time-card", "librus-school-card",
       "librus-school-year-card",
       "librus-today-card", "librus-tomorrow-card",
       { tag: "librus-family-card", family: true },
       { tag: "librus-first-lesson-card", family: true },
+      { tag: "librus-siblings-card", family: true },
       { tag: "librus-first-lesson-card", family: true, config: { type: "custom:librus-first-lesson-card", only_tomorrow: true, hide_room: true, title: "Jutro rano" } },
       "librus-week-summary-card", "librus-lucky-number-card",
       "librus-student-card", "librus-streak-card", "librus-rank-card", "librus-achievements-card",

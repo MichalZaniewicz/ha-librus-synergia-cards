@@ -55,6 +55,7 @@ import "./librus-school-year-card";
 import "./librus-today-card";
 import "./librus-tomorrow-card";
 import "./librus-first-lesson-card";
+import "./librus-siblings-card";
 import "./librus-family-card";
 import "./librus-dashboard-strategy";
 import "./librus-week-summary-card";
@@ -423,6 +424,12 @@ window.customCards.push(
     preview: false,
   },
   {
+    type: "librus-siblings-card",
+    name: "Librus - Godziny w szkole",
+    description: "Kiedy każde dziecko jest w szkole: paski od pierwszej do ostatniej lekcji na osi dnia, dzień do wyboru, kreska teraz.",
+    preview: false,
+  },
+  {
     type: "librus-family-card",
     name: "Librus - Rodzina",
     description: "Wszystkie dzieci na jednej karcie: status dnia i tylko to, co dziś ważne - sprawdziany, zadania, nieobecności, nowe oceny, wiadomości.",
@@ -510,7 +517,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 70 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 71 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

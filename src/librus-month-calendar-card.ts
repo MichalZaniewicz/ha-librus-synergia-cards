@@ -4,7 +4,7 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { fetchCalendarEvents, isoDate, type LibrusCalendarEvent } from "./utils/calendar";
+import { allDayDates, fetchCalendarEvents, isoDate, type LibrusCalendarEvent } from "./utils/calendar";
 import { parseCategory, formatDate } from "./utils/format";
 import { t, type TranslationKey } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
@@ -39,6 +39,13 @@ interface LessonChangeItem {
 }
 type ChangesByDate = Record<string, LessonChangeItem[]>;
 
+interface MonthIndex {
+  entries: Map<string, DayEntry[]>;
+  free: Map<string, string>;
+  partial: Set<string>;
+  absences: Map<string, AbsenceDay>;
+}
+
 // Shared empty values, so _index()'s memo still hits without them.
 const NO_HOMEWORK: HomeworkItem[] = [];
 const NO_CHANGES: ChangesByDate = {};
@@ -46,18 +53,6 @@ const NO_CHANGES: ChangesByDate = {};
 function kindOf(category: string | null, text: string): Kind {
   const haystack = `${category ?? ""} ${text}`;
   return KIND_RE.find(([, re]) => re.test(haystack))?.[0] ?? "other";
-}
-
-/** Every date an all-day event covers ([start, end), end exclusive). */
-function coveredDays(ev: LibrusCalendarEvent): string[] {
-  const days: string[] = [];
-  const d = new Date(`${ev.start.slice(0, 10)}T12:00:00`);
-  const end = new Date(`${(ev.end || ev.start).slice(0, 10)}T12:00:00`);
-  do {
-    days.push(isoDate(d));
-    d.setDate(d.getDate() + 1);
-  } while (d < end);
-  return days;
 }
 
 /**
@@ -68,6 +63,24 @@ function coveredDays(ev: LibrusCalendarEvent): string[] {
 /** The integration's title for a free day that frees only some lessons. */
 const PARTIAL_FREE_DAY = /\(lekcje [\d–-]+\)$/;
 
+/** A day on the Absences calendar (integration 0.12.27+): "bad" while an
+ * absence is unexcused, "warn" when every absence is excused, "late" for
+ * late arrivals only. Read from the integration's titles
+ * ("Nieobecność nieusprawiedliwiona (2 lekcje)", "Nieobecność: 1 uspr.,
+ * 1 nieuspr.", "Spóźnienie (lekcja 3)"). */
+type AbsenceKind = "bad" | "warn" | "late";
+interface AbsenceDay {
+  kind: AbsenceKind;
+  title: string;
+  lines: string[];
+}
+
+function absenceKind(summary: string): AbsenceKind {
+  if (/nieuspr/i.test(summary)) return "bad";
+  if (/nieobecno/i.test(summary)) return "warn";
+  return "late";
+}
+
 @customElement("librus-month-calendar-card")
 export class LibrusMonthCalendarCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
@@ -77,6 +90,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
   @state() private _selected?: string;
   @state() private _agenda: LibrusCalendarEvent[] = [];
   @state() private _free: LibrusCalendarEvent[] = [];
+  @state() private _absences: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
 
   public static getConfigElement(): LovelaceCardEditor {
@@ -113,10 +127,11 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const resolved = this._resolveEntities();
     if ("error" in resolved) return;
     const { agenda, free_days: freeDays } = resolved.map;
+    const absences = this._config.hide_absences ? undefined : resolved.map.absences;
     const shown = this._shownMonth;
     const start = new Date(shown);
     const end = new Date(shown.getFullYear(), shown.getMonth() + 1, 1);
-    const range = `${agenda}:${freeDays}:${isoDate(start)}`;
+    const range = `${agenda}:${freeDays}:${absences}:${isoDate(start)}`;
     const cacheKey = `${range}:${this._dataStamp()}`;
     if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
     this._fetchedFor = cacheKey;
@@ -124,13 +139,18 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     // undefined = the fetch failed (an entity that isn't there loads as []).
     const load = async (id?: string): Promise<LibrusCalendarEvent[] | undefined> =>
       id ? fetchCalendarEvents(this.hass!, id, start, end).catch(() => undefined) : [];
-    const [agendaEvents, freeEvents] = await Promise.all([load(agenda), load(freeDays)]);
+    const [agendaEvents, freeEvents, absenceEvents] = await Promise.all([
+      load(agenda),
+      load(freeDays),
+      load(absences),
+    ]);
     if (!this._isCurrentFetch(generation)) return;
     // A failed calendar keeps what the card already shows for this month.
     const keep = this._keepAfterError(range);
     this._agenda = agendaEvents ?? (keep ? this._agenda : []);
     this._free = freeEvents ?? (keep ? this._free : []);
-    if (agendaEvents && freeEvents) this._fetchSucceeded(range);
+    this._absences = absenceEvents ?? (keep ? this._absences : []);
+    if (agendaEvents && freeEvents && absenceEvents) this._fetchSucceeded(range);
     else this._fetchFailed(generation);
   }
 
@@ -151,18 +171,16 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
   private _indexCache?: {
     agenda: LibrusCalendarEvent[];
     free: LibrusCalendarEvent[];
+    absences: LibrusCalendarEvent[];
     homework: HomeworkItem[];
     changes: ChangesByDate;
     month: string;
     language: string;
-    result: { entries: Map<string, DayEntry[]>; free: Map<string, string>; partial: Set<string> };
+    result: MonthIndex;
   };
 
   /** date -> entries, and date -> free-day name, for the shown month. */
-  private _index(
-    homework: HomeworkItem[],
-    changes: ChangesByDate
-  ): { entries: Map<string, DayEntry[]>; free: Map<string, string>; partial: Set<string> } {
+  private _index(homework: HomeworkItem[], changes: ChangesByDate): MonthIndex {
     const hass = this.hass!;
     const month = isoDate(this._shownMonth);
     const c = this._indexCache;
@@ -170,6 +188,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
       c &&
       c.agenda === this._agenda &&
       c.free === this._free &&
+      c.absences === this._absences &&
       c.homework === homework &&
       c.changes === changes &&
       c.month === month &&
@@ -178,14 +197,20 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
       return c.result;
     }
     const result = this._buildIndex(homework, changes);
-    this._indexCache = { agenda: this._agenda, free: this._free, homework, changes, month, language: hass.language, result };
+    this._indexCache = {
+      agenda: this._agenda,
+      free: this._free,
+      absences: this._absences,
+      homework,
+      changes,
+      month,
+      language: hass.language,
+      result,
+    };
     return result;
   }
 
-  private _buildIndex(
-    homework: HomeworkItem[],
-    changes: ChangesByDate
-  ): { entries: Map<string, DayEntry[]>; free: Map<string, string>; partial: Set<string> } {
+  private _buildIndex(homework: HomeworkItem[], changes: ChangesByDate): MonthIndex {
     const hass = this.hass!;
     const entries = new Map<string, DayEntry[]>();
     const add = (day: string, entry: DayEntry) => entries.set(day, [...(entries.get(day) ?? []), entry]);
@@ -197,7 +222,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
         detail: [category, ev.description].filter(Boolean).join(" · ") || undefined,
       };
       // A multi-day all-day entry (e.g. a trip) gets a dot on every day it covers.
-      for (const day of ev.allDay ? coveredDays(ev) : [ev.start.slice(0, 10)]) add(day, entry);
+      for (const day of ev.allDay ? allDayDates(ev) : [ev.start.slice(0, 10)]) add(day, entry);
     }
     for (const hw of homework) {
       const due = (hw.due_date ?? "").slice(0, 10);
@@ -234,13 +259,21 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     // "Rekolekcje (lekcje 3–4)") is listed but the day isn't shaded as off.
     const partial = new Set<string>();
     for (const ev of this._free) {
-      for (const day of coveredDays(ev)) {
+      for (const day of allDayDates(ev)) {
         free.set(day, ev.summary);
         if (PARTIAL_FREE_DAY.test(ev.summary)) partial.add(day);
         else partial.delete(day);
       }
     }
-    return { entries, free, partial };
+    const absences = new Map<string, AbsenceDay>();
+    for (const ev of this._absences) {
+      absences.set(ev.start.slice(0, 10), {
+        kind: absenceKind(ev.summary),
+        title: ev.summary,
+        lines: (ev.description ?? "").split("\n").map((l) => l.trim()).filter(Boolean),
+      });
+    }
+    return { entries, free, partial, absences };
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -259,7 +292,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const changesEntity =
       !this._config.hide_changes && map.cancelled_lessons ? hass.states[map.cancelled_lessons] : undefined;
     const changes = (changesEntity?.attributes.by_date as ChangesByDate | undefined) ?? NO_CHANGES;
-    const { entries, free, partial } = this._index(homework, changes);
+    const { entries, free, partial, absences } = this._index(homework, changes);
 
     const shownMonth = this._shownMonth;
     const year = shownMonth.getFullYear();
@@ -292,6 +325,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
       const iso = isoDate(date);
       const weekend = date.getDay() === 0 || date.getDay() === 6;
       const dayEntries = entries.get(iso) ?? [];
+      const absence = absences.get(iso);
       cells.push(html`<button
         class="day ${(free.has(iso) && !partial.has(iso)) || weekend ? "free" : ""} ${iso === todayIso ? "today" : ""} ${iso === selected
           ? "sel"
@@ -303,10 +337,15 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
       >
         <span class="n">${d}</span>
         <span class="dots">${dayEntries.slice(0, 4).map((e) => html`<i class="dot k-${e.kind}"></i>`)}</span>
+        ${absence ? html`<i class="abs a-${absence.kind}"></i>` : nothing}
       </button>`);
     }
 
     const kindsShown = KINDS.filter((k) => counts.get(k));
+    const absenceKinds = (["bad", "warn", "late"] as AbsenceKind[]).filter((k) =>
+      [...absences].some(([day, a]) => day.startsWith(monthPrefix) && a.kind === k)
+    );
+    const selectedAbsence = selected ? absences.get(selected) : undefined;
     const selectedEntries = selected ? (entries.get(selected) ?? []) : [];
     const selectedFree = selected ? free.get(selected) : undefined;
     const selectedLabel = selected
@@ -345,6 +384,9 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
                 (k) => html`<span><i class="dot k-${k}"></i>${t(hass, `card.month.kind_${k}` as TranslationKey)}</span>`
               )}
               <span><i class="free-box"></i>${t(hass, "card.month.free")}</span>
+              ${absenceKinds.map(
+                (k) => html`<span><i class="abs-key a-${k}"></i>${t(hass, `card.month.absence_${k}` as TranslationKey)}</span>`
+              )}
             </div>`}
         ${selected
           ? html`<div class="list">
@@ -356,7 +398,16 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
                   <div>${e.title}${e.detail ? html`<small>${e.detail}</small>` : nothing}</div>
                 </div>`
               )}
-              ${!selectedFree && selectedEntries.length === 0
+              ${selectedAbsence
+                ? html`<div class="ev">
+                    <i class="dot a-${selectedAbsence.kind}"></i>
+                    <div>
+                      ${selectedAbsence.title}
+                      ${selectedAbsence.lines.map((l) => html`<small>${l}</small>`)}
+                    </div>
+                  </div>`
+                : nothing}
+              ${!selectedFree && !selectedAbsence && selectedEntries.length === 0
                 ? html`<div class="none">${t(hass, "card.month.nothing_day")}</div>`
                 : nothing}
             </div>`
@@ -411,6 +462,32 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
         align-items: flex-start;
         gap: 4px;
         cursor: pointer;
+        position: relative;
+      }
+      /* Absences (integration 0.12.27+): a bar along the bottom of the day. */
+      .abs {
+        position: absolute;
+        left: 5px;
+        right: 5px;
+        bottom: 3px;
+        height: 3px;
+        border-radius: 2px;
+      }
+      .abs-key {
+        width: 12px;
+        height: 3px;
+        border-radius: 2px;
+        display: inline-block;
+        flex: none;
+      }
+      .a-bad {
+        background: var(--lc-bad);
+      }
+      .a-warn {
+        background: var(--lc-warn);
+      }
+      .a-late {
+        background: var(--lc-chart-10);
       }
       .day.other {
         cursor: default;

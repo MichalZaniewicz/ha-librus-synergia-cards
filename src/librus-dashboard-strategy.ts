@@ -157,7 +157,14 @@ export class LibrusDashboardStrategy extends HTMLElement {
         max_columns: 2,
         sections: [
           { type: "grid", cards: [heading(lang, "all"), { type: "custom:librus-family-card", grid_options: { columns: 12 } }] },
-          { type: "grid", cards: [heading(lang, "morning"), { type: "custom:librus-first-lesson-card", grid_options: { columns: 12 } }] },
+          {
+            type: "grid",
+            cards: [
+              heading(lang, "morning"),
+              { type: "custom:librus-first-lesson-card", grid_options: { columns: 12 } },
+              { type: "custom:librus-siblings-card", grid_options: { columns: 12 } },
+            ],
+          },
         ],
       });
     }

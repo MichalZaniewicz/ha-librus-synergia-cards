@@ -257,6 +257,33 @@ export function isoDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/** Every local date an all-day event covers ([start, end), end exclusive). */
+export function allDayDates(ev: LibrusCalendarEvent): string[] {
+  const days: string[] = [];
+  const d = new Date(`${ev.start.slice(0, 10)}T12:00:00`);
+  const end = new Date(`${(ev.end || ev.start).slice(0, 10)}T12:00:00`);
+  do {
+    days.push(isoDate(d));
+    d.setDate(d.getDate() + 1);
+  } while (d < end);
+  return days;
+}
+
+const FREE_LESSONS_RE = /\s*\(lekcje (\d+)(?:[–-](\d+))?\)$/;
+
+/** A free day that frees only some lessons - the integration titles it
+ * "Rekolekcje (lekcje 3–4)" (0.12.19+): `[3, 4]`. `undefined` for a whole
+ * day off. */
+export function freeDayLessons(summary: string): [number, number] | undefined {
+  const m = FREE_LESSONS_RE.exec(summary);
+  return m ? [Number(m[1]), Number(m[2] ?? m[1])] : undefined;
+}
+
+/** The free day's name without the "(lekcje 3–4)" part. */
+export function freeDayName(summary: string): string {
+  return summary.replace(FREE_LESSONS_RE, "");
+}
+
 /** Local "HH:MM" (24 h) of `d` - for comparing against bell-schedule times. */
 export function hm(d: Date): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;

@@ -40,6 +40,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   show_saturday?: boolean;
   /** Week timetable: show bell schedule times beneath lesson numbers. */
   show_hours?: boolean;
+  /** Week timetable: rows of lesson numbers (default) or lessons on a time axis. */
+  layout?: "grid" | "timeline";
   /** Grade log: also list descriptive grades (off by default). */
   show_descriptive?: boolean;
   /** Grade log / Descriptive grades: don't show who gave each grade. */

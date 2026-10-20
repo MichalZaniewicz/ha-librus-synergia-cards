@@ -90,7 +90,7 @@ type EditorField =
     }
   | {
       kind: "select";
-      key: "mailbox" | "sort" | "mode" | "semester";
+      key: "mailbox" | "sort" | "mode" | "semester" | "layout";
       label: TranslationKey;
       options: { value: string; label: TranslationKey }[];
     };
@@ -168,6 +168,11 @@ const SEMESTER_OPTIONS: { value: string; label: TranslationKey }[] = [
   { value: "2", label: "semester.second" },
 ];
 
+const LAYOUT_OPTIONS: { value: string; label: TranslationKey }[] = [
+  { value: "grid", label: "layout.grid" },
+  { value: "timeline", label: "layout.timeline" },
+];
+
 const CATEGORY_FILTER_FIELD: EditorField = { kind: "text", key: "category_filter", label: "editor.category_filter" };
 const SORT_FIELD: EditorField = { kind: "select", key: "sort", label: "editor.sort", options: SORT_OPTIONS };
 const DAYS_BACK_FIELD: EditorField = { kind: "number", key: "days", label: "editor.days_back", min: 7, max: 365 };
@@ -202,7 +207,9 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-month-calendar-card": [
     TITLE_FIELD,
     { kind: "boolean", key: "hide_changes", label: "editor.hide_changes" },
+    { kind: "boolean", key: "hide_absences", label: "editor.month_hide_absences" },
   ],
+  "custom:librus-siblings-card": [TITLE_FIELD, { kind: "names" }],
   "custom:librus-substitutions-card": [
     TITLE_FIELD,
     { kind: "number", key: "days_ahead", label: "editor.days_ahead", min: 1, max: 30 },
@@ -294,6 +301,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     { kind: "select", key: "semester", label: "editor.semester", options: SEMESTER_OPTIONS },
   ],
   "custom:librus-week-timetable-card": [
+    { kind: "select", key: "layout", label: "editor.layout", options: LAYOUT_OPTIONS },
     { kind: "boolean", key: "show_saturday", label: "editor.show_saturday" },
     { kind: "boolean", key: "show_hours", label: "editor.show_hours" },
   ],
@@ -738,7 +746,7 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ subject_id: Number.isNaN(next as number) ? undefined : next });
   }
 
-  private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "semester"; options: { value: string }[] }, ev: Event): void {
+  private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "semester" | "layout"; options: { value: string }[] }, ev: Event): void {
     const value = LibrusCardEditor._selectValue(ev);
     if (!value) return;
     const current = (this._config?.[field.key] as string | undefined) ?? field.options[0].value;
