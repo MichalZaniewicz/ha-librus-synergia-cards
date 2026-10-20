@@ -251,7 +251,7 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
     const label = `${clock(c.from!)}–${clock(c.to!)}`;
     const narrow = right - left < 22;
     return html`<span
-        class="bar"
+        class="span"
         style="left:${left}%;width:${right - left}%;--c:${c.color}"
         title=${`${c.name}: ${label}`}
       >
@@ -371,7 +371,7 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
         position: relative;
         height: 26px;
       }
-      .bar {
+      .span {
         position: absolute;
         top: 0;
         bottom: 0;
