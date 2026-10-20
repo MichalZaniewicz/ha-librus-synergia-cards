@@ -667,7 +667,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.semester_comparison.points": "punkty",
 
   "card.semester.title": "Semestr w liczbach",
-  "card.semester.requires": "Wymaga ha-librus-synergia 0.12.25+ (semester_summary w czujniku średniej)",
+  "card.semester.requires": "Wymaga ha-librus-synergia 0.12.26+ (semester_summary w czujniku średniej)",
   "card.semester.empty": "Brak danych semestru - daty semestrów klasy pojawią się z początkiem roku",
   "card.semester.not_started": "Ten semestr jeszcze się nie zaczął",
   "card.semester.subtitle": "Semestr {semester} {year} · dzień {day} z {days}",

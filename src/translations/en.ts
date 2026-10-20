@@ -666,7 +666,7 @@ export const en = {
   "card.semester_comparison.points": "points",
 
   "card.semester.title": "Semester in numbers",
-  "card.semester.requires": "Needs ha-librus-synergia 0.12.25+ (semester_summary on the Overall average sensor)",
+  "card.semester.requires": "Needs ha-librus-synergia 0.12.26+ (semester_summary on the Overall average sensor)",
   "card.semester.empty": "No semester data yet - the class's semester dates come with the school year",
   "card.semester.not_started": "This semester hasn't started yet",
   "card.semester.subtitle": "Semester {semester} {year} · day {day} of {days}",
