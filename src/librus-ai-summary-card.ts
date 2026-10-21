@@ -291,12 +291,8 @@ export class LibrusAiSummaryCard extends LibrusBaseCard {
       }
       .tabs {
         display: flex;
+        flex-wrap: wrap;
         gap: 6px;
-        overflow-x: auto;
-        scrollbar-width: none;
-      }
-      .tabs::-webkit-scrollbar {
-        display: none;
       }
       .tab {
         font: inherit;
