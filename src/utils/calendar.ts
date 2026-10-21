@@ -90,7 +90,7 @@ const LEADING_EMOJI_RE =
   /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator})[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}️‍]*\s+/u;
 
 /** "📐 Matematyka" -> "Matematyka". The integration's "Emoji in calendar
- * titles" option (0.12.27+) puts one in front of timetable and Agenda
+ * titles" option (0.12.28+) puts one in front of timetable and Agenda
  * titles for phones and watches; the cards show subjects and categories
  * by name, so every title is read without it. */
 export function stripLeadingEmoji(summary: string): string {

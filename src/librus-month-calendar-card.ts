@@ -63,7 +63,7 @@ function kindOf(category: string | null, text: string): Kind {
 /** The integration's title for a free day that frees only some lessons. */
 const PARTIAL_FREE_DAY = /\(lekcje [\d–-]+\)$/;
 
-/** A day on the Absences calendar (integration 0.12.27+): "bad" while an
+/** A day on the Absences calendar (integration 0.12.28+): "bad" while an
  * absence is unexcused, "warn" when every absence is excused, "late" for
  * late arrivals only. Read from the integration's titles
  * ("Nieobecność nieusprawiedliwiona (2 lekcje)", "Nieobecność: 1 uspr.,
@@ -464,7 +464,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
         cursor: pointer;
         position: relative;
       }
-      /* Absences (integration 0.12.27+): a bar along the bottom of the day,
+      /* Absences (integration 0.12.28+): a bar along the bottom of the day,
          in the flow under the dots so the two never overlap. */
       .abs {
         align-self: stretch;
