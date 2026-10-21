@@ -81,6 +81,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   hide_subtitle?: boolean;
   /** Any CSS color ("#e91e63", "teal") replacing the indigo accent. Universal. */
   accent_color?: string;
+  /** Text size: "normal" / "large" / "larger" / "largest" or a factor (1.2). Universal. */
+  text_size?: string | number;
   /** Height limit of the scrolling lists, in px (320 by default). */
   list_height?: number;
   /** Hides the colour legend under the attendance charts and the grade radar. */

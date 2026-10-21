@@ -221,6 +221,10 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
         display: flex;
         justify-content: center;
       }
+      .chart-wrap svg {
+        max-width: 100%;
+        height: auto;
+      }
       .radar-fill-polygon {
         fill: var(--lc-brand);
         fill-opacity: 0.24;

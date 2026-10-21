@@ -210,8 +210,9 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
       }
       .period {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 10px;
+        gap: 2px 10px;
         padding: 6px 8px;
         border-radius: 8px;
         font-size: 0.82rem;
@@ -247,6 +248,7 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
         color: var(--secondary-text-color);
       }
       .psubj {
+        min-width: 0;
         margin-left: auto;
         font-weight: 700;
         text-align: right;

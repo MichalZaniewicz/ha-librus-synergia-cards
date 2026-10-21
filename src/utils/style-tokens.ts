@@ -98,7 +98,16 @@ export const librusTokens = css`
 
 /** Layout/component classes shared by every card - keeps the family visually consistent. */
 export const librusSharedStyles = css`
+  /* Text size: the universal \`text_size\` option sets --lc-scale inline on
+     the host (LibrusBaseCard._syncTheme); otherwise a theme variable
+     \`librus-cards-scale\` sets it for every card at once. \`zoom\` scales
+     text, icons, charts and spacing together, and the content reflows into
+     the card's width - so nothing overflows or gets clipped. */
+  :host {
+    --lc-scale: var(--librus-cards-scale, 1);
+  }
   ha-card {
+    zoom: var(--lc-scale);
     cursor: pointer;
     padding: 16px;
     display: flex;

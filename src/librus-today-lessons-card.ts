@@ -197,8 +197,9 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
         font-weight: 700;
         font-size: 0.8rem;
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 6px;
+        gap: 2px 6px;
       }
       .tl-item.now .subj {
         color: var(--lc-brand-strong);

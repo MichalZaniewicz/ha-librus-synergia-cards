@@ -219,6 +219,7 @@ card supports:
 | `exam_keywords` | Next exam | Comma-separated Agenda-category keywords that count as an exam (default `sprawdzian`), e.g. `sprawdzian, praca klasowa, egzamin` |
 | `icon` | every card | Override the header icon, e.g. `mdi:star` |
 | `accent_color` | every card | Any CSS color (`#e91e63`, `teal`, `rgb(0 150 136)`) instead of the indigo accent - rings, bars, chips and the icon badge follow it. The exact color is used in both themes, so pick one that reads on a dark background too. An invalid value is ignored |
+| `text_size` | every card | Bigger text: `large` (115%), `larger` (130%), `largest` (150%), or any factor such as `1.2`. Icons, charts and spacing grow with it and the card reflows to fit its width. To enlarge every card at once, add `librus-cards-scale: 1.2` to your Home Assistant theme instead; a card's own `text_size` wins over it |
 | `hide_header` | every card | Hide the header row entirely |
 | `hide_icon` / `hide_subtitle` | every card with a header | Hide just the icon badge, or just the line under the title |
 | `compact` | every card | Tighter padding, smaller icon badge, subtitle hidden - for a denser dashboard |
@@ -277,7 +278,7 @@ and empty state, with a light/dark toggle and a language switcher.
    `list_height`) are added with `addField([...cards], field)` below `EDITOR_FIELDS`. The editor
    renders the student picker automatically whenever more than one Librus device exists, adds a `title`
    field to every card with a title line, the action picker to cards listed in `TAP_ACTION_CARDS`, and
-   always appends the universal `icon` / `accent_color` / `hide_header` / `hide_icon` / `hide_subtitle` /
+   always appends the universal `icon` / `accent_color` / `text_size` / `hide_header` / `hide_icon` / `hide_subtitle` /
    `compact` / `hide_outage_warning` fields - those are honored generically by `LibrusBaseCard` (see
    `utils/base-card.ts`), so a new card gets them for free. A new card's title should read
    `${this._config.title ?? t(hass, "...")}`; a list should go through `applyListOptions`

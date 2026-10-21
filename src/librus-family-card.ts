@@ -454,6 +454,7 @@ export class LibrusFamilyCard extends LibrusBaseCard {
       }
       .fchip {
         display: inline-flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 5px;
         font-size: 0.76rem;

@@ -28,6 +28,18 @@ const HEARTBEAT_MS = 60_000;
 /** A failed on-demand fetch is tried again no sooner than this. */
 const FETCH_RETRY_MS = 60_000;
 
+/** `text_size` choices in the editor; YAML also takes a plain number. */
+export const TEXT_SIZES: Record<string, number> = { normal: 1, large: 1.15, larger: 1.3, largest: 1.5 };
+
+/** The zoom factor for `text_size`, or undefined to leave the default (the
+ * `librus-cards-scale` theme variable, else 1). Numbers are kept to 0.75-2. */
+export function textScale(value: string | number | undefined): number | undefined {
+  if (value === undefined || value === "") return undefined;
+  const scale = typeof value === "number" ? value : TEXT_SIZES[value] ?? Number.parseFloat(value);
+  if (!Number.isFinite(scale) || scale <= 0) return undefined;
+  return Math.min(2, Math.max(0.75, scale));
+}
+
 interface CardTimer {
   fn: () => void;
   handle: ReturnType<typeof setInterval>;
@@ -378,6 +390,9 @@ export abstract class LibrusBaseCard extends LitElement {
     const height = config?.list_height;
     if (height && height > 0) this.style.setProperty("--lc-list-height", `${height}px`);
     else this.style.removeProperty("--lc-list-height");
+    const scale = textScale(config?.text_size);
+    if (scale) this.style.setProperty("--lc-scale", String(scale));
+    else this.style.removeProperty("--lc-scale");
   }
 
   /**
