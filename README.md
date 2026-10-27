@@ -329,6 +329,14 @@ older integration it falls back to the `librus_synergia_achievement_unlocked` ev
 (`hass.connection.subscribeEvents`), keeping a list in `localStorage` and filtering events by the
 card's own config entry, so a multi-student household's cards don't mix achievements.
 
+## Supporters
+
+Thank you to everyone who [bought me a coffee](https://buymeacoffee.com/zanula) for the Librus projects:
+
+- **Paweł**
+- **devNull**
+- **M4hSzyna**
+
 ## Disclaimer
 
 An unofficial companion to an unofficial integration - not affiliated with or endorsed by Librus.
