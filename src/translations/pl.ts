@@ -473,6 +473,10 @@ export const pl: Record<keyof typeof en, string> = {
   "ai_summary.section.school_news": "Szkoła pisze",
   "editor.summary_only": "Tylko nagłówek i rady",
   "editor.hide_generate": "Ukryj przycisk Wygeneruj teraz",
+  "editor.summary_version": "Wersja",
+  "summary_version.auto": "Główna (jak w Konfiguruj)",
+  "summary_version.parent": "Dla rodzica",
+  "summary_version.student": "Dla ucznia",
 
   "card.lucky_number.title": "Szczęśliwy numerek",
   "card.lucky_number.subtitle": "Dziś w dzienniku",

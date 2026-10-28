@@ -215,7 +215,7 @@ card supports:
 | `hide_legend` | Attendance, Attendance heatmap, Absences by subject, Absences by weekday, Attendance by subject, Grade profile (radar) | Hide the colour legend under the chart - off by default |
 | `keep_unread` | Announcements | Opening an unread notice doesn't mark it read in Librus - off by default (`ha-librus-synergia` 0.12.17+ marks it read, as opening it in Librus does) |
 | `show_descriptive` | Grade log | Also list descriptive grades (a skill-based subject, e.g. music in grades 1-3), with the skill shown where other grades show their category - off by default |
-| `summary_only` / `hide_generate` | Weekly AI summary | Show only the headline, warning and to-dos (no section tabs); hide the Generate now button |
+| `version` / `summary_only` / `hide_generate` | Weekly AI summary | Which text to show with *Written to: Parent and student* (`parent` / `student`, integration 0.12.30+; default the main one); show only the headline, warning and to-dos (no section tabs); hide the Generate now button |
 | `exam_keywords` | Next exam | Comma-separated Agenda-category keywords that count as an exam (default `sprawdzian`), e.g. `sprawdzian, praca klasowa, egzamin` |
 | `icon` | every card | Override the header icon, e.g. `mdi:star` |
 | `accent_color` | every card | Any CSS color (`#e91e63`, `teal`, `rgb(0 150 136)`) instead of the indigo accent - rings, bars, chips and the icon badge follow it. The exact color is used in both themes, so pick one that reads on a dark background too. An invalid value is ignored |

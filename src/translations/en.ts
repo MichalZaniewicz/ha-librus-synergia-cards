@@ -472,6 +472,10 @@ export const en = {
   "ai_summary.section.school_news": "From the school",
   "editor.summary_only": "Headline and to-dos only",
   "editor.hide_generate": "Hide the Generate now button",
+  "editor.summary_version": "Version",
+  "summary_version.auto": "Main (as set in Configure)",
+  "summary_version.parent": "For the parent",
+  "summary_version.student": "For the student",
 
   "card.lucky_number.title": "Lucky number",
   "card.lucky_number.subtitle": "Today in the register",

@@ -434,6 +434,20 @@
       generating: false,
       paused: false,
       error: null,
+      // "Parent and student" (integration 0.12.30+): the student's own text.
+      versions: {
+        student: {
+          headline: "Piątka z historii to Twój tydzień - teraz matma we wtorek.",
+          status: "good",
+          sections: {
+            grades: { status: "good", text: "Cztery nowe oceny, a piątka z historii podniosła Ci średnią do 4,38. Z fizyki wyszło 3+ - to jedna kartkówka, nic straconego." },
+            next_week: { status: "ok", text: "Wtorek: sprawdzian z matematyki (działy 1-2). Czwartek: kartkówka z angielskiego." },
+          },
+          advice: ["Przejrzyj działy 1-2 z matematyki w weekend.", "Przypomnij rodzicom o usprawiedliwieniu z czwartku."],
+          warning: null,
+          summary: null,
+        },
+      },
     }, "Mocny tydzień z historii, fizyka do podciągnięcia przed sprawdzianem z matematyki.");
     entities["button.weekly_summary_generate"] = { entity_id: "button.weekly_summary_generate", device_id: DEVICE_ID, platform: "librus_synergia", translation_key: "weekly_summary_generate" };
     states["button.weekly_summary_generate"] = { entity_id: "button.weekly_summary_generate", state: lastPolled, attributes: {} };

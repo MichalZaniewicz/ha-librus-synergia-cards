@@ -114,6 +114,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   summary_only?: boolean;
   /** AI summary card: hide the "Generate now" button. */
   hide_generate?: boolean;
+  /** AI summary card: which text with "Written to: Parent and student" (auto = the main one). */
+  version?: "auto" | "parent" | "student";
 }
 
 /** Entity registry entry shape available on `hass.entities` (HA 2024.8+). */

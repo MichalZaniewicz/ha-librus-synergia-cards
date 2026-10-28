@@ -90,7 +90,7 @@ type EditorField =
     }
   | {
       kind: "select";
-      key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size";
+      key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version";
       label: TranslationKey;
       options: { value: string; label: TranslationKey }[];
     };
@@ -339,6 +339,16 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-teachers-card": [TITLE_FIELD],
   "custom:librus-ai-summary-card": [
     TITLE_FIELD,
+    {
+      kind: "select",
+      key: "version",
+      label: "editor.summary_version",
+      options: [
+        { value: "auto", label: "summary_version.auto" },
+        { value: "parent", label: "summary_version.parent" },
+        { value: "student", label: "summary_version.student" },
+      ],
+    },
     { kind: "boolean", key: "summary_only", label: "editor.summary_only" },
     { kind: "boolean", key: "hide_generate", label: "editor.hide_generate" },
   ],
@@ -757,7 +767,7 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ subject_id: Number.isNaN(next as number) ? undefined : next });
   }
 
-  private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size"; options: { value: string }[] }, ev: Event): void {
+  private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version"; options: { value: string }[] }, ev: Event): void {
     const value = LibrusCardEditor._selectValue(ev);
     if (!value) return;
     const current = (this._config?.[field.key] as string | undefined) ?? field.options[0].value;

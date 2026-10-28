@@ -67,7 +67,19 @@ export class LibrusAiSummaryCard extends LibrusBaseCard {
     }
     const attrs = entity.attributes as Record<string, unknown>;
     const generating = Boolean(attrs.generating) || this._pressing;
-    const headline = UNAVAILABLE.has(entity.state) ? undefined : entity.state;
+    // "Parent and student" (integration 0.12.30+): the state is the parent's
+    // text, `versions` holds both. Without it the main text is shown.
+    const versions = (attrs.versions ?? {}) as Record<string, Record<string, unknown> | undefined>;
+    const wanted = this._config.version;
+    const picked = wanted === "parent" || wanted === "student" ? versions[wanted] : undefined;
+    const text = picked ?? attrs;
+    const headline = picked
+      ? (typeof picked.headline === "string" && picked.headline) ||
+        (typeof picked.summary === "string" && picked.summary.split("\n", 1)[0]) ||
+        undefined
+      : UNAVAILABLE.has(entity.state)
+        ? undefined
+        : entity.state;
 
     if (!headline) {
       return html`
@@ -82,12 +94,12 @@ export class LibrusAiSummaryCard extends LibrusBaseCard {
       `;
     }
 
-    const status = typeof attrs.status === "string" ? attrs.status : undefined;
-    const sections = (attrs.sections ?? {}) as Partial<Record<AiSection, AiSectionData>>;
+    const status = typeof text.status === "string" ? text.status : undefined;
+    const sections = (text.sections ?? {}) as Partial<Record<AiSection, AiSectionData>>;
     const present = AI_SECTIONS.filter((key) => sections[key]?.text);
-    const advice = Array.isArray(attrs.advice) ? (attrs.advice as string[]) : [];
-    const warning = typeof attrs.warning === "string" && attrs.warning ? attrs.warning : undefined;
-    const summary = typeof attrs.summary === "string" && attrs.summary ? attrs.summary : undefined;
+    const advice = Array.isArray(text.advice) ? (text.advice as string[]) : [];
+    const warning = typeof text.warning === "string" && text.warning ? text.warning : undefined;
+    const summary = typeof text.summary === "string" && text.summary ? text.summary : undefined;
     const tab = this._tab && present.includes(this._tab) ? this._tab : present[0];
     const summaryOnly = this._config.summary_only === true;
 
@@ -97,7 +109,7 @@ export class LibrusAiSummaryCard extends LibrusBaseCard {
           <div class="icon-badge"><ha-icon icon="mdi:creation"></ha-icon></div>
           <div class="title-block">
             <div class="title">${this._config.title || t(hass, "card.ai_summary.title")}</div>
-            <div class="subtitle">${this._subtitle(attrs)}</div>
+            <div class="subtitle">${this._subtitle(attrs, picked ? wanted : undefined)}</div>
           </div>
           ${status && STATUS_CLASS[status]
             ? html`<span class="pill ${STATUS_CLASS[status]}">${t(hass, `ai_summary.status.${status}` as TranslationKey)}</span>`
@@ -129,7 +141,7 @@ export class LibrusAiSummaryCard extends LibrusBaseCard {
     `;
   }
 
-  private _subtitle(attrs: Record<string, unknown>): string {
+  private _subtitle(attrs: Record<string, unknown>, shown?: string): string {
     const hass = this.hass!;
     const parts: string[] = [];
     const fmt = new Intl.DateTimeFormat(hass.language, { day: "numeric", month: "numeric" });
@@ -138,8 +150,9 @@ export class LibrusAiSummaryCard extends LibrusBaseCard {
     if (from && to && !Number.isNaN(from.getTime()) && !Number.isNaN(to.getTime())) {
       parts.push(`${fmt.format(from)} – ${fmt.format(to)}`);
     }
-    if (attrs.audience === "student" || attrs.audience === "parent") {
-      parts.push(t(hass, `card.ai_summary.for_${attrs.audience}` as TranslationKey));
+    const audience = shown ?? attrs.audience;
+    if (audience === "student" || audience === "parent") {
+      parts.push(t(hass, `card.ai_summary.for_${audience}` as TranslationKey));
     }
     return parts.join(" · ");
   }
