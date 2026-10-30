@@ -984,7 +984,7 @@
     const weekdayEventsExToday = weekdayEvents.filter(
       (ev) => new Date(ev.start).toDateString() !== today.toDateString()
     );
-    // Activities outside the timetable (integration 0.12.33+): extra
+    // Activities outside the timetable (integration 0.12.34+): extra
     // activities, one-to-one teaching - free times, uid "librus-extra-...".
     // [day offset from this Monday or "today"/"tomorrow", start, end, summary, description, room]
     const extraActivityEvents = [

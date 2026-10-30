@@ -10,7 +10,7 @@ export interface LibrusCalendarEvent {
   location?: string;
   /** An activity outside the regular timetable (extra activities, the
    * individualised learning path, one-to-one teaching - integration
-   * 0.12.33+), not a lesson. Only cards that ask for them get them. */
+   * 0.12.34+), not a lesson. Only cards that ask for them get them. */
   extra?: boolean;
 }
 
