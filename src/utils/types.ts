@@ -83,6 +83,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   accent_color?: string;
   /** Text size: "normal" / "large" / "larger" / "largest" or a factor (1.2). Universal. */
   text_size?: string | number;
+  /** Card language ("pl", "en"), whatever Home Assistant uses. Universal. */
+  language?: string;
   /** Height limit of the scrolling lists, in px (320 by default). */
   list_height?: number;
   /** Hides the colour legend under the attendance charts and the grade radar. */

@@ -90,7 +90,7 @@ type EditorField =
     }
   | {
       kind: "select";
-      key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version";
+      key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version" | "language";
       label: TranslationKey;
       options: { value: string; label: TranslationKey }[];
     };
@@ -113,6 +113,16 @@ const COMMON_FIELDS: EditorField[] = [
       { value: "large", label: "text_size.large" },
       { value: "larger", label: "text_size.larger" },
       { value: "largest", label: "text_size.largest" },
+    ],
+  },
+  {
+    kind: "select",
+    key: "language",
+    label: "editor.language",
+    options: [
+      { value: "auto", label: "language.auto" },
+      { value: "pl", label: "language.pl" },
+      { value: "en", label: "language.en" },
     ],
   },
   { kind: "boolean", key: "hide_header", label: "editor.hide_header" },
@@ -767,7 +777,7 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ subject_id: Number.isNaN(next as number) ? undefined : next });
   }
 
-  private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version"; options: { value: string }[] }, ev: Event): void {
+  private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version" | "language"; options: { value: string }[] }, ev: Event): void {
     const value = LibrusCardEditor._selectValue(ev);
     if (!value) return;
     const current = (this._config?.[field.key] as string | undefined) ?? field.options[0].value;

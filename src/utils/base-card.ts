@@ -40,6 +40,13 @@ export function textScale(value: string | number | undefined): number | undefine
   return Math.min(2, Math.max(0.75, scale));
 }
 
+/** The `language` option as a language code, or undefined for "Home Assistant's". */
+export function cardLanguage(value: string | undefined): string | undefined {
+  const code = (value ?? "").trim().toLowerCase();
+  if (!code || code === "auto") return undefined;
+  return /^[a-z]{2,3}(-[a-z0-9]+)*$/.test(code) ? code : undefined;
+}
+
 interface CardTimer {
   fn: () => void;
   handle: ReturnType<typeof setInterval>;
@@ -48,7 +55,38 @@ interface CardTimer {
 }
 
 export abstract class LibrusBaseCard extends LitElement {
-  @property({ attribute: false }) public hass?: LibrusHass;
+  private _rawHass?: LibrusHass;
+  // The last `hass` handed out with the card's own language - see the getter.
+  private _languageView?: { raw: LibrusHass; language: string; view: LibrusHass };
+
+  /**
+   * `hass`, as the card sees it. With the `language` option set, a thin
+   * view of Home Assistant's object whose `language` / `locale.language`
+   * say that language instead, so every `t(this.hass, ...)` and date
+   * format in every card follows it without touching the cards. The view
+   * inherits everything else (states, registries, callWS...) from the real
+   * object, and is rebuilt only when that object or the language changes.
+   */
+  @property({ attribute: false })
+  public get hass(): LibrusHass | undefined {
+    const raw = this._rawHass;
+    const language = cardLanguage(this._cardConfig?.language);
+    if (!raw || !language || language === raw.language) return raw;
+    const cached = this._languageView;
+    if (cached && cached.raw === raw && cached.language === language) return cached.view;
+    const view = Object.create(raw) as LibrusHass;
+    Object.defineProperty(view, "language", { value: language, enumerable: true });
+    const locale = raw.locale;
+    if (locale) {
+      Object.defineProperty(view, "locale", { value: { ...locale, language }, enumerable: true });
+    }
+    this._languageView = { raw, language, view };
+    return view;
+  }
+
+  public set hass(value: LibrusHass | undefined) {
+    this._rawHass = value;
+  }
 
   protected _configuredDeviceId?: string;
 
