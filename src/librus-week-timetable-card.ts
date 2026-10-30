@@ -82,6 +82,42 @@ const MAX_WEEKS = 12;
 /** Timeline height per minute of the school day, in px. */
 const PX_PER_MINUTE = 0.8;
 
+interface Placed {
+  ev: LibrusCalendarEvent;
+  /** The event's column, and how many columns its overlap cluster has. */
+  column: number;
+  columns: number;
+}
+
+/** One day's events in side-by-side columns: events that
+ * overlap in time never share a column, and every event of a cluster of
+ * overlapping events gets the same width. */
+function overlapColumns(day: LibrusCalendarEvent[]): Placed[] {
+  const placed: Placed[] = [];
+  let cluster: Placed[] = [];
+  let columnEnds: number[] = [];
+  let clusterEnd = -1;
+  const close = (): void => {
+    for (const p of cluster) p.columns = columnEnds.length;
+    placed.push(...cluster);
+    cluster = [];
+    columnEnds = [];
+  };
+  const sorted = [...day].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  for (const ev of sorted) {
+    const start = new Date(ev.start).getTime();
+    const end = new Date(ev.end).getTime();
+    if (cluster.length && start >= clusterEnd) close();
+    let column = columnEnds.findIndex((columnEnd) => columnEnd <= start);
+    if (column < 0) column = columnEnds.push(end) - 1;
+    else columnEnds[column] = end;
+    cluster.push({ ev, column, columns: 1 });
+    clusterEnd = Math.max(cluster.length > 1 ? clusterEnd : end, end);
+  }
+  if (cluster.length) close();
+  return placed;
+}
+
 @customElement("librus-week-timetable-card")
 export class LibrusWeekTimetableCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
@@ -164,7 +200,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     const generation = this._beginFetch();
     // undefined = that calendar failed; a missing entity loads as [].
     const load = async (id?: string): Promise<LibrusCalendarEvent[] | undefined> =>
-      id ? fetchCalendarEvents(this.hass!, id, monday, rangeEnd).catch(() => undefined) : [];
+      id ? fetchCalendarEvents(this.hass!, id, monday, rangeEnd, { extra: true }).catch(() => undefined) : [];
     const [events, free, agendaEvents] = await Promise.all([load(timetable), load(freeDays), load(withAgenda)]);
     if (!this._isCurrentFetch(generation)) return;
     const keep = this._keepAfterError(range);
@@ -219,12 +255,17 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     }
 
     const dayCount = this._dayCount;
+    // Lessons and activities outside the timetable (extra activities and
+    // the like) per column: the grid keeps the activities in their own row,
+    // the timeline puts them on the time axis with the lessons.
     const byDay: LibrusCalendarEvent[][] = Array.from({ length: dayCount }, () => []);
+    const extraByDay: LibrusCalendarEvent[][] = Array.from({ length: dayCount }, () => []);
     for (const ev of events) {
       const index = dates.indexOf(isoDate(new Date(ev.start)));
-      if (index >= 0) byDay[index].push(ev);
+      if (index >= 0) (ev.extra ? extraByDay : byDay)[index].push(ev);
     }
     byDay.forEach((day) => day.sort((a, b) => a.start.localeCompare(b.start)));
+    extraByDay.forEach((day) => day.sort((a, b) => a.start.localeCompare(b.start)));
 
     const now = new Date();
     const todayColumn = dates.indexOf(isoDate(now)); // -1 when today isn't shown
@@ -261,9 +302,18 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     } else if (events.length === 0 && !anyFree) {
       body = html`<div class="empty-week">${t(hass, "card.week_timetable.empty")}</div>`;
     } else if (this._timeline) {
-      body = this._renderTimeline(byDay, dates, dayHeads, freeByDate, todayColumn, now, nextToday, breakNow);
+      body = this._renderTimeline(
+        byDay.map((day, i) => [...day, ...extraByDay[i]]),
+        dates,
+        dayHeads,
+        freeByDate,
+        todayColumn,
+        now,
+        nextToday,
+        breakNow
+      );
     } else {
-      body = this._renderGrid(resolved.map, byDay, dates, dayHeads, freeByDate, todayColumn, now, nextToday, breakNow);
+      body = this._renderGrid(resolved.map, byDay, extraByDay, dates, dayHeads, freeByDate, todayColumn, now, nextToday, breakNow);
     }
 
     return html`
@@ -314,6 +364,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
   private _renderGrid(
     map: Record<string, string>,
     byDay: LibrusCalendarEvent[][],
+    extraByDay: LibrusCalendarEvent[][],
     dates: string[],
     dayHeads: TemplateResult[],
     freeByDate: Map<string, FreeDay>,
@@ -438,6 +489,24 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
             >${abbreviate(firstName)}${parallel ? "+" : ""}</div>`;
           })}
         `)}
+        ${extraByDay.some((day) => day.length)
+          ? html`
+              <span class="n xa-n" title=${t(hass, "card.week_timetable.extra_activities")}>+</span>
+              ${extraByDay.map(
+                (day, dayIndex) => html`<div class="xa-cell">
+                  ${day.map((ev) => {
+                    const info = lessonInfo(ev);
+                    const current = dayIndex === todayColumn && !info.cancelled && isHappeningNow(ev, now);
+                    const when = `${hm(new Date(ev.start))}–${hm(new Date(ev.end))}`;
+                    const tip = `${when} ${info.name}${info.cancelled ? ` (${t(hass, "label.activity_cancelled")})` : ""}${ev.location ? ` · ${ev.location}` : ""}`;
+                    return html`<span class="xa ${info.cancelled ? "off" : ""} ${current ? "current" : ""}" title=${tip}
+                      ><span class="xa-time">${hm(new Date(ev.start))}</span> ${abbreviate(info.name)}</span
+                    >`;
+                  })}
+                </div>`
+              )}
+            `
+          : nothing}
       </div>
     `;
   }
@@ -513,38 +582,34 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         </div>
         ${byDay.map((day, i) => {
           const free = freeByDate.get(dates[i]);
-          // Lessons starting together (split groups) share the width.
-          const groups = new Map<number, LibrusCalendarEvent[]>();
-          for (const ev of day) {
-            const key = minutesOf(ev.start);
-            groups.set(key, [...(groups.get(key) ?? []), ev]);
-          }
+          // Events that overlap (split groups, or an extra activity running
+          // into a lesson) share the width: each cluster of overlapping
+          // events gets as many columns as it needs at once.
+          const groups = overlapColumns(day);
           return html`<div class="tl-day ${i === todayColumn ? "today" : ""} ${free && !free.lessons ? "free" : ""}" style="height:${height}px">
             ${hours.map((m) => html`<span class="tl-line" style="top:${y(m)}px"></span>`)}
-            ${[...groups.values()].flatMap((group) =>
-              group.map((ev, k) => {
+            ${groups.map(({ ev, column, columns }) => {
                 const info = lessonInfo(ev);
                 const top = y(minutesOf(ev.start));
                 const h = Math.max(14, y(minutesOf(ev.end)) - top - 2);
-                const width = 100 / group.length;
+                const width = 100 / columns;
                 const current = i === todayColumn && !info.cancelled && isHappeningNow(ev, now);
                 const next = breakNow && i === todayColumn && ev === nextToday;
                 const changed = info.substitution || info.roomChange || info.moved;
                 const [firstName] = info.name.split(" + ");
                 return html`<div
-                  class="tl-lesson ${current ? "current" : ""} ${next ? "next" : ""} ${info.cancelled ? "off" : ""} ${changed && !info.cancelled ? "sub" : ""}"
-                  style="top:${top}px;height:${h}px;left:calc(${width * k}% + 2px);width:calc(${width}% - 4px)"
+                  class="tl-lesson ${current ? "current" : ""} ${next ? "next" : ""} ${info.cancelled ? "off" : ""} ${changed && !info.cancelled ? "sub" : ""} ${ev.extra ? "xa" : ""}"
+                  style="top:${top}px;height:${h}px;left:calc(${width * column}% + 2px);width:calc(${width}% - 4px)"
                   title=${`${hm(new Date(ev.start))}–${hm(new Date(ev.end))} ${this._tip([info])}${ev.location ? ` · ${ev.location}` : ""}`}
                 >
                   <span class="tl-subj">${abbreviate(firstName)}</span>
                   ${h >= 26
                     ? html`<span class="tl-meta">${info.cancelled
-                        ? t(hass, "label.lesson_cancelled")
+                        ? t(hass, ev.extra ? "label.activity_cancelled" : "label.lesson_cancelled")
                         : `${hm(new Date(ev.start))}${ev.location ? ` · ${ev.location}` : ""}`}</span>`
                     : nothing}
                 </div>`;
-              })
-            )}
+              })}
             ${i === todayColumn && nowShown
               ? html`<span class="tl-now" style="top:${y(nowMin)}px"><i></i></span>`
               : nothing}
@@ -721,6 +786,43 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         text-decoration: line-through;
         opacity: 0.55;
       }
+      /* Activities outside the timetable: their own row under the lessons. */
+      .xa-n {
+        color: var(--lc-good);
+      }
+      .xa-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .xa {
+        border-radius: 5px;
+        padding: 2px 3px;
+        font-weight: 700;
+        background: var(--lc-good-bg);
+        color: var(--lc-good);
+        text-align: center;
+        line-height: 1.15;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .xa-time {
+        font-weight: 500;
+        font-size: 0.52rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .xa.off {
+        background: transparent;
+        border: 1px dashed var(--divider-color);
+        color: var(--secondary-text-color);
+        text-decoration: line-through;
+        opacity: 0.7;
+      }
+      .xa.current {
+        box-shadow: 0 0 0 2px var(--lc-good);
+      }
 
       /* Timeline layout. */
       .tl {
@@ -825,6 +927,10 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
       }
       .tl-lesson.off .tl-subj {
         text-decoration: line-through;
+      }
+      .tl-lesson.xa:not(.off):not(.current) {
+        background: var(--lc-good-bg);
+        color: var(--lc-good);
       }
       .tl-now {
         position: absolute;

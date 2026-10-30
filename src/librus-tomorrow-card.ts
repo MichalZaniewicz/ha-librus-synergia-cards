@@ -74,7 +74,7 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
 
     const generation = this._beginFetch();
     try {
-      const events = await fetchCalendarEvents(this.hass, entityId, target, dayAfter);
+      const events = await fetchCalendarEvents(this.hass, entityId, target, dayAfter, { extra: true });
       const lessons = events.filter((e) => !e.allDay).sort((a, b) => a.start.localeCompare(b.start));
       if (this._isCurrentFetch(generation)) {
         this._lessons = lessons;
@@ -128,7 +128,9 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
     // Cancelled lessons stay on the list (struck through) but don't count
     // towards the lesson count or the start/end times (found live: "7
     // lessons, ends 14:35" with the 7th lesson cancelled).
-    const held = this._lessons.filter((ev) => !lessonInfo(ev).cancelled);
+    // Activities outside the timetable are listed, but the lesson count and
+    // the times are the lessons'.
+    const held = this._lessons.filter((ev) => !ev.extra && !lessonInfo(ev).cancelled);
     const first = held[0];
     const last = held[held.length - 1];
     const gaps = freePeriods(this._lessons);

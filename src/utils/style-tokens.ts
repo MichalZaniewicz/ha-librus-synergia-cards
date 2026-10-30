@@ -526,6 +526,10 @@ export const librusSharedStyles = css`
     background: var(--lc-brand-bg);
     color: var(--lc-brand);
   }
+  .lesson-tag.extra {
+    background: var(--lc-good-bg);
+    color: var(--lc-good);
+  }
 
   .stat-label {
     font-size: 0.66rem;

@@ -314,10 +314,16 @@ export function donutChart(
 
 /** "odwołana" / "zastępstwo" tag after a lesson name (style: .lesson-tag). */
 export function lessonTag(hass: LibrusHass, info: LessonInfo): TemplateResult | typeof nothing {
+  const extra = info.extra
+    ? html`<span class="lesson-tag extra">${t(hass, "label.extra_activity")}</span>`
+    : nothing;
   if (info.cancelled) {
-    return html`<span class="lesson-tag cancelled">${t(hass, "label.lesson_cancelled")}</span>`;
+    return html`${extra}<span class="lesson-tag cancelled">${t(
+      hass,
+      info.extra ? "label.activity_cancelled" : "label.lesson_cancelled"
+    )}</span>`;
   }
-  const tags: TemplateResult[] = [];
+  const tags: TemplateResult[] = info.extra ? [extra as TemplateResult] : [];
   if (info.substitution) {
     tags.push(html`<span class="lesson-tag substitution">${t(hass, "label.lesson_substitution")}</span>`);
   }

@@ -58,7 +58,7 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
 
     const generation = this._beginFetch();
     try {
-      const events = await fetchCalendarEvents(this.hass, entityId, today, tomorrow);
+      const events = await fetchCalendarEvents(this.hass, entityId, today, tomorrow, { extra: true });
       const sorted = events
         .filter((e) => !e.allDay)
         .sort((a, b) => a.start.localeCompare(b.start));

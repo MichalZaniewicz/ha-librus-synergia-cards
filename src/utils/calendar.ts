@@ -8,7 +8,15 @@ export interface LibrusCalendarEvent {
   summary: string;
   description?: string;
   location?: string;
+  /** An activity outside the regular timetable (extra activities, the
+   * individualised learning path, one-to-one teaching - integration
+   * 0.12.33+), not a lesson. Only cards that ask for them get them. */
+  extra?: boolean;
 }
+
+/** The integration gives activities outside the timetable a uid with this
+ * prefix (calendar.py, EXTRA_ACTIVITY_UID_PREFIX). */
+const EXTRA_ACTIVITY_UID_PREFIX = "librus-extra-";
 
 interface RawCalendarDateTime {
   date?: string;
@@ -21,6 +29,7 @@ interface RawCalendarEvent {
   summary?: string;
   description?: string;
   location?: string;
+  uid?: string;
 }
 
 function normalize(raw: string | RawCalendarDateTime): { value: string; allDay: boolean } {
@@ -52,12 +61,17 @@ const requests = new Map<string, { at: number; promise: Promise<LibrusCalendarEv
  * for the same Librus refresh, by the calendar's Last update sensor - is
  * answered from the one already sent. A failed one isn't kept. Every caller
  * gets its own copy of the list, so sorting it in place is fine.
+ *
+ * Activities outside the timetable (`extra`) are left out unless
+ * `options.extra` asks for them: most cards count lessons, start and end
+ * times or bell periods, and an extra activity at 7:50 is none of those.
  */
 export async function fetchCalendarEvents(
   hass: LibrusHass,
   entityId: string,
   start: Date,
-  end: Date
+  end: Date,
+  options: { extra?: boolean } = {}
 ): Promise<LibrusCalendarEvent[]> {
   const path = `calendars/${entityId}?start=${encodeURIComponent(
     start.toISOString()
@@ -75,7 +89,7 @@ export async function fetchCalendarEvents(
     });
   }
   const events = await entry.promise;
-  return events.map((e) => ({ ...e }));
+  return events.filter((e) => options.extra || !e.extra).map((e) => ({ ...e }));
 }
 
 /** The state of the Last update sensor of the calendar's own device ("" without one). */
@@ -110,6 +124,7 @@ async function loadCalendarEvents(hass: LibrusHass, path: string): Promise<Libru
       summary: stripLeadingEmoji(item.summary ?? ""),
       description: item.description,
       location: item.location,
+      extra: typeof item.uid === "string" && item.uid.startsWith(EXTRA_ACTIVITY_UID_PREFIX),
     };
   });
 }
@@ -132,6 +147,8 @@ export interface LessonInfo {
   details: string[];
   /** For a room change: [old room, new room]. */
   rooms?: [string, string];
+  /** An activity outside the regular timetable, not a lesson. */
+  extra: boolean;
 }
 
 const SUFFIX_RE = /\s*\((odwołane|zastępstwo|zmiana sali|przeniesiona)\)\s*$/i;
@@ -152,6 +169,7 @@ export function lessonInfo(event: LibrusCalendarEvent): LessonInfo {
     teacher: lines[0] || undefined,
     details,
     rooms: roomLine ? [roomLine[1], roomLine[2]] : undefined,
+    extra: Boolean(event.extra),
   };
 }
 
@@ -226,8 +244,10 @@ export const FREE_PERIOD_MINUTES = 30;
  * in the middle of the day leaves one too.
  */
 export function freePeriods(events: LibrusCalendarEvent[]): FreePeriod[] {
+  // Lessons only: an extra activity at 7:15 before lessons from 12:00 is not
+  // a free period between lessons.
   const held = events
-    .filter((e) => !e.allDay && !lessonInfo(e).cancelled)
+    .filter((e) => !e.allDay && !e.extra && !lessonInfo(e).cancelled)
     .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
   const out: FreePeriod[] = [];
   let lastEnd: string | undefined;
