@@ -730,14 +730,25 @@
     for (const s of SUBJECTS) {
       const entityId = `sensor.subject_${s.id}_average`;
       const grades = [
-        { value: "5", category: "Sprawdzian", date: iso(new Date(today.getTime() - 1 * 86400000)), comments: ["Świetna praca, tak trzymaj!"], teacher: "Jan Kowalski" },
-        { value: "4+", category: "Kartkówka", date: iso(new Date(today.getTime() - 9 * 86400000)), comments: [] },
-        { value: "4", category: "Odpowiedź", date: iso(new Date(today.getTime() - 15 * 86400000)), comments: [] },
+        { value: "5", category: "Sprawdzian", weight: 3, date: iso(new Date(today.getTime() - 1 * 86400000)), comments: ["Świetna praca, tak trzymaj!"], teacher: "Jan Kowalski" },
+        { value: "4+", category: "Kartkówka", weight: 2, date: iso(new Date(today.getTime() - 9 * 86400000)), comments: [] },
+        { value: "4", category: "Odpowiedź", weight: 2, date: iso(new Date(today.getTime() - 15 * 86400000)), comments: [] },
       ];
+      // Older grades (September-October) with weights (integration 0.12.36+),
+      // varied by subject - the month-by-month and weight cards need a year.
+      const OLDER = [
+        [24, ["6", "5", "3", "4-", "5+", "2"], "Aktywność", 1],
+        [33, ["4", "3+", "5", "6", "3", "4"], "Sprawdzian", 3],
+        [41, ["5", "4", "6", "5", "4+", "3"], "Zadanie domowe", 1],
+        [52, ["3", "5", "4", "4", "2+", "5"], "Kartkówka", 2],
+      ];
+      for (const [daysAgo, values, category, weight] of OLDER) {
+        grades.push({ value: values[s.id % values.length], category, weight, date: iso(new Date(today.getTime() - daysAgo * 86400000)), comments: [] });
+      }
       if (s.id === 1) {
         // A correction ("poprawa") - backend 0.10.1+ `improves`/`improved`.
         grades[1] = { ...grades[1], value: "4", improves: "2", improved: false };
-        grades.push({ value: "2", category: "Kartkówka", date: iso(new Date(today.getTime() - 20 * 86400000)), comments: [], improves: null, improved: true });
+        grades.push({ value: "2", category: "Kartkówka", weight: 2, date: iso(new Date(today.getTime() - 20 * 86400000)), comments: [], improves: null, improved: true });
       }
       // A grade that doesn't count towards the average (integration 0.12.36+).
       if (s.id === 1) grades[2] = { ...grades[2], counts_to_average: false };
@@ -1031,6 +1042,21 @@
         { start: iso(new Date(today.getTime() - 2 * 86400000)), end: iso(new Date(today.getTime() - 1 * 86400000)), allDay: true, summary: "[Sprawdzian] Historia: Powstanie listopadowe", description: null },
         { start: iso(new Date(today.getTime() + 9 * 86400000)), end: iso(new Date(today.getTime() + 10 * 86400000)), allDay: true, summary: "[Inne] Konkurs matematyczny - zgłoszenia", description: null },
         { start: iso(new Date(today.getTime() + 1 * 86400000)), end: iso(new Date(today.getTime() + 2 * 86400000)), allDay: true, summary: "[Test] Język angielski: Unit 2", description: null },
+        // Tests and quizzes across the semester (the Tests this semester card).
+        ...[
+          [-52, "Sprawdzian", "Fizyka: Ruch"], [-45, "Kartkówka", "Chemia: Wzory"], [-44, "Kartkówka", "Geografia: Mapa"],
+          [-38, "Sprawdzian", "Język polski: Lektura"], [-37, "Kartkówka", "Matematyka: Potęgi"],
+          [-31, "Sprawdzian", "Biologia: Komórka"], [-30, "Sprawdzian", "Chemia: Atomy"], [-29, "Kartkówka", "Historia: Daty"], [-28, "Sprawdzian", "Matematyka: Pierwiastki"],
+          [-24, "Kartkówka", "Język angielski: Słówka"], [-17, "Sprawdzian", "Geografia: Klimat"], [-16, "Kartkówka", "Fizyka: Prędkość"],
+          [-10, "Sprawdzian", "Język niemiecki: Rozdział 1"], [-9, "Kartkówka", "Chemia: Wartościowość"],
+          [10, "Kartkówka", "Język polski: Części mowy"], [16, "Sprawdzian", "Fizyka: Siły"], [17, "Sprawdzian", "Biologia: Tkanki"], [18, "Kartkówka", "Matematyka: Wyrażenia"],
+          [24, "Sprawdzian", "Historia: Rozbiory"], [31, "Kartkówka", "Geografia: Europa"], [38, "Sprawdzian", "Matematyka: Równania"], [39, "Kartkówka", "Chemia: Reakcje"],
+          [52, "Sprawdzian", "Język polski: Wypracowanie"], [66, "Sprawdzian", "Biologia: Układ krwionośny"], [73, "Kartkówka", "Fizyka: Praca"],
+        ].map(([days, category, text]) => ({
+          start: iso(new Date(today.getTime() + days * 86400000)),
+          end: iso(new Date(today.getTime() + (days + 1) * 86400000)),
+          allDay: true, summary: `[${category}] ${text}`, description: null,
+        })),
       ],
       // Made-up absences, a few school days back (the month card's bars).
       "calendar.absences": [
@@ -1100,8 +1126,19 @@
         }
         const historyMatch = /^history\/period\/[^?]+\?filter_entity_id=([^&]+)/.exec(path);
         if (historyMatch) {
-          const entityId = decodeURIComponent(historyMatch[1]);
-          return [historyByEntity[entityId] ?? []];
+          const ids = decodeURIComponent(historyMatch[1]).split(",");
+          if (ids.length === 1) return [historyByEntity[ids[0]] ?? []];
+          // Several subjects at once: a made-up drift towards each one's
+          // current average; the first entry names its entity, as in HA.
+          return ids.map((entityId, i) => {
+            const now = Number(states[entityId]?.state);
+            if (!Number.isFinite(now)) return [];
+            const from = now + [-0.6, 0.45, -0.3, 0.2, 0, -0.15, 0.5, -0.4][i % 8];
+            const series = buildMockGradeHistory([[40, from], [26, (from * 2 + now) / 3], [12, (from + now * 2) / 3], [3, now]])
+              .map((e) => ({ ...e, state: Number(e.state).toFixed(2) }));
+            series[0] = { ...series[0], entity_id: entityId };
+            return series;
+          });
         }
         return [];
       },
@@ -1279,6 +1316,7 @@
       "librus-semester-card",
       "librus-grade-distribution-card",
       "librus-grades-radar-card", "librus-grade-category-distribution-card",
+      "librus-grades-by-month-card", "librus-subject-trends-card", "librus-grade-weight-card", "librus-exam-weeks-card",
       "librus-latest-grade-card", "librus-behaviour-grade-card", "librus-descriptive-grades-card",
       "librus-subject-spotlight-card", "librus-report-card-card",
       "librus-attendance-card", "librus-attendance-tile-card", "librus-attendance-heatmap-card",

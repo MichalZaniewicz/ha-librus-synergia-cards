@@ -55,6 +55,13 @@ export const librusTokens = css`
     --lc-silver-bg: #e6e9ec;
     --lc-diamond: #1f9cb8;
     --lc-diamond-bg: #d9f1f6;
+    /* One color per grade 1-6 (grades by month, what weighs in the average). */
+    --lc-grade-1: #c6444b;
+    --lc-grade-2: #dc7a6c;
+    --lc-grade-3: #e08e1d;
+    --lc-grade-4: #2563a8;
+    --lc-grade-5: #4f46e5;
+    --lc-grade-6: #2e8f57;
   }
   :host(.dark) {
     --lc-brand: #948cf2;
@@ -93,6 +100,12 @@ export const librusTokens = css`
     --lc-silver-bg: rgba(167, 176, 186, 0.16);
     --lc-diamond: #4dd0e8;
     --lc-diamond-bg: rgba(77, 208, 232, 0.16);
+    --lc-grade-1: #e27c81;
+    --lc-grade-2: #e8a09a;
+    --lc-grade-3: #f3ae4e;
+    --lc-grade-4: #8cc9f2;
+    --lc-grade-5: #948cf2;
+    --lc-grade-6: #5fc98a;
   }
 `;
 

@@ -19,6 +19,10 @@ import "./librus-semester-card";
 import "./librus-grade-distribution-card";
 import "./librus-grades-radar-card";
 import "./librus-grade-category-distribution-card";
+import "./librus-grades-by-month-card";
+import "./librus-subject-trends-card";
+import "./librus-grade-weight-card";
+import "./librus-exam-weeks-card";
 import "./librus-latest-grade-card";
 import "./librus-behaviour-grade-card";
 import "./librus-descriptive-grades-card";
@@ -205,6 +209,30 @@ window.customCards.push(
     type: "librus-grade-category-distribution-card",
     name: "Librus - Oceny wg kategorii",
     description: "Poziomy wykres słupkowy: ile ocen ze sprawdzianów, kartkówek, odpowiedzi itd.",
+    preview: true,
+  },
+  {
+    type: "librus-grades-by-month-card",
+    name: "Librus - Oceny miesiąc po miesiącu",
+    description: "Słupki: ile i jakich ocen w każdym miesiącu roku szkolnego, ze średnią miesiąca nad słupkiem.",
+    preview: true,
+  },
+  {
+    type: "librus-subject-trends-card",
+    name: "Librus - Trendy przedmiotów",
+    description: "Mini-wykres średniej każdego przedmiotu z ostatnich dni i jej zmiana - największe zmiany na górze.",
+    preview: true,
+  },
+  {
+    type: "librus-grade-weight-card",
+    name: "Librus - Co waży w średniej",
+    description: "Ile każda kategoria ocen (sprawdzian, kartkówka...) waży w średniej przedmiotu i jaka jest w niej średnia.",
+    preview: true,
+  },
+  {
+    type: "librus-exam-weeks-card",
+    name: "Librus - Sprawdziany w semestrze",
+    description: "Sprawdziany i kartkówki tydzień po tygodniu przez cały semestr, z zaznaczonymi ciężkimi tygodniami.",
     preview: true,
   },
   {
@@ -517,7 +545,7 @@ window.customCards.push(
 
 // eslint-disable-next-line no-console
 console.info(
-  "%c LIBRUS-SYNERGIA-CARDS %c 71 cards loaded ",
+  "%c LIBRUS-SYNERGIA-CARDS %c 75 cards loaded ",
   "color: #fff; background: #4f46e5; font-weight: 700; border-radius: 3px 0 0 3px; padding: 2px 6px;",
   "color: #4f46e5; background: transparent; font-weight: 500;"
 );

@@ -82,3 +82,40 @@ export async function fetchNumericHistory(
   }
   return points;
 }
+
+/**
+ * Numeric state history for several entities at once (one request), keyed by
+ * entity id - same thinning as `fetchNumericHistory`. Each series starts with
+ * the state the entity had at `start`.
+ */
+export async function fetchNumericHistories(
+  hass: LibrusHass,
+  entityIds: string[],
+  start: Date,
+  end: Date
+): Promise<Map<string, HistoryPoint[]>> {
+  const out = new Map<string, HistoryPoint[]>();
+  if (!entityIds.length) return out;
+  const path =
+    `history/period/${encodeURIComponent(start.toISOString())}` +
+    `?filter_entity_id=${encodeURIComponent(entityIds.join(","))}` +
+    `&end_time=${encodeURIComponent(end.toISOString())}` +
+    "&minimal_response&no_attributes";
+  const raw = (await hass.callApi("GET", path)) as (RawHistoryEntry & { entity_id?: string })[][] | undefined;
+  for (const series of raw ?? []) {
+    // With minimal_response only the first entry of a series names its entity.
+    const entityId = series[0]?.entity_id;
+    if (!entityId) continue;
+    const points: HistoryPoint[] = [];
+    for (const entry of series) {
+      const value = Number(entry.state);
+      const timestamp = new Date(entry.last_changed).getTime();
+      if (entry.state === "" || !Number.isFinite(value) || Number.isNaN(timestamp)) continue;
+      const prev = points[points.length - 1];
+      if (prev && prev.value === value) continue;
+      points.push({ timestamp, value });
+    }
+    out.set(entityId, points);
+  }
+  return out;
+}

@@ -29,7 +29,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
   <img src="https://raw.githubusercontent.com/MichalZaniewicz/ha-librus-synergia-cards/main/docs/trailer.webp" alt="Librus Synergia Cards trailer: 65 cards, light and dark, English and Polish, the visual editor">
 </p>
 
-71 cards built for one job: showing a child's school life from Librus on a Home Assistant dashboard. Today's lessons and what changed, grades with a report card forecast, attendance, messages, homework, tests and the lucky number. Every card follows your light or dark theme, speaks English or Polish, and is set up in the visual editor, without YAML. With more than one child, each card picks a student, and some show all of them at once.
+75 cards built for one job: showing a child's school life from Librus on a Home Assistant dashboard. Today's lessons and what changed, grades with a report card forecast, attendance, messages, homework, tests and the lucky number. Every card follows your light or dark theme, speaks English or Polish, and is set up in the visual editor, without YAML. With more than one child, each card picks a student, and some show all of them at once.
 
 The cards read the entities of the [Librus Synergia integration](https://github.com/MichalZaniewicz/ha-librus-synergia), so install that first.
 
@@ -61,6 +61,9 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Grade distribution | `custom:librus-grade-distribution-card` | Histogram - how many 6s/5s/4s/... across every subject. With the integration's point grade forecast thresholds (`ha-librus-synergia` 0.12.17+), point grades count too, each in the grade its percentage maps to - on the subject's own scale when it has one (0.12.19+) |
 | Grade profile (radar) | `custom:librus-grades-radar-card` | Every subject's average on one spider/radar chart, so a strong or weak subject stands out at a glance. With the integration's point grade forecast thresholds (`ha-librus-synergia` 0.12.17+), a subject graded in points sits at its forecast grade (percentage in the tooltip). Subjects that shorten to the same label get the word that tells them apart ("Ang" / "Ang zaw") |
 | Grades by category | `custom:librus-grade-category-distribution-card` | A ranked horizontal bar chart of how the year's grades split across categories (Sprawdzian/Kartkówka/Odpowiedź/...), point grades included |
+| Grades month by month | `custom:librus-grades-by-month-card` | One stacked bar per month of the school year: how many 1s to 6s came in, with that month's average above the bar. Every subject, or one picked in the editor |
+| Subject trends | `custom:librus-subject-trends-card` | A small line of every subject's average over the last 30 days (option `days`) with the change, biggest movers first. Comes from the subject sensors' own history, so it needs the recorder |
+| What weighs in the average | `custom:librus-grade-weight-card` | How much each grade category (test, quiz, answer...) weighs in a subject's average - its weight times its grades, as a share - and the average within it. Chips switch subjects or show all together. Needs `ha-librus-synergia` 0.12.36+ (grade weights) |
 | Latest grade | `custom:librus-latest-grade-card` | The most recent grade across all subjects (a point grade too, as "17/20"), with the teacher's comment if any |
 | Behaviour grade | `custom:librus-behaviour-grade-card` | The formal "ocena zachowania" - distinct from the free-text notices below - with a month strip of the school year |
 | Descriptive grades | `custom:librus-descriptive-grades-card` | Non-numeric descriptive assessment, for schools that use it |
@@ -87,6 +90,7 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Next lesson | `custom:librus-next-lesson-tile-card` | A single-row tile with the next (or current) lesson, for denser dashboards |
 | Agenda | `custom:librus-agenda-card` | Upcoming terminarz events, grouped by date |
 | Next exam | `custom:librus-exam-countdown-card` | A countdown to the next test/exam - uses the integration's `next_exam` sensor when present, otherwise scans the Agenda feed for "[Sprawdzian]"-tagged items |
+| Tests this semester | `custom:librus-exam-weeks-card` | Tests and quizzes week by week across the semester, from the Agenda: past weeks solid, the rest faded, this week outlined, a dashed line at a heavy week (3+), and how many are left |
 | Free days | `custom:librus-free-days-card` | A countdown to the next school break, plus a short list of the next few. During a break it says it's on and until when |
 | Free days tile | `custom:librus-free-days-tile-card` | Compact single-row tile - days until the next break, or the break that's on now and its last day |
 | Week timetable | `custom:librus-week-timetable-card` | The whole week's lesson grid at a glance, with the lesson happening right now highlighted; substitutions, room changes and moved lessons are outlined (details in the tooltip). Arrows move to earlier and later weeks (up to 12 either way). Days off are labelled under the date and their lessons hatched - a whole day or only the lessons it frees ("Rekolekcje · l. 3–4"). Activities outside the timetable (integration 0.12.34+) get their own row under the lessons, with their start time. Layout `timeline` shows the lessons on a time axis instead, with tests and trips above each day, the activities outside the timetable at their own times, and a "now" line. Options: layout, show Saturday, show lesson hours (requires the school's `bell_schedule` attribute) |
@@ -185,7 +189,7 @@ card supports:
 | Names | First lesson | The name shown for each child (default: the first name from the device name) |
 | `hide_room` / `only_tomorrow` | First lesson | Hide the classroom; show only the next school day (e.g. for an evening dashboard) |
 | `title` | every card with a header (all except the tiles and the Student card) | Header title override |
-| `max_items` | Grade log, Subject grades, Recent activity, Announcements, Messages, Homework checklist, School trips, Agenda, Behaviour notices, Homework assignments, Teachers, Substitutions, Descriptive grades, Hero History | Row cap (School trips: default 4; no cap by default where there was none) |
+| `max_items` | Grade log, Subject grades, Recent activity, Announcements, Messages, Homework checklist, School trips, Agenda, Behaviour notices, Homework assignments, Teachers, Substitutions, Descriptive grades, Hero History, Subject trends | Row cap (School trips: default 4; no cap by default where there was none) |
 | `max_items` | Next exam, Free days | How many later exams / free days to list under the next one (default 4, `0` hides them) |
 | `list_height` | the cards with a scrolling list (Grade log, Agenda, Messages, Announcements, Grades, ...) | Height limit of the list in px (default 320; Grades 220) |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
@@ -196,18 +200,19 @@ card supports:
 | `hide_changes` | Month calendar | Leave out cancelled lessons and substitutions - off by default |
 | `hide_absences` | Month calendar | Leave out the absence bars - off by default |
 | `days` | Grade trend | How much history to chart (default 60) |
+| `days` | Subject trends | How far back to compare (default 30) |
 | `days` | Grade log, Subject grades | Only include grades from the last N days (unset = no limit) |
 | `days` | What was taught | Number of school days shown (default 3, 1-10) |
 | `category_filter` | Grade log, Subject grades | Comma-separated category keywords - keeps a grade if its category matches any, e.g. `sprawdzian, kartkówka` |
 | `sort` | Grade log, Subject grades, Announcements, Messages, Recent activity, Behaviour notices, Descriptive grades | `newest` (default) or `oldest` first |
-| `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator | Pick one subject (Grade trend / Grade goal default to the overall average) |
+| `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator, Grades month by month, What weighs in the average | Pick one subject (Grade trend / Grade goal default to the overall average; Grades month by month to every subject; What weighs in the average to all subjects, switchable on the card) |
 | `target` | Grade goal | Target average, e.g. `4.5` |
 | `mode` | Hero, Hero History | `archetype` or `hero` - which set of names and descriptions to use |
 | `mailbox` | Messages | The mailbox shown first: `inbox` / `substitutions` / `alerts` / `justifications` / `outbox` / `archive` |
 | `show_saturday` | Weekly timetable, Lesson-time split | Include Saturday (6-day week) - off by default |
 | `show_hours` | Weekly timetable | Bell times under each lesson number - off by default; needs the School sensor's `bell_schedule` |
 | `layout` | Weekly timetable | `grid` (rows of lesson numbers, default) or `timeline` (lessons on a time axis, with tests and trips above each day and a "now" line) |
-| `semester` | Semester in numbers | Which semester: `auto` (the current one, the default), `1` or `2` |
+| `semester` | Semester in numbers, Tests this semester | Which semester: `auto` (the current one, the default), `1` or `2` |
 | `hide_teacher` | Grade log, Descriptive grades | Don't show who gave each grade - off by default |
 | `hide_comments` | Grade log, Subject grades, Descriptive grades, Latest grade, Behaviour grade | Don't show teachers' comments - off by default. A text grade's own text and the behaviour grade's description stay |
 | `hide_room` | Today's lessons, Today's schedule, Tomorrow | Don't show the classroom - off by default |

@@ -317,6 +317,17 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   ],
   "custom:librus-grade-simulator-card": [{ kind: "subject" }],
   "custom:librus-semester-comparison-card": [TITLE_FIELD],
+  "custom:librus-grades-by-month-card": [TITLE_FIELD, { kind: "subject" }],
+  "custom:librus-subject-trends-card": [
+    TITLE_FIELD,
+    { kind: "number", key: "days", label: "editor.days_back", min: 7, max: 180 },
+    MAX_ITEMS_FIELD(30),
+  ],
+  "custom:librus-exam-weeks-card": [
+    TITLE_FIELD,
+    { kind: "select", key: "semester", label: "editor.semester", options: SEMESTER_OPTIONS },
+  ],
+  "custom:librus-grade-weight-card": [TITLE_FIELD, { kind: "subject" }],
   "custom:librus-semester-card": [
     TITLE_FIELD,
     { kind: "select", key: "semester", label: "editor.semester", options: SEMESTER_OPTIONS },
