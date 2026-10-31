@@ -174,6 +174,7 @@ export const en = {
   "card.grade_weight.grades": "grades: {count}",
   "card.grade_weight.top": "{category} is",
   "card.grade_weight.of_average": "of the average",
+  "card.grade_weight.subject": "Subject",
   "card.grade_weight.weakest": "Weakest",
   "card.grade_weight.nothing_counts": "No grade here counts towards the average",
   "card.grade_weight.requires": "Needs Librus Synergia integration 0.12.36 or newer (grade weights)",

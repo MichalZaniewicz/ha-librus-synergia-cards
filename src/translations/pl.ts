@@ -175,6 +175,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.grade_weight.grades": "ocen: {count}",
   "card.grade_weight.top": "{category} to",
   "card.grade_weight.of_average": "średniej",
+  "card.grade_weight.subject": "Przedmiot",
   "card.grade_weight.weakest": "Najsłabiej",
   "card.grade_weight.nothing_counts": "Żadna ocena tutaj nie liczy się do średniej",
   "card.grade_weight.requires": "Wymaga integracji Librus Synergia 0.12.36 lub nowszej (wagi ocen)",

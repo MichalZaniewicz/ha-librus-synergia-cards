@@ -63,7 +63,7 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Grades by category | `custom:librus-grade-category-distribution-card` | A ranked horizontal bar chart of how the year's grades split across categories (Sprawdzian/Kartkówka/Odpowiedź/...), point grades included |
 | Grades month by month | `custom:librus-grades-by-month-card` | One stacked bar per month of the school year: how many 1s to 6s came in, with that month's average above the bar. Every subject, or one picked in the editor |
 | Subject trends | `custom:librus-subject-trends-card` | A small line of every subject's average over the last 30 days (option `days`) with the change, biggest movers first. Comes from the subject sensors' own history, so it needs the recorder |
-| What weighs in the average | `custom:librus-grade-weight-card` | How much each grade category (test, quiz, answer...) weighs in a subject's average - its weight times its grades, as a share - and the average within it. Chips switch subjects or show all together. Needs `ha-librus-synergia` 0.12.36+ (grade weights) |
+| What weighs in the average | `custom:librus-grade-weight-card` | How much each grade category (test, quiz, answer...) weighs in a subject's average - its weight times its grades, as a share - and the average within it. A drop-down on the card switches subjects or shows all together. Needs `ha-librus-synergia` 0.12.36+ (grade weights) |
 | Latest grade | `custom:librus-latest-grade-card` | The most recent grade across all subjects (a point grade too, as "17/20"), with the teacher's comment if any |
 | Behaviour grade | `custom:librus-behaviour-grade-card` | The formal "ocena zachowania" - distinct from the free-text notices below - with a month strip of the school year |
 | Descriptive grades | `custom:librus-descriptive-grades-card` | Non-numeric descriptive assessment, for schools that use it |
@@ -205,7 +205,7 @@ card supports:
 | `days` | What was taught | Number of school days shown (default 3, 1-10) |
 | `category_filter` | Grade log, Subject grades | Comma-separated category keywords - keeps a grade if its category matches any, e.g. `sprawdzian, kartkówka` |
 | `sort` | Grade log, Subject grades, Announcements, Messages, Recent activity, Behaviour notices, Descriptive grades | `newest` (default) or `oldest` first |
-| `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator, Grades month by month, What weighs in the average | Pick one subject (Grade trend / Grade goal default to the overall average; Grades month by month to every subject; What weighs in the average to all subjects, switchable on the card) |
+| `subject_id` | Subject grades, Grade trend, Grade goal, Grade simulator, Grades month by month, What weighs in the average | Pick one subject (Grade trend / Grade goal default to the overall average; Grades month by month to every subject; What weighs in the average to all subjects, switchable in the card's drop-down) |
 | `target` | Grade goal | Target average, e.g. `4.5` |
 | `mode` | Hero, Hero History | `archetype` or `hero` - which set of names and descriptions to use |
 | `mailbox` | Messages | The mailbox shown first: `inbox` / `substitutions` / `alerts` / `justifications` / `outbox` / `archive` |

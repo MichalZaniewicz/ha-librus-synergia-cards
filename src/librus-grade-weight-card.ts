@@ -7,7 +7,6 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { formatNumber } from "./utils/format";
-import { activateOnKey } from "./utils/render-helpers";
 import { AverageSum, averageTerm, gradeColor, isWeighted, type WeightedGradeEntry } from "./utils/grade-math";
 
 const PALETTE = Array.from({ length: 16 }, (_, i) => `var(--lc-chart-${i + 1})`);
@@ -27,9 +26,9 @@ interface CategoryRow {
 /**
  * What each grade category (test, quiz, answer...) weighs in a subject's
  * average - its weight times its grades, as a share of the whole - and the
- * average within it (approved mockup, card 5). Chips switch between the
- * subjects with grades and all of them together; the editor's subject is
- * the one shown first. Needs the `weight` on each grade (integration
+ * average within it (approved mockup, card 5). A drop-down switches between
+ * the subjects with grades and all of them together; the editor's subject
+ * is the one shown first. Needs the `weight` on each grade (integration
  * 0.12.36+); in the arithmetic average mode every grade weighs the same.
  */
 @customElement("librus-grade-weight-card")
@@ -101,17 +100,10 @@ export class LibrusGradeWeightCard extends LibrusBaseCard {
       .filter((r) => r.average !== undefined && r.share >= 10)
       .sort((a, b) => a.average! - b.average!)[0];
 
-    const chip = (value: string, label: string) => html`
-      <span
-        class="pick ${picked === value ? "on" : ""}"
-        role="button"
-        tabindex="0"
-        aria-pressed=${picked === value ? "true" : "false"}
-        @click=${() => (this._picked = value)}
-        @keydown=${activateOnKey(() => (this._picked = value))}
-        >${label}</span
-      >
-    `;
+    const averageOf = (st: { state: string } | undefined) => {
+      const v = Number(st?.state);
+      return st && st.state !== "" && Number.isFinite(v) ? ` · ${two(v)}` : "";
+    };
 
     return html`
       <ha-card class="static">
@@ -123,10 +115,22 @@ export class LibrusGradeWeightCard extends LibrusBaseCard {
           </div>
         </div>
         ${subjects.length > 1
-          ? html`<div class="picker">
-              ${chip(ALL, t(hass, "card.grade_weight.all"))}
-              ${subjects.map((s) => chip(String(s.subjectId), s.subject))}
-            </div>`
+          ? html`<label class="picker">
+              <select
+                aria-label=${t(hass, "card.grade_weight.subject")}
+                .value=${picked}
+                @change=${(ev: Event) => (this._picked = (ev.target as HTMLSelectElement).value)}
+              >
+                <option value=${ALL} ?selected=${picked === ALL}>${t(hass, "card.grade_weight.all_subjects")}</option>
+                ${subjects.map(
+                  (s) =>
+                    html`<option value=${String(s.subjectId)} ?selected=${picked === String(s.subjectId)}>
+                      ${s.subject}${averageOf(s.state)}
+                    </option>`
+                )}
+              </select>
+              <ha-icon icon="mdi:chevron-down"></ha-icon>
+            </label>`
           : nothing}
         ${total > 0
           ? html`
@@ -202,27 +206,42 @@ export class LibrusGradeWeightCard extends LibrusBaseCard {
     librusTokens,
     librusSharedStyles,
     css`
+      /* A native select: on a phone it opens the system picker, which beats
+         a sideways-scrolling row of chips (found live). */
       .picker {
-        display: flex;
-        gap: 5px;
-        overflow-x: auto;
-        scrollbar-width: thin;
-        padding-bottom: 2px;
+        position: relative;
+        display: block;
       }
-      .pick {
-        flex: none;
-        font-size: 0.7rem;
+      .picker select {
+        width: 100%;
+        appearance: none;
+        -webkit-appearance: none;
+        font: inherit;
+        font-size: 0.8rem;
         font-weight: 600;
-        padding: 3px 10px;
-        border-radius: 999px;
+        color: var(--primary-text-color);
         background: var(--lc-chip-bg);
-        color: var(--secondary-text-color);
+        border: 1px solid var(--divider-color);
+        border-radius: 10px;
+        padding: 8px 34px 8px 12px;
         cursor: pointer;
-        white-space: nowrap;
+        outline: none;
       }
-      .pick.on {
-        background: var(--lc-brand-bg);
-        color: var(--lc-brand);
+      .picker select:focus-visible {
+        border-color: var(--lc-brand);
+      }
+      .picker option {
+        background: var(--card-background-color, var(--ha-card-background, #fff));
+        color: var(--primary-text-color);
+      }
+      .picker ha-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        --mdc-icon-size: 18px;
+        color: var(--secondary-text-color);
+        pointer-events: none;
       }
       .stacked {
         display: flex;
