@@ -1,6 +1,6 @@
 import type { GradeLogEntry } from "./grade-filters";
 
-/** A `grades` entry with its category's weight (integration 0.12.36+). */
+/** A `grades` entry with its category's weight (integration 0.12.37+). */
 export interface WeightedGradeEntry extends GradeLogEntry {
   weight?: number | null;
 }

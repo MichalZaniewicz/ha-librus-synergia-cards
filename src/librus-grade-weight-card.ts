@@ -29,7 +29,7 @@ interface CategoryRow {
  * average within it (approved mockup, card 5). A drop-down switches between
  * the subjects with grades and all of them together; the editor's subject
  * is the one shown first. Needs the `weight` on each grade (integration
- * 0.12.36+); in the arithmetic average mode every grade weighs the same.
+ * 0.12.37+); in the arithmetic average mode every grade weighs the same.
  */
 @customElement("librus-grade-weight-card")
 export class LibrusGradeWeightCard extends LibrusBaseCard {

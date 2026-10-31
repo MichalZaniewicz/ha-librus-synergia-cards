@@ -150,7 +150,7 @@ export interface LessonInfo {
   /** An activity outside the regular timetable, not a lesson. */
   extra: boolean;
   /** A test in the Agenda for this lesson ("Sprawdzian: ..." / "Kartkówka: ..."
-   * description line, integration 0.12.36+): the kind and the Agenda text. */
+   * description line, integration 0.12.37+): the kind and the Agenda text. */
   exam?: { kind: "test" | "quiz"; text?: string };
 }
 

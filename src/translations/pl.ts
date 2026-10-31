@@ -178,7 +178,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.grade_weight.subject": "Przedmiot",
   "card.grade_weight.weakest": "Najsłabiej",
   "card.grade_weight.nothing_counts": "Żadna ocena tutaj nie liczy się do średniej",
-  "card.grade_weight.requires": "Wymaga integracji Librus Synergia 0.12.36 lub nowszej (wagi ocen)",
+  "card.grade_weight.requires": "Wymaga integracji Librus Synergia 0.12.37 lub nowszej (wagi ocen)",
 
   "card.subject_time.title": "Podział czasu lekcji",
   "card.subject_time.subtitle": "Lekcje w tygodniu, wg przedmiotu",

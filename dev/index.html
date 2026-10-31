@@ -734,7 +734,7 @@
         { value: "4+", category: "Kartkówka", weight: 2, date: iso(new Date(today.getTime() - 9 * 86400000)), comments: [] },
         { value: "4", category: "Odpowiedź", weight: 2, date: iso(new Date(today.getTime() - 15 * 86400000)), comments: [] },
       ];
-      // Older grades (September-October) with weights (integration 0.12.36+),
+      // Older grades (September-October) with weights (integration 0.12.37+),
       // varied by subject - the month-by-month and weight cards need a year.
       const OLDER = [
         [24, ["6", "5", "3", "4-", "5+", "2"], "Aktywność", 1],
@@ -750,7 +750,7 @@
         grades[1] = { ...grades[1], value: "4", improves: "2", improved: false };
         grades.push({ value: "2", category: "Kartkówka", weight: 2, date: iso(new Date(today.getTime() - 20 * 86400000)), comments: [], improves: null, improved: true });
       }
-      // A grade that doesn't count towards the average (integration 0.12.36+).
+      // A grade that doesn't count towards the average (integration 0.12.37+).
       if (s.id === 1) grades[2] = { ...grades[2], counts_to_average: false };
       // Fizyka heads for a 1 so the forecast's "at risk" state shows.
       const avg = s.id === 9 ? 1.62 : 4 + (s.id % 7) * 0.28;
@@ -965,7 +965,7 @@
           summary: LESSON_SUBJECTS[(i + first + day.getDay()) % LESSON_SUBJECTS.length],
           location: `sala ${10 + i}`, description: "Nauczyciel " + String.fromCharCode(65 + i)
             // Wednesday: a test on the first lesson, a short one on the
-            // second (integration 0.12.36+).
+            // second (integration 0.12.37+).
             + (day.getDay() === 3 && i === 0 ? "\nSprawdzian: Dział 3 - ułamki dziesiętne" : "")
             + (day.getDay() === 3 && i === 1 ? "\nKartkówka: Mięśnie" : ""),
         };
@@ -997,7 +997,7 @@
       location: `sala ${10 + i}`,
       description: "Nauczyciel " + String.fromCharCode(65 + i)
         + (i === 1 ? `\nZmiana sali: ${4 + i} → ${10 + i}` : i === 3 ? "\nZastępstwo za: Chemia, Nauczyciel X" : "")
-        // A test from the Agenda on the first lesson (integration 0.12.36+).
+        // A test from the Agenda on the first lesson (integration 0.12.37+).
         + (i === 0 ? "\nSprawdzian: Dział 3 - ułamki dziesiętne" : ""),
     }));
     const weekdayEventsExToday = weekdayEvents.filter(

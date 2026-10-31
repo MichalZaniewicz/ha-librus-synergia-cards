@@ -21,7 +21,7 @@ export interface GradeLogEntry {
   /** True for an entry built from the Descriptive grades sensor (see `descriptiveGradeEntries`). */
   descriptive?: boolean;
   /** False for a grade that doesn't count towards the average (its category's
-   * "Licz do śr.", integration 0.12.36+ on ordinary grades). */
+   * "Licz do śr.", integration 0.12.37+ on ordinary grades). */
   counts_to_average?: boolean | null;
 }
 
