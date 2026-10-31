@@ -214,6 +214,7 @@ export const en = {
 
   "card.grade_log.title": "Grade log",
   "label.grade_improves": "corrects {value}",
+  "label.grade_not_counted": "not in the average",
   "card.grade_log.subtitle": "All subjects",
   "card.grade_log.empty_filtered": "No grades match this filter",
 
@@ -437,6 +438,8 @@ export const en = {
   "label.lesson_cancelled": "cancelled",
   "label.lesson_substitution": "substitution",
   "label.lesson_moved": "moved",
+  "label.lesson_test": "test",
+  "label.lesson_quiz": "quiz",
   "label.lesson_room_change": "room {from} → {to}",
   "label.lesson_room_changed": "room changed",
   "label.lesson_extra": "extra lesson",

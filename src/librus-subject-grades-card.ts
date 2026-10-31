@@ -7,7 +7,7 @@ import { formatShortDate, formatNumber } from "./utils/format";
 import { t } from "./utils/localize";
 import type { LibrusCardConfig } from "./utils/types";
 import { librusCardEditor } from "./utils/card-editor";
-import { filterAndSortGrades, pointGradeEntries, pointTone, textGradeEntries, type GradeLogEntry } from "./utils/grade-filters";
+import { filterAndSortGrades, notCounted, pointGradeEntries, pointTone, textGradeEntries, type GradeLogEntry } from "./utils/grade-filters";
 import { UNAVAILABLE } from "./utils/entities";
 
 /**
@@ -89,16 +89,16 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
           ${shown.map(
             (g) => html`
               <div class="list-item">
-                <div class="grade-chip ${g.improved ? "improved" : ""} ${g.points ? `points ${pointTone(g.percentage)}` : ""}">
+                <div class="grade-chip ${g.improved ? "improved" : ""} ${notCounted(g) ? "nocount" : ""} ${g.points ? `points ${pointTone(g.percentage)}` : ""}">
                   ${g.value}${g.points && g.percentage !== null && g.percentage !== undefined
                     ? html`<small>${Math.round(g.percentage)}%</small>`
-                    : nothing}
+                    : nothing}${notCounted(g) ? html`<sup>*</sup>` : nothing}
                 </div>
                 <div class="body">
                   <div class="row1">
                     <span><span class="cat-label">${g.category ?? ""}</span>${g.improves
                       ? html` · <span class="fix-label">${t(hass, "label.grade_improves", { value: g.improves })}</span>`
-                      : nothing}</span>
+                      : nothing}${notCounted(g) ? html` · <span class="nocount-label">${t(hass, "label.grade_not_counted")}</span>` : nothing}</span>
                     ${g.date ? html`<time>${formatShortDate(g.date, hass.language)}</time>` : nothing}
                   </div>
                   ${g.comments.length ? html`<div class="quote ${g.text ? "" : "comment"}">${g.comments.join(" · ")}</div>` : nothing}

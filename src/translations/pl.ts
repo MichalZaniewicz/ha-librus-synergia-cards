@@ -215,6 +215,7 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.grade_log.title": "Dziennik ocen",
   "label.grade_improves": "poprawa z {value}",
+  "label.grade_not_counted": "nie do średniej",
   "card.grade_log.subtitle": "Wszystkie przedmioty",
   "card.grade_log.empty_filtered": "Brak ocen pasujących do filtra",
 
@@ -438,6 +439,8 @@ export const pl: Record<keyof typeof en, string> = {
   "label.lesson_cancelled": "odwołana",
   "label.lesson_substitution": "zastępstwo",
   "label.lesson_moved": "przeniesiona",
+  "label.lesson_test": "sprawdzian",
+  "label.lesson_quiz": "kartkówka",
   "label.lesson_room_change": "sala {from} → {to}",
   "label.lesson_room_changed": "zmiana sali",
   "label.lesson_extra": "dodatkowa lekcja",

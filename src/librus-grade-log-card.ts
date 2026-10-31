@@ -10,6 +10,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import {
   descriptiveGradeEntries,
   filterAndSortGrades,
+  notCounted,
   pointGradeEntries,
   pointTone,
   textGradeEntries,
@@ -98,14 +99,14 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
           ${filtered.slice(0, max).map(
             (g) => html`
               <div class="list-item">
-                <div class="grade-chip ${g.improved ? "improved" : ""} ${g.points ? `points ${pointTone(g.percentage)}` : ""} ${g.descriptive ? "descriptive" : ""}">
+                <div class="grade-chip ${g.improved ? "improved" : ""} ${notCounted(g) ? "nocount" : ""} ${g.points ? `points ${pointTone(g.percentage)}` : ""} ${g.descriptive ? "descriptive" : ""}">
                   ${g.value}${g.points && g.percentage !== null && g.percentage !== undefined
                     ? html`<small>${Math.round(g.percentage)}%</small>`
-                    : nothing}
+                    : nothing}${notCounted(g) ? html`<sup>*</sup>` : nothing}
                 </div>
                 <div class="body">
                   <div class="row1">
-                    <span>${g.subject}${g.category ? html` · <span class="cat-label">${g.category}</span>` : nothing}${g.improves ? html` · <span class="fix-label">${t(hass, "label.grade_improves", { value: g.improves })}</span>` : nothing}</span>
+                    <span>${g.subject}${g.category ? html` · <span class="cat-label">${g.category}</span>` : nothing}${g.improves ? html` · <span class="fix-label">${t(hass, "label.grade_improves", { value: g.improves })}</span>` : nothing}${notCounted(g) ? html` · <span class="nocount-label">${t(hass, "label.grade_not_counted")}</span>` : nothing}</span>
                     ${g.date ? html`<time>${formatShortDate(g.date, hass.language)}</time>` : nothing}
                   </div>
                   ${g.teacher && !this._config?.hide_teacher ? html`<div class="item-text">${g.teacher}</div>` : nothing}

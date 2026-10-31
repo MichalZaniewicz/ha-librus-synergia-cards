@@ -20,6 +20,14 @@ export interface GradeLogEntry {
   teacher?: string | null;
   /** True for an entry built from the Descriptive grades sensor (see `descriptiveGradeEntries`). */
   descriptive?: boolean;
+  /** False for a grade that doesn't count towards the average (its category's
+   * "Licz do śr.", integration 0.12.36+ on ordinary grades). */
+  counts_to_average?: boolean | null;
+}
+
+/** True only when Librus says the grade doesn't count (unknown = counts). */
+export function notCounted(g: GradeLogEntry): boolean {
+  return g.counts_to_average === false;
 }
 
 /** One entry of the Descriptive grades sensor's `grades` / `recent` attribute. */
@@ -79,6 +87,7 @@ interface PointGradeAttr {
   percentage: number | null;
   category: string | null;
   date: string | null;
+  counts_to_average?: boolean | null;
 }
 
 /**
@@ -96,6 +105,7 @@ export function pointGradeEntries(attributes: Record<string, unknown> | undefine
     comments: [],
     percentage: p.percentage,
     points: true,
+    counts_to_average: p.counts_to_average,
   }));
 }
 

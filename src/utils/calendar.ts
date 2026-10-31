@@ -149,18 +149,32 @@ export interface LessonInfo {
   rooms?: [string, string];
   /** An activity outside the regular timetable, not a lesson. */
   extra: boolean;
+  /** A test in the Agenda for this lesson ("Sprawdzian: ..." / "Kartkówka: ..."
+   * description line, integration 0.12.36+): the kind and the Agenda text. */
+  exam?: { kind: "test" | "quiz"; text?: string };
 }
 
 const SUFFIX_RE = /\s*\((odwołane|zastępstwo|zmiana sali|przeniesiona)\)\s*$/i;
 const ROOM_RE = /^Zmiana sali:\s*(.+?)\s*→\s*(.+)$/;
+const EXAM_RE = /^(Sprawdzian|Kartkówka)(?::\s*(.*))?$/;
 
 export function lessonInfo(event: LibrusCalendarEvent): LessonInfo {
   const kind = SUFFIX_RE.exec(event.summary)?.[1]?.toLowerCase();
   const name = event.summary.replace(SUFFIX_RE, "");
   const lines = (event.description ?? "").split("\n").map((l) => l.trim());
-  const details = lines.slice(1).filter(Boolean);
+  // Test lines become `exam` (shown as a tag), not a detail line.
+  const examLines = lines.slice(1).map((l) => EXAM_RE.exec(l)).filter((m): m is RegExpExecArray => Boolean(m));
+  const details = lines.slice(1).filter((l) => l && !EXAM_RE.test(l));
   const roomLine = details.map((l) => ROOM_RE.exec(l)).find(Boolean);
+  const exam = examLines.length
+    ? {
+        // A full test wins over a short one on the same lesson.
+        kind: examLines.some((m) => m[1] === "Sprawdzian") ? ("test" as const) : ("quiz" as const),
+        text: examLines.map((m) => m[2]).filter(Boolean).join(" · ") || undefined,
+      }
+    : undefined;
   return {
+    exam,
     name,
     cancelled: kind === "odwołane",
     substitution: kind === "zastępstwo",

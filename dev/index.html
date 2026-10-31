@@ -739,6 +739,8 @@
         grades[1] = { ...grades[1], value: "4", improves: "2", improved: false };
         grades.push({ value: "2", category: "Kartkówka", date: iso(new Date(today.getTime() - 20 * 86400000)), comments: [], improves: null, improved: true });
       }
+      // A grade that doesn't count towards the average (integration 0.12.36+).
+      if (s.id === 1) grades[2] = { ...grades[2], counts_to_average: false };
       // Fizyka heads for a 1 so the forecast's "at risk" state shows.
       const avg = s.id === 9 ? 1.62 : 4 + (s.id % 7) * 0.28;
       // Grade forecast (backend 0.12.0+), on the default thresholds.
@@ -950,7 +952,9 @@
         return {
           start: start.toISOString(), end: end.toISOString(), allDay: false,
           summary: LESSON_SUBJECTS[(i + first + day.getDay()) % LESSON_SUBJECTS.length],
-          location: `sala ${10 + i}`, description: "Nauczyciel " + String.fromCharCode(65 + i),
+          location: `sala ${10 + i}`, description: "Nauczyciel " + String.fromCharCode(65 + i)
+            // A short test on Wednesday's second lesson (integration 0.12.36+).
+            + (day.getDay() === 3 && i === 1 ? "\nKartkówka: Mięśnie" : ""),
         };
       });
     }
@@ -979,7 +983,9 @@
         + (i === 1 ? " (zmiana sali)" : i === 2 ? " (odwołane)" : i === 3 ? " (zastępstwo)" : i === bellSlots.length - 1 ? " (odwołane)" : ""),
       location: `sala ${10 + i}`,
       description: "Nauczyciel " + String.fromCharCode(65 + i)
-        + (i === 1 ? `\nZmiana sali: ${4 + i} → ${10 + i}` : i === 3 ? "\nZastępstwo za: Chemia, Nauczyciel X" : ""),
+        + (i === 1 ? `\nZmiana sali: ${4 + i} → ${10 + i}` : i === 3 ? "\nZastępstwo za: Chemia, Nauczyciel X" : "")
+        // A test from the Agenda on the first lesson (integration 0.12.36+).
+        + (i === 0 ? "\nSprawdzian: Dział 3 - ułamki dziesiętne" : ""),
     }));
     const weekdayEventsExToday = weekdayEvents.filter(
       (ev) => new Date(ev.start).toDateString() !== today.toDateString()

@@ -324,6 +324,13 @@ export function lessonTag(hass: LibrusHass, info: LessonInfo): TemplateResult | 
     )}</span>`;
   }
   const tags: TemplateResult[] = info.extra ? [extra as TemplateResult] : [];
+  if (info.exam) {
+    tags.push(
+      html`<span class="lesson-tag exam" title=${info.exam.text ?? ""}
+        >${t(hass, info.exam.kind === "test" ? "label.lesson_test" : "label.lesson_quiz")}</span
+      >`
+    );
+  }
   if (info.substitution) {
     tags.push(html`<span class="lesson-tag substitution">${t(hass, "label.lesson_substitution")}</span>`);
   }

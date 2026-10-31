@@ -177,6 +177,21 @@ export const librusSharedStyles = css`
     background: var(--lc-bad-bg);
     color: var(--lc-bad);
   }
+  /* A grade that doesn't count towards the average: dashed and faded,
+     with an asterisk (see notCounted). */
+  .grade-chip.nocount {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--divider-color);
+    color: var(--secondary-text-color);
+  }
+  .grade-chip.nocount sup {
+    font-size: 0.6rem;
+    margin-left: 1px;
+  }
+  .nocount-label {
+    color: var(--secondary-text-color);
+    font-style: italic;
+  }
 
   /* "Librus not responding" strip, inserted after .header by LibrusBaseCard. */
   .lc-outage {
@@ -529,6 +544,11 @@ export const librusSharedStyles = css`
   .lesson-tag.extra {
     background: var(--lc-good-bg);
     color: var(--lc-good);
+  }
+  /* Solid, so it doesn't read as the (pale red) "cancelled" tag. */
+  .lesson-tag.exam {
+    background: var(--lc-bad);
+    color: #fff;
   }
 
   .stat-label {

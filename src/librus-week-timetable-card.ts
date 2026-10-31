@@ -482,9 +482,11 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
             const isToday = dayIndex === todayColumn;
             const current = isToday && slot.some((e, i) => !infos[i].cancelled && isHappeningNow(e, now));
             const next = breakNow && isToday && slot.includes(nextToday!);
-            const tip = this._tip(infos) + (planNote ? ` (${planNote})` : "");
+            const exam = infos.find((i) => i.exam && !i.cancelled)?.exam;
+            const tip =
+              this._tip(infos) + (planNote ? ` (${planNote})` : "") + (exam ? ` – ${this._examTip(exam)}` : "");
             return html`<div
-              class="cell on ${current ? "current" : ""} ${next ? "next" : ""} ${cancelled ? "off" : ""} ${substitution && !cancelled ? "sub" : ""} ${extra && !cancelled ? "extra" : ""}"
+              class="cell on ${current ? "current" : ""} ${next ? "next" : ""} ${cancelled ? "off" : ""} ${substitution && !cancelled ? "sub" : ""} ${extra && !cancelled ? "extra" : ""} ${exam ? "exam" : ""}"
               title=${tip}
             >${abbreviate(firstName)}${parallel ? "+" : ""}</div>`;
           })}
@@ -509,6 +511,13 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
           : nothing}
       </div>
     `;
+  }
+
+  /** "Test: Chapter 5" - the test part of a lesson's tooltip. */
+  private _examTip(exam: NonNullable<ReturnType<typeof lessonInfo>["exam"]>): string {
+    const label = t(this.hass!, exam.kind === "test" ? "label.lesson_test" : "label.lesson_quiz");
+    const word = label.charAt(0).toUpperCase() + label.slice(1);
+    return exam.text ? `${word}: ${exam.text}` : word;
   }
 
   /** "Matematyka (zastępstwo) / Fizyka" - a slot's tooltip. */
@@ -596,11 +605,12 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
                 const current = i === todayColumn && !info.cancelled && isHappeningNow(ev, now);
                 const next = breakNow && i === todayColumn && ev === nextToday;
                 const changed = info.substitution || info.roomChange || info.moved;
+                const exam = info.cancelled ? undefined : info.exam;
                 const [firstName] = info.name.split(" + ");
                 return html`<div
-                  class="tl-lesson ${current ? "current" : ""} ${next ? "next" : ""} ${info.cancelled ? "off" : ""} ${changed && !info.cancelled ? "sub" : ""} ${ev.extra ? "xa" : ""}"
+                  class="tl-lesson ${current ? "current" : ""} ${next ? "next" : ""} ${info.cancelled ? "off" : ""} ${changed && !info.cancelled ? "sub" : ""} ${ev.extra ? "xa" : ""} ${exam ? "exam" : ""}"
                   style="top:${top}px;height:${h}px;left:calc(${width * column}% + 2px);width:calc(${width}% - 4px)"
-                  title=${`${hm(new Date(ev.start))}–${hm(new Date(ev.end))} ${this._tip([info])}${ev.location ? ` · ${ev.location}` : ""}`}
+                  title=${`${hm(new Date(ev.start))}–${hm(new Date(ev.end))} ${this._tip([info])}${ev.location ? ` · ${ev.location}` : ""}${exam ? ` – ${this._examTip(exam)}` : ""}`}
                 >
                   <span class="tl-subj">${abbreviate(firstName)}</span>
                   ${h >= 26
@@ -779,6 +789,24 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
       .cell.extra {
         outline: 2px dashed var(--lc-good);
         outline-offset: -2px;
+      }
+      /* A test in the Agenda for this lesson: a red dot in the corner
+         (the tooltip says which). A timeline block is already absolutely
+         positioned. */
+      .cell.exam {
+        position: relative;
+      }
+      .cell.exam::after,
+      .tl-lesson.exam::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--lc-bad);
+        box-shadow: 0 0 0 1.5px var(--card-background-color, #fff);
       }
       .cell.missing {
         background: transparent;
