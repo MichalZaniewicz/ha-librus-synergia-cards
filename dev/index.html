@@ -953,7 +953,9 @@
           start: start.toISOString(), end: end.toISOString(), allDay: false,
           summary: LESSON_SUBJECTS[(i + first + day.getDay()) % LESSON_SUBJECTS.length],
           location: `sala ${10 + i}`, description: "Nauczyciel " + String.fromCharCode(65 + i)
-            // A short test on Wednesday's second lesson (integration 0.12.36+).
+            // Wednesday: a test on the first lesson, a short one on the
+            // second (integration 0.12.36+).
+            + (day.getDay() === 3 && i === 0 ? "\nSprawdzian: Dział 3 - ułamki dziesiętne" : "")
             + (day.getDay() === 3 && i === 1 ? "\nKartkówka: Mięśnie" : ""),
         };
       });
