@@ -12,8 +12,29 @@ import { t } from "./utils/localize";
 import { heroSubjectStat } from "./utils/forecast";
 
 const SCALE_MAX = 10;
+
+interface SemesterAttendance {
+  total?: number;
+  percentage?: number | null;
+}
+
+/** Attendance % of the current semester (the Attendance sensor's
+ * `by_semester`), else of the whole year (`percentage`). */
+function semesterAttendance(
+  attendance: Record<string, unknown> | undefined,
+  schoolClass: Record<string, unknown> | undefined
+): number | null {
+  const firstEnd = schoolClass?.first_semester_end as string | undefined;
+  const today = new Date();
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const semester = firstEnd && todayIso > firstEnd.slice(0, 10) ? "2" : "1";
+  const bySemester = attendance?.by_semester as Record<string, SemesterAttendance> | undefined;
+  const current = bySemester?.[semester];
+  if (current && (current.total ?? 0) > 0 && typeof current.percentage === "number") return current.percentage;
+  return num(attendance?.percentage);
+}
 const PALETTE = ["1", "2", "3", "4", "5", "7"]; // --lc-chart-N, skipping 6 (a low-contrast neutral)
-const CHART_WIDTH = 260;
+const CHART_WIDTH = 300;
 const CHART_HEIGHT = 240;
 
 /**
@@ -72,7 +93,7 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
   private _renderStatRadar(stats: HeroStat[], hass: LibrusHass): TemplateResult {
     const cx = CHART_WIDTH / 2;
     const cy = CHART_HEIGHT / 2 - 4;
-    const maxR = Math.min(CHART_WIDTH, CHART_HEIGHT) / 2 - 34;
+    const maxR = Math.min(CHART_WIDTH, CHART_HEIGHT) / 2 - 44;
     const n = stats.length;
     const angle = (i: number) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
     const point = (i: number, val: number): [number, number] => {
@@ -104,10 +125,15 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
           `;
         })}
         ${stats.map((s, i) => {
-          const [lx, ly] = point(i, SCALE_MAX * 1.14);
+          // Outside the reach of a full stat's icon badge (r=11 at maxR),
+          // which used to cover the label of a stat near 10 (found live).
           const cosA = Math.cos(angle(i));
+          const sinA = Math.sin(angle(i));
+          const r = maxR + 17;
+          const lx = cx + r * cosA;
+          const ly = cy + r * sinA + (sinA < -0.9 ? -2 : sinA > 0.9 ? 9 : 4);
           const anchor = Math.abs(cosA) < 0.3 ? "middle" : cosA > 0 ? "start" : "end";
-          return svg`<text x=${lx} y=${ly + 3} text-anchor=${anchor} class="radar-label">${t(hass, s.labelKey)}</text>`;
+          return svg`<text x=${lx} y=${ly} text-anchor=${anchor} class="radar-label">${t(hass, s.labelKey)}</text>`;
         })}
       </svg>
     `;
@@ -127,13 +153,14 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
       heroSubjectStat(s.subject, hass.states[s.entityId])
     );
 
-    const attendanceStreak = map.attendance_streak ? hass.states[map.attendance_streak] : undefined;
+    const attendance = map.attendance ? hass.states[map.attendance] : undefined;
+    const schoolClass = map.school_class ? hass.states[map.school_class] : undefined;
     const behaviourGrade = map.behaviour_grade ? hass.states[map.behaviour_grade] : undefined;
     const rank = map.rank ? hass.states[map.rank] : undefined;
 
     const stats = computeHeroStats({
       subjects,
-      attendanceStreak: num(attendanceStreak?.state),
+      attendancePercent: semesterAttendance(attendance?.attributes, schoolClass?.attributes),
       behaviourShortName:
         behaviourGrade && !["unknown", "unavailable"].includes(behaviourGrade.state) ? behaviourGrade.state : null,
       rankTier: rank && !["unknown", "unavailable"].includes(rank.state) ? rank.state : null,

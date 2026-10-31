@@ -24,6 +24,9 @@ const BEHAVIOUR_TIER_VALUE: Record<string, number> = {
   ng: 0, // naganne
 };
 
+/** Attendance % that counts as zero perseverance. */
+const ATTENDANCE_FLOOR = 80;
+
 const RANK_TIER_VALUE: Record<string, number> = {
   diamond: 10,
   gold: 7.5,
@@ -33,7 +36,8 @@ const RANK_TIER_VALUE: Record<string, number> = {
 
 export interface HeroStatsInputs {
   subjects: SubjectStat[];
-  attendanceStreak: number | null;
+  /** Attendance % of the current semester (0-100). */
+  attendancePercent: number | null;
   behaviourShortName: string | null;
   rankTier: string | null;
 }
@@ -50,8 +54,12 @@ function clusterStat(subjects: SubjectStat[], clusterId: string): number {
  * same numbers. See `hero-archetypes.ts` for the sibling "one overall
  * result" computation this shares the subject-cluster logic with. */
 export function computeHeroStats(inputs: HeroStatsInputs): HeroStat[] {
+  // Perseverance = attendance: 80% or less is 0, 100% is 10. A single
+  // excused absence used to zero a "days in a row" streak (found live).
   const attendanceStat =
-    inputs.attendanceStreak !== null ? Math.round(Math.min(1, inputs.attendanceStreak / 30) * 100) / 10 : 0;
+    inputs.attendancePercent !== null
+      ? Math.round(Math.min(10, Math.max(0, ((inputs.attendancePercent - ATTENDANCE_FLOOR) / (100 - ATTENDANCE_FLOOR)) * 10)) * 10) / 10
+      : 0;
   const behaviourStat = inputs.behaviourShortName
     ? (BEHAVIOUR_TIER_VALUE[inputs.behaviourShortName] ?? 5)
     : 0;
