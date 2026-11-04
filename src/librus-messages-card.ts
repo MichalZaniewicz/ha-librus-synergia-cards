@@ -101,6 +101,9 @@ export class LibrusMessagesCard extends LibrusBaseCard {
   @state() private _sent?: { id?: number; to: string[]; withdrawn?: boolean; withdrawError?: string };
   @state() private _composeOpen = false;
   @state() private _recipients?: MessageRecipient[];
+  /** The student `_recipients` / `_recipientsError` are for. */
+  private _recipientsFor?: string;
+  private _recipientsLoading?: string;
   @state() private _recipientsError?: string;
   @state() private _recipientQuery = "";
   /** The recipient dropdown is open. */
@@ -232,7 +235,7 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     this._confirm = undefined;
     this._sendError = undefined;
     this._sent = undefined;
-    if (!this._recipients) void this._loadRecipients();
+    if (!this._recipients || this._recipientsFor !== this._deviceId()) void this._loadRecipients();
   }
 
   private _closeCompose(): void {
@@ -243,12 +246,22 @@ export class LibrusMessagesCard extends LibrusBaseCard {
 
   private async _loadRecipients(): Promise<void> {
     const deviceId = this._deviceId();
-    if (!this.hass || !deviceId) return;
+    if (!this.hass || !deviceId || this._recipientsLoading === deviceId) return;
+    this._recipientsLoading = deviceId;
+    if (this._recipientsFor !== deviceId) {
+      // Another student's list must not be offered while this one loads.
+      this._recipients = undefined;
+      this._composeTo = undefined;
+    }
+    this._recipientsFor = deviceId;
     this._recipientsError = undefined;
     try {
-      this._recipients = await fetchRecipients(this.hass, deviceId);
+      const list = await fetchRecipients(this.hass, deviceId);
+      if (this._recipientsFor === deviceId) this._recipients = list;
     } catch (err) {
-      this._recipientsError = serviceErrorText(err);
+      if (this._recipientsFor === deviceId) this._recipientsError = serviceErrorText(err);
+    } finally {
+      if (this._recipientsLoading === deviceId) this._recipientsLoading = undefined;
     }
   }
 
@@ -386,15 +399,14 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     </div>`;
   }
 
-  private _renderCompose(): TemplateResult {
+  /** The recipient drop-down's groups for a (lower-cased) search text. */
+  private _recipientGroups(all: MessageRecipient[], query: string): { label: string; people: MessageRecipient[] }[] {
     const hass = this.hass!;
-    const all = this._recipients ?? [];
-    const query = this._recipientQuery.trim().toLocaleLowerCase();
     const matches = (r: MessageRecipient) =>
       !query ||
       r.name.toLocaleLowerCase().includes(query) ||
       r.subjects.some((s) => s.toLocaleLowerCase().includes(query));
-    const groups: { label: string; people: MessageRecipient[] }[] = [
+    return [
       { label: t(hass, "card.messages.group_tutor"), people: all.filter((r) => r.group === "tutors") },
       {
         label: t(hass, "card.messages.group_teachers"),
@@ -411,6 +423,19 @@ export class LibrusMessagesCard extends LibrusBaseCard {
     ]
       .map((g) => ({ ...g, people: g.people.filter(matches) }))
       .filter((g) => g.people.length);
+  }
+
+  private _renderCompose(): TemplateResult {
+    const hass = this.hass!;
+    // The card's student changed (`device_id`) since the list was loaded.
+    if (this._recipientsFor !== this._deviceId()) queueMicrotask(() => void this._loadRecipients());
+    const all = this._recipients ?? [];
+    const query = this._recipientQuery.trim().toLocaleLowerCase();
+    // Filtered and sorted once per list + search text - not again for every
+    // keystroke in the topic or message box.
+    const groups = this._memo("recipientGroups", [all, query, hass.language], () =>
+      this._recipientGroups(all, query)
+    );
     const chosen = all.find((r) => r.account_id === this._composeTo);
     const confirming = this._confirm === "compose";
     const ready = !!chosen && !!this._composeTopic.trim() && !!this._composeText.trim();

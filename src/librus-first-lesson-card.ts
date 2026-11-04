@@ -9,6 +9,7 @@ import { findLibrusDeviceIds, mapByTranslationKey } from "./utils/entities";
 import { formatTime, formatDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
+import { PerChildFetch } from "./utils/per-child-fetch";
 
 const AVATAR_COLORS = [
   "var(--lc-chart-1)",
@@ -93,8 +94,10 @@ export function studentName(hass: LibrusHass, deviceId: string, override?: strin
 export class LibrusFirstLessonCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   protected _watchAllDevices = true;
-  @state() private _events = new Map<string, LibrusCalendarEvent[] | undefined>();
-  private _fetchedFor?: string;
+  /** Per student: the day the lessons were fetched on, and the lessons
+   * (undefined: no timetable calendar, or the fetch failed). */
+  @state() private _events = new Map<string, { day: string; events?: LibrusCalendarEvent[] }>();
+  private _fetches = new PerChildFetch();
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -138,37 +141,43 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
     const hass = this.hass;
-    const ids = this._deviceIds();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const end = nextSchoolDay(today);
     end.setDate(end.getDate() + 1);
-    const range = `${ids.join(",")}:${isoDate(today)}`;
-    const cacheKey = `${range}:${this._dataStamp(true)}`;
-    if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
-    this._fetchedFor = cacheKey;
-
-    const generation = this._beginFetch();
-    let failed = false;
-    const results = await Promise.all(
-      ids.map(async (id): Promise<[string, LibrusCalendarEvent[] | undefined]> => {
+    const day = isoDate(today);
+    // Each student on its own Last update stamp: a Librus refresh of one
+    // child refetches only that child's lessons.
+    const keyOf = (id: string): string => `${day}:${this._deviceDataStamp(id)}`;
+    const due = this._fetches.due(this._deviceIds(), keyOf, force);
+    await Promise.all(
+      due.map(async (id) => {
+        const generation = this._fetches.begin(id, keyOf(id));
         const entityId = mapByTranslationKey(hass, id).timetable;
-        if (!entityId) return [id, undefined];
-        try {
-          return [id, await fetchCalendarEvents(hass, entityId, today, end)];
-        } catch {
-          failed = true;
-          // A failed refresh keeps that student's lessons from the same day.
-          return [id, this._keepAfterError(range) ? this._events.get(id) : undefined];
+        let events: LibrusCalendarEvent[] | undefined;
+        let failed = false;
+        if (entityId) {
+          try {
+            events = await fetchCalendarEvents(hass, entityId, today, end);
+          } catch {
+            failed = true;
+            // A failed refresh keeps that student's lessons from the same day.
+            const previous = this._events.get(id);
+            events = previous?.day === day ? previous.events : undefined;
+          }
         }
+        if (!this._fetches.isCurrent(id, generation)) return;
+        this._events = new Map(this._events).set(id, { day, events });
+        // Tried again a minute later, so that student's lessons come back.
+        if (failed) this._fetches.failed(id, generation);
       })
     );
-    if (this._isCurrentFetch(generation)) {
-      this._events = new Map(results);
-      this._fetchSucceeded(range);
-      // Tried again a minute later, so that student's lessons come back.
-      if (failed) this._fetchFailed(generation);
-    }
+  }
+
+  /** A student's lessons, if they are for `day` (today's date). */
+  private _eventsOf(id: string, day: string): LibrusCalendarEvent[] | undefined {
+    const loaded = this._events.get(id);
+    return loaded?.day === day ? loaded.events : undefined;
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -184,6 +193,8 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
 
     const now = new Date();
     const todayIso = isoDate(now);
+    // The lessons are fetched per day (today to the next school day).
+    const fetchedDay = todayIso;
     const next = nextSchoolDay(now);
     const nextIso = isoDate(next);
     const tomorrow = new Date(now);
@@ -195,8 +206,8 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
       deviceId: id,
       name: studentName(hass, id, config.names?.[id]),
       color: AVATAR_COLORS[i % AVATAR_COLORS.length],
-      today: summarize(this._events.get(id), todayIso, now),
-      next: summarize(this._events.get(id), nextIso, now),
+      today: summarize(this._eventsOf(id, fetchedDay), todayIso, now),
+      next: summarize(this._eventsOf(id, fetchedDay), nextIso, now),
     }));
 
     if (students.every((s) => (onlyNext || s.today.free) && s.next.free)) {

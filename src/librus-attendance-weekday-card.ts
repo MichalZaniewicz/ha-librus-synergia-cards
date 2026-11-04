@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
+import { formatDate } from "./utils/format";
 
 interface WeekdayBucket {
   excused: number;
@@ -89,7 +90,7 @@ export class LibrusAttendanceWeekdayCard extends LibrusBaseCard {
       sums.late += b.late;
     }
     const dayNames = WEEKDAYS.map((n) =>
-      new Date(2026, 0, n + 4).toLocaleDateString(hass.language, { weekday: "short" })
+      formatDate(new Date(2026, 0, n + 4), hass.language, { weekday: "short" })
     );
 
     return html`

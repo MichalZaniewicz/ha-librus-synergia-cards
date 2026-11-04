@@ -4,7 +4,7 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { formatNumber, numOrNull } from "./utils/format";
+import { formatDate, formatNumber, numOrNull } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 
@@ -149,7 +149,7 @@ export class LibrusSemesterCard extends LibrusBaseCard {
     const maxDigit = Math.max(1, ...Object.values(g.distribution));
     const maxWeekday = Math.max(1, ...a.absences_by_weekday);
     const weekdays = Array.from({ length: 5 }, (_, i) =>
-      new Date(2026, 0, i + 5).toLocaleDateString(lang, { weekday: "short" })
+      formatDate(new Date(2026, 0, i + 5), lang, { weekday: "short" })
     );
 
     const stat = (value: string | number, label: string, tone = "") =>

@@ -7,6 +7,7 @@ import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
 import { t, type TranslationKey } from "./utils/localize";
+import { formatDate } from "./utils/format";
 
 /** Section order as the integration (0.10+) writes them; `school_news` only when opted in. */
 export const AI_SECTIONS = ["grades", "attendance", "behaviour", "next_week", "school_news"] as const;
@@ -144,11 +145,11 @@ export class LibrusAiSummaryCard extends LibrusBaseCard {
   private _subtitle(attrs: Record<string, unknown>, shown?: string): string {
     const hass = this.hass!;
     const parts: string[] = [];
-    const fmt = new Intl.DateTimeFormat(hass.language, { day: "numeric", month: "numeric" });
     const from = typeof attrs.week_from === "string" ? new Date(`${attrs.week_from}T12:00:00`) : undefined;
     const to = typeof attrs.week_to === "string" ? new Date(`${attrs.week_to}T12:00:00`) : undefined;
     if (from && to && !Number.isNaN(from.getTime()) && !Number.isNaN(to.getTime())) {
-      parts.push(`${fmt.format(from)} – ${fmt.format(to)}`);
+      const day = (d: Date): string => formatDate(d, hass.language, { day: "numeric", month: "numeric" });
+      parts.push(`${day(from)} – ${day(to)}`);
     }
     const audience = shown ?? attrs.audience;
     if (audience === "student" || audience === "parent") {
@@ -162,13 +163,13 @@ export class LibrusAiSummaryCard extends LibrusBaseCard {
     if (attrs.paused) return t(hass, "card.ai_summary.paused");
     const next = typeof attrs.next_run === "string" ? new Date(attrs.next_run) : undefined;
     if (!next || Number.isNaN(next.getTime())) return "";
-    const when = new Intl.DateTimeFormat(hass.language, {
+    const when = formatDate(next, hass.language, {
       weekday: "short",
       day: "numeric",
       month: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(next);
+    });
     return t(hass, "card.ai_summary.next_run", { when });
   }
 

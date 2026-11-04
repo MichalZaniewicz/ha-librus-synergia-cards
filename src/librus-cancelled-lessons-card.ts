@@ -6,7 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
-import { formatDate, formatShortDate } from "./utils/format";
+import { formatDate, formatNumber, formatShortDate } from "./utils/format";
 import { monthLabel, schoolMonths } from "./utils/months";
 
 type Counts = { cancelled: number; substitutions: number };
@@ -100,7 +100,7 @@ export class LibrusCancelledLessonsCard extends LibrusBaseCard {
           <div class="tile">
             ${typeof percent === "number"
               ? html`<span class="v"
-                    >${percent.toLocaleString(hass.language, { maximumFractionDigits: 1 })}<small>%</small></span
+                    >${formatNumber(percent, hass.language, { maximumFractionDigits: 1 })}<small>%</small></span
                   ><span class="l">${t(hass, "card.cancelled.share")}</span>`
               : html`<span class="v">${bySubject.length}</span><span class="l">${t(hass, "card.cancelled.subjects")}</span>`}
           </div>

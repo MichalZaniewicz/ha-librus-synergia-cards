@@ -57,7 +57,8 @@ export class LibrusTeachersCard extends LibrusBaseCard {
   @state() private _sending = false;
   @state() private _error?: string;
   @state() private _sentTo?: string;
-  private _recipients?: MessageRecipient[];
+  // Wiadomości recipients, per student (a changed `device_id` refetches).
+  private _recipients?: { deviceId: string; list: MessageRecipient[] };
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -93,9 +94,11 @@ export class LibrusTeachersCard extends LibrusBaseCard {
 
   /** The teacher's Wiadomości account: by name, then by subject among namesakes. */
   private async _accountFor(target: WriteTarget, deviceId: string): Promise<MessageRecipient> {
-    this._recipients ??= await fetchRecipients(this.hass!, deviceId);
+    if (this._recipients?.deviceId !== deviceId) {
+      this._recipients = { deviceId, list: await fetchRecipients(this.hass!, deviceId) };
+    }
     const key = nameKey(target.name);
-    let found = this._recipients.filter((r) => nameKey(r.name) === key);
+    let found = this._recipients.list.filter((r) => nameKey(r.name) === key);
     if (found.length > 1 && target.subject) {
       const bySubject = found.filter((r) => r.subjects.includes(target.subject!));
       if (bySubject.length) found = bySubject;

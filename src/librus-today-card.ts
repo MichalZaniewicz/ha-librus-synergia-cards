@@ -6,7 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
-import { minutesUntil } from "./utils/format";
+import { formatDate, minutesUntil } from "./utils/format";
 import { t, formatCountdown } from "./utils/localize";
 import { tapAction } from "./utils/actions";
 
@@ -62,7 +62,7 @@ export class LibrusTodayCard extends LibrusBaseCard {
           <div class="icon-badge amber"><ha-icon icon="mdi:white-balance-sunny"></ha-icon></div>
           <div class="title-block">
             <div class="title">${this._config?.title ?? t(hass, "card.today.title")}</div>
-            <div class="subtitle">${new Date().toLocaleDateString(hass.language, { weekday: "long", day: "numeric", month: "long" })}</div>
+            <div class="subtitle">${formatDate(new Date(), hass.language, { weekday: "long", day: "numeric", month: "long" })}</div>
           </div>
         </div>
         <div class="stats">

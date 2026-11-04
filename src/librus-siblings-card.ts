@@ -20,10 +20,13 @@ import { formatDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { studentName } from "./librus-first-lesson-card";
+import { PerChildFetch } from "./utils/per-child-fetch";
 
 const COLORS = ["var(--lc-chart-1)", "var(--lc-chart-2)", "var(--lc-chart-3)", "var(--lc-chart-7)", "var(--lc-chart-8)", "var(--lc-chart-10)"];
 
 interface ChildWeek {
+  /** Monday ("YYYY-MM-DD") of the week the lessons are for. */
+  week: string;
   timetable?: LibrusCalendarEvent[];
   free: LibrusCalendarEvent[];
 }
@@ -58,7 +61,7 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
   @state() private _weeks = new Map<string, ChildWeek>();
   /** The column picked in the tabs (0 = Monday); unset = today / Monday. */
   @state() private _day?: number;
-  private _fetchedFor?: string;
+  private _fetches = new PerChildFetch();
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -99,20 +102,19 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
     const hass = this.hass;
-    const ids = this._deviceIds();
     const monday = mondayOfSchoolWeek(new Date());
     const end = new Date(monday);
     end.setDate(end.getDate() + 5);
-    const range = `${ids.join(",")}:${isoDate(monday)}`;
-    const cacheKey = `${range}:${this._dataStamp(true)}`;
-    if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
-    this._fetchedFor = cacheKey;
-
-    const generation = this._beginFetch();
-    let failed = false;
-    const results = await Promise.all(
-      ids.map(async (id): Promise<[string, ChildWeek]> => {
+    const week = isoDate(monday);
+    // Each student on its own Last update stamp: a Librus refresh of one
+    // child refetches only that child's week.
+    const keyOf = (id: string): string => `${week}:${this._deviceDataStamp(id)}`;
+    const due = this._fetches.due(this._deviceIds(), keyOf, force);
+    await Promise.all(
+      due.map(async (id) => {
+        const generation = this._fetches.begin(id, keyOf(id));
         const map = mapByTranslationKey(hass, id);
+        let failed = false;
         const load = async (entityId?: string): Promise<LibrusCalendarEvent[] | undefined> => {
           if (!entityId) return [];
           try {
@@ -123,22 +125,20 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
           }
         };
         const [timetable, free] = await Promise.all([load(map.timetable), load(map.free_days)]);
+        if (!this._fetches.isCurrent(id, generation)) return;
         // A failed refresh keeps that student's week from before.
-        const previous = this._keepAfterError(range) ? this._weeks.get(id) : undefined;
-        return [
-          id,
-          {
-            timetable: map.timetable ? (timetable ?? previous?.timetable) : undefined,
-            free: free ?? previous?.free ?? [],
-          },
-        ];
+        const previous = this._weeks.get(id);
+        const kept = previous?.week === week ? previous : undefined;
+        const weeks = new Map(this._weeks);
+        weeks.set(id, {
+          week,
+          timetable: map.timetable ? (timetable ?? kept?.timetable) : undefined,
+          free: free ?? kept?.free ?? [],
+        });
+        this._weeks = weeks;
+        if (failed) this._fetches.failed(id, generation);
       })
     );
-    if (this._isCurrentFetch(generation)) {
-      this._weeks = new Map(results);
-      this._fetchSucceeded(range);
-      if (failed) this._fetchFailed(generation);
-    }
   }
 
   protected render(): TemplateResult | typeof nothing {
@@ -163,8 +163,11 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
     const day = this._day ?? Math.max(0, todayIndex);
     const date = isoDate(dates[day]);
 
+    const shownWeek = isoDate(monday);
     const children: ChildDay[] = ids.map((id, i) => {
-      const week = this._weeks.get(id);
+      const loaded = this._weeks.get(id);
+      // Another week's lessons (before the new week has loaded) count as unknown.
+      const week = loaded?.week === shownWeek ? loaded : undefined;
       const base = { name: studentName(hass, id, config.names?.[id]), color: COLORS[i % COLORS.length] };
       if (!week?.timetable) return { ...base, unknown: true };
       const held = week.timetable

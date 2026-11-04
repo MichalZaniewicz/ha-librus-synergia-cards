@@ -142,13 +142,16 @@ export class LibrusDashboardStrategy extends HTMLElement {
       };
     }
 
-    // With one child the cards find the student on their own; with several
-    // each card is told which one.
-    const several = ids.length > 1;
+    // With one Librus device in Home Assistant the cards find the student on
+    // their own; with several each card is told which one - also when
+    // `students` picks only some of them (a card without `device_id` then
+    // can't tell which child it's for). The family view only makes sense
+    // with two or more children shown.
+    const passDeviceId = found.length > 1;
     const views: Record<string, unknown>[] = [];
     const used = new Set<string>(["rodzina"]);
 
-    if (several && config.family_view !== false) {
+    if (ids.length > 1 && config.family_view !== false) {
       views.push({
         title: t.family,
         path: "rodzina",
@@ -174,7 +177,7 @@ export class LibrusDashboardStrategy extends HTMLElement {
       let path = slug(name);
       for (let n = 2; used.has(path); n++) path = `${slug(name)}-${n}`;
       used.add(path);
-      const deviceId = several ? id : undefined;
+      const deviceId = passDeviceId ? id : undefined;
       views.push({
         title: name,
         path,

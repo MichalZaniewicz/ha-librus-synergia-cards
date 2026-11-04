@@ -259,9 +259,13 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     // "Rekolekcje (lekcje 3–4)") is listed but the day isn't shaded as off.
     const partial = new Set<string>();
     for (const ev of this._free) {
+      const isPartial = PARTIAL_FREE_DAY.test(ev.summary);
       for (const day of allDayDates(ev)) {
+        // A whole day off always wins over a partial one on the same date
+        // (whichever comes first in the calendar).
+        if (isPartial && free.has(day) && !partial.has(day)) continue;
         free.set(day, ev.summary);
-        if (PARTIAL_FREE_DAY.test(ev.summary)) partial.add(day);
+        if (isPartial) partial.add(day);
         else partial.delete(day);
       }
     }
@@ -349,7 +353,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const selectedEntries = selected ? (entries.get(selected) ?? []) : [];
     const selectedFree = selected ? free.get(selected) : undefined;
     const selectedLabel = selected
-      ? new Date(`${selected}T12:00:00`).toLocaleDateString(hass.language, { weekday: "long", day: "numeric", month: "long" })
+      ? formatDate(new Date(`${selected}T12:00:00`), hass.language, { weekday: "long", day: "numeric", month: "long" })
       : "";
 
     return html`
@@ -369,8 +373,7 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
           ${[0, 1, 2, 3, 4, 5, 6].map(
             (i) =>
               html`<span class="wd"
-                >${new Date(2026, 0, 5 + i)
-                  .toLocaleDateString(hass.language, { weekday: "short" })
+                >${formatDate(new Date(2026, 0, 5 + i), hass.language, { weekday: "short" })
                   .replace(".", "")
                   .slice(0, 3)}</span
               >`

@@ -58,6 +58,8 @@ export abstract class LibrusBaseCard extends LitElement {
   private _rawHass?: LibrusHass;
   // The last `hass` handed out with the card's own language - see the getter.
   private _languageView?: { raw: LibrusHass; language: string; view: LibrusHass };
+  // The overridden `locale` handed out with it - see the getter.
+  private _localeView?: { raw: NonNullable<LibrusHass["locale"]>; language: string; value: LibrusHass["locale"] };
 
   /**
    * `hass`, as the card sees it. With the `language` option set, a thin
@@ -78,7 +80,16 @@ export abstract class LibrusBaseCard extends LitElement {
     Object.defineProperty(view, "language", { value: language, enumerable: true });
     const locale = raw.locale;
     if (locale) {
-      Object.defineProperty(view, "locale", { value: { ...locale, language }, enumerable: true });
+      // The same overridden object for as long as Home Assistant's own
+      // locale object and the language stay: `raw` is new on every state
+      // change anywhere, and a new locale here made shouldUpdate() render
+      // the card each time.
+      let overridden = this._localeView;
+      if (!overridden || overridden.raw !== locale || overridden.language !== language) {
+        overridden = { raw: locale, language, value: { ...locale, language } };
+        this._localeView = overridden;
+      }
+      Object.defineProperty(view, "locale", { value: overridden.value, enumerable: true });
     }
     this._languageView = { raw, language, view };
     return view;
@@ -290,6 +301,16 @@ export abstract class LibrusBaseCard extends LitElement {
     return this._stampIds()
       .map((id) => hass.states[id]?.state ?? "")
       .join(",");
+  }
+
+  /** `_dataStamp()` for one student: the state of that device's Last update
+   * sensor ("" without one) - for the cards showing every student, which
+   * fetch each one on its own stamp (see utils/per-child-fetch.ts). */
+  protected _deviceDataStamp(deviceId: string): string {
+    const hass = this.hass;
+    if (!hass) return "";
+    const id = registryIndex(hass).keyMaps.get(deviceId)?.last_update;
+    return id ? (hass.states[id]?.state ?? "") : "";
   }
 
   /**

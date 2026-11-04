@@ -9,31 +9,22 @@ import {
   fetchCalendarEvents,
   freeDayLessons,
   freeDayName,
-  hm,
   isHappeningNow,
   hasEnded,
   isoDate,
   mondayOfSchoolWeek,
+  mondayOfWeek,
   type LibrusCalendarEvent,
   lessonInfo,
+  wallDate,
+  wallMinutes,
+  wallMinutesNow,
+  wallTime,
 } from "./utils/calendar";
 import { t } from "./utils/localize";
-import { formatDate, minutesUntil, parseCategory } from "./utils/format";
+import { daysBetween, formatDate, minutesUntil, parseCategory } from "./utils/format";
 import { librusCardEditor } from "./utils/card-editor";
 import { abbreviate } from "./utils/subjects";
-
-function isoWeekday(iso: string): number {
-  const d = new Date(iso);
-  const day = d.getDay(); // 0 = Sunday
-  return day === 0 ? 7 : day;
-}
-
-/** True if `d` falls on a Saturday or Sunday - decides which Monday
- * `mondayOfSchoolWeek` rolls forward to, and which subtitle the card shows. */
-function isWeekend(d: Date): boolean {
-  const weekday = isoWeekday(d.toISOString());
-  return weekday >= 6;
-}
 
 interface BellPeriod {
   lesson_no: number;
@@ -62,19 +53,25 @@ interface FreeDay {
 
 /** Lesson number for an event, from the School sensor's `bell_schedule`:
  * an exact start-time match first, else the period the start falls inside
- * (a lesson that starts a few minutes late). `undefined` if neither. */
+ * (a lesson that starts a few minutes late). `undefined` if neither. Both
+ * times on Home Assistant's clock (wallTime), not the browser's. */
 function lessonNoFor(ev: LibrusCalendarEvent, periods: BellPeriod[]): number | undefined {
-  const start = hm(new Date(ev.start));
+  const start = wallTime(ev.start);
   const exact = periods.find((p) => p.start === start);
   if (exact) return exact.lesson_no;
   return periods.find((p) => p.start <= start && start < p.end)?.lesson_no;
 }
 
-/** Minutes since local midnight. */
-function minutesOf(iso: string): number {
-  const d = new Date(iso);
-  return d.getHours() * 60 + d.getMinutes();
+/** "08:00–08:45" on Home Assistant's clock. */
+function timeRange(ev: LibrusCalendarEvent): string {
+  return `${wallTime(ev.start)}–${wallTime(ev.end)}`;
 }
+
+/** How long the arrows wait before fetching the week they landed on - a
+ * click past several weeks fetches (= asks Librus for) only the last one. */
+const NAV_DEBOUNCE_MS = 300;
+
+const NO_EVENTS: LibrusCalendarEvent[] = [];
 
 /** How far the arrows go - the integration fetches weeks on demand up to
  * 12 weeks either side of this one. */
@@ -124,8 +121,16 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
   @state() private _events: LibrusCalendarEvent[] = [];
   @state() private _free: LibrusCalendarEvent[] = [];
   @state() private _agenda: LibrusCalendarEvent[] = [];
-  /** Weeks before (-) or after (+) the school week the card opens on. */
-  @state() private _offset = 0;
+  /** Monday ("YYYY-MM-DD") of the week picked with the arrows; unset =
+   * the week the card opens on. A date, not a number of weeks: the week the
+   * card opens on moves forward at the weekend, and an offset from it made
+   * the shown week jump by itself. */
+  @state() private _picked?: string;
+  // The arrows' pending fetch (see NAV_DEBOUNCE_MS).
+  private _navTimer?: ReturnType<typeof setTimeout>;
+  // The opening week's Monday at the last render - a tick re-renders when
+  // it moves on.
+  private _renderedBase?: string;
   /** The week the events above belong to (a fetch for another week may still be running). */
   @state() private _loadedWeek?: string;
   private _fetchedFor?: string;
@@ -164,24 +169,62 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     this._every(30 * 60_000, () => void this._fetch(this._forceRefresh()));
     // Only re-renders (no refetch) - moves the "current lesson" highlight
     // along as one lesson ends and the next begins, without waiting for
-    // the next full calendar refresh.
-    this._every(30_000, () => this.requestUpdate());
+    // the next full calendar refresh. Nothing moves on a week without today,
+    // unless the opening week itself has moved on.
+    this._every(30_000, () => {
+      const today = isoDate(new Date());
+      if (this._columnDates().includes(today) || isoDate(this._baseMonday()) !== this._renderedBase) {
+        this.requestUpdate();
+      }
+    });
+  }
+
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this._navTimer !== undefined) clearTimeout(this._navTimer);
+    this._navTimer = undefined;
+  }
+
+  /** Monday of the week the card opens on: this week on a school day; next
+   * week at the weekend - but with Saturday shown, still this week on a
+   * Saturday (its lessons are in it), next week from Sunday. */
+  private _baseMonday(): Date {
+    const now = new Date();
+    if (this._config?.show_saturday && now.getDay() === 6) return mondayOfWeek(now);
+    return mondayOfSchoolWeek(now);
   }
 
   /** Monday of the week shown. */
   private _monday(): Date {
-    const monday = mondayOfSchoolWeek(new Date());
-    monday.setDate(monday.getDate() + 7 * this._offset);
-    return monday;
+    return this._picked ? new Date(`${this._picked}T00:00:00`) : this._baseMonday();
+  }
+
+  /** Weeks before (-) or after (+) the week the card opens on. */
+  private get _offset(): number {
+    return Math.round(daysBetween(this._baseMonday(), this._monday()) / 7);
   }
 
   private _shift(weeks: number): void {
-    this._offset = weeks === 0 ? 0 : Math.max(-MAX_WEEKS, Math.min(MAX_WEEKS, this._offset + weeks));
-    void this._fetch();
+    const base = this._baseMonday();
+    const offset = weeks === 0 ? 0 : Math.max(-MAX_WEEKS, Math.min(MAX_WEEKS, this._offset + weeks));
+    if (offset === 0) {
+      this._picked = undefined;
+    } else {
+      const monday = new Date(base);
+      monday.setDate(monday.getDate() + 7 * offset);
+      this._picked = isoDate(monday);
+    }
+    // Fetch once the clicking stops.
+    if (this._navTimer !== undefined) clearTimeout(this._navTimer);
+    this._navTimer = setTimeout(() => {
+      this._navTimer = undefined;
+      void this._fetch();
+    }, NAV_DEBOUNCE_MS);
   }
 
   private async _fetch(force = false): Promise<void> {
     if (!this.hass || !this._config) return;
+    if (this._navTimer !== undefined) return; // the arrows' own fetch follows
     const resolved = this._resolveEntities();
     if ("error" in resolved) return;
     const { timetable, free_days: freeDays, agenda } = resolved.map;
@@ -222,6 +265,10 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
 
   /** Column date -> the day off on it. */
   private _freeByDate(): Map<string, FreeDay> {
+    return this._memo("freeByDate", [this._free], () => this._buildFreeByDate());
+  }
+
+  private _buildFreeByDate(): Map<string, FreeDay> {
     const result = new Map<string, FreeDay>();
     for (const ev of this._free) {
       const lessons = freeDayLessons(ev.summary);
@@ -246,7 +293,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
 
     const dates = this._columnDates();
     const loaded = this._loadedWeek === dates[0];
-    const events = loaded ? this._events : [];
+    const events = loaded ? this._events : NO_EVENTS;
     const freeByDate = loaded ? this._freeByDate() : new Map<string, FreeDay>();
     const anyFree = dates.some((d) => freeByDate.has(d));
 
@@ -255,17 +302,22 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     }
 
     const dayCount = this._dayCount;
+    this._renderedBase = isoDate(this._baseMonday());
     // Lessons and activities outside the timetable (extra activities and
     // the like) per column: the grid keeps the activities in their own row,
-    // the timeline puts them on the time axis with the lessons.
-    const byDay: LibrusCalendarEvent[][] = Array.from({ length: dayCount }, () => []);
-    const extraByDay: LibrusCalendarEvent[][] = Array.from({ length: dayCount }, () => []);
-    for (const ev of events) {
-      const index = dates.indexOf(isoDate(new Date(ev.start)));
-      if (index >= 0) (ev.extra ? extraByDay : byDay)[index].push(ev);
-    }
-    byDay.forEach((day) => day.sort((a, b) => a.start.localeCompare(b.start)));
-    extraByDay.forEach((day) => day.sort((a, b) => a.start.localeCompare(b.start)));
+    // the timeline puts them on the time axis with the lessons. Rebuilt only
+    // when the events or the week change (not on the 30 s tick).
+    const { byDay, extraByDay } = this._memo("byDay", [events, dates[0], dayCount], () => {
+      const lessons: LibrusCalendarEvent[][] = Array.from({ length: dayCount }, () => []);
+      const extras: LibrusCalendarEvent[][] = Array.from({ length: dayCount }, () => []);
+      for (const ev of events) {
+        const index = dates.indexOf(wallDate(ev.start));
+        if (index >= 0) (ev.extra ? extras : lessons)[index].push(ev);
+      }
+      lessons.forEach((day) => day.sort((a, b) => a.start.localeCompare(b.start)));
+      extras.forEach((day) => day.sort((a, b) => a.start.localeCompare(b.start)));
+      return { byDay: lessons, extraByDay: extras };
+    });
 
     const now = new Date();
     const todayColumn = dates.indexOf(isoDate(now)); // -1 when today isn't shown
@@ -277,8 +329,8 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     const nextToday = todayEvents.find((e) => new Date(e.start) > now);
     const breakNow = !lessonNow && !!nextToday && todayEvents.some((e) => hasEnded(e, now));
 
-    const dayNames = Array.from({ length: dayCount }, (_, i) =>
-      new Date(2026, 0, i + 5).toLocaleDateString(hass.language, { weekday: "short" })
+    const dayNames = this._memo("dayNames", [dayCount, hass.language], () =>
+      Array.from({ length: dayCount }, (_, i) => formatDate(new Date(2026, 0, i + 5), hass.language, { weekday: "short" }))
     );
     const dayHeads = dates.map((date, i) => {
       const free = freeByDate.get(date);
@@ -303,7 +355,8 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
       body = html`<div class="empty-week">${t(hass, "card.week_timetable.empty")}</div>`;
     } else if (this._timeline) {
       body = this._renderTimeline(
-        byDay.map((day, i) => [...day, ...extraByDay[i]]),
+        resolved.map,
+        this._memo("timelineDays", [byDay, extraByDay], () => byDay.map((day, i) => [...day, ...extraByDay[i]])),
         dates,
         dayHeads,
         freeByDate,
@@ -357,7 +410,8 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     if (breakNow && nextToday) {
       return t(hass, "card.week_timetable.break_now", { minutes: minutesUntil(new Date(nextToday.start), now) });
     }
-    return t(hass, isWeekend(now) ? "card.week_timetable.subtitle_upcoming" : "card.week_timetable.subtitle");
+    const upcoming = isoDate(this._baseMonday()) > isoDate(now);
+    return t(hass, upcoming ? "card.week_timetable.subtitle_upcoming" : "card.week_timetable.subtitle");
   }
 
   /** The lesson-number grid (rows = lessons, columns = days). */
@@ -499,10 +553,10 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
                   ${day.map((ev) => {
                     const info = lessonInfo(ev);
                     const current = dayIndex === todayColumn && !info.cancelled && isHappeningNow(ev, now);
-                    const when = `${hm(new Date(ev.start))}–${hm(new Date(ev.end))}`;
+                    const when = timeRange(ev);
                     const tip = `${when} ${info.name}${info.cancelled ? ` (${t(hass, "label.activity_cancelled")})` : ""}${ev.location ? ` · ${ev.location}` : ""}`;
                     return html`<span class="xa ${info.cancelled ? "off" : ""} ${current ? "current" : ""}" title=${tip}
-                      ><span class="xa-time">${hm(new Date(ev.start))}</span> ${abbreviate(info.name)}</span
+                      ><span class="xa-time">${wallTime(ev.start)}</span> ${abbreviate(info.name)}</span
                     >`;
                   })}
                 </div>`
@@ -541,6 +595,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
   /** Lessons as blocks on a time axis, with the Agenda's all-day entries
    * (tests, trips) and days off above them and a "now" line on today. */
   private _renderTimeline(
+    map: Record<string, string>,
     byDay: LibrusCalendarEvent[][],
     dates: string[],
     dayHeads: TemplateResult[],
@@ -554,24 +609,37 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     const dayCount = this._dayCount;
     const timed = byDay.flat();
     // Whole hours around the week's lessons (8:00-15:00 for an empty week).
-    const startMin = timed.length ? Math.floor(Math.min(...timed.map((e) => minutesOf(e.start))) / 60) * 60 : 8 * 60;
+    const startMin = timed.length ? Math.floor(Math.min(...timed.map((e) => wallMinutes(e.start))) / 60) * 60 : 8 * 60;
     const endMin = timed.length
-      ? Math.max(startMin + 60, Math.ceil(Math.max(...timed.map((e) => minutesOf(e.end))) / 60) * 60)
+      ? Math.max(startMin + 60, Math.ceil(Math.max(...timed.map((e) => wallMinutes(e.end))) / 60) * 60)
       : 15 * 60;
+    // A day off for only some lessons ("Rekolekcje (lekcje 3–4)"): those
+    // lessons are hatched, like in the grid. Needs the bell schedule to
+    // know a lesson's number.
+    const school = map.school ? hass.states[map.school] : undefined;
+    const periods = (school?.attributes.bell_schedule as BellPeriod[] | undefined) ?? [];
+    const isFreed = (ev: LibrusCalendarEvent, free: FreeDay | undefined): boolean => {
+      if (!free?.lessons || ev.extra) return false;
+      const no = lessonNoFor(ev, periods);
+      return no !== undefined && no >= free.lessons[0] && no <= free.lessons[1];
+    };
     const height = (endMin - startMin) * PX_PER_MINUTE;
     const y = (min: number): number => (min - startMin) * PX_PER_MINUTE;
     const hours: number[] = [];
     for (let m = startMin; m <= endMin; m += 60) hours.push(m);
 
-    const allDay = dates.map((date) =>
-      this._agenda
-        .filter((ev) => ev.allDay && allDayDates(ev).includes(date))
-        .map((ev) => {
-          const { category, text } = parseCategory(ev.summary);
-          return category ? `${category}: ${text}` : text;
-        })
+    const allDay = this._memo("allDay", [this._agenda, dates[0], dates.length], () =>
+      dates.map((date) =>
+        this._agenda
+          .filter((ev) => ev.allDay && allDayDates(ev).includes(date))
+          .map((ev) => {
+            const { category, text } = parseCategory(ev.summary);
+            return category ? `${category}: ${text}` : text;
+          })
+      )
     );
-    const nowMin = now.getHours() * 60 + now.getMinutes();
+    // On the same clock as the lessons (Home Assistant's).
+    const nowMin = wallMinutesNow(now, timed[0]?.start);
     const nowShown = todayColumn >= 0 && nowMin >= startMin && nowMin <= endMin;
 
     return html`
@@ -599,8 +667,9 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
             ${hours.map((m) => html`<span class="tl-line" style="top:${y(m)}px"></span>`)}
             ${groups.map(({ ev, column, columns }) => {
                 const info = lessonInfo(ev);
-                const top = y(minutesOf(ev.start));
-                const h = Math.max(14, y(minutesOf(ev.end)) - top - 2);
+                const top = y(wallMinutes(ev.start));
+                const h = Math.max(14, y(wallMinutes(ev.end)) - top - 2);
+                const freed = isFreed(ev, free);
                 const width = 100 / columns;
                 const current = i === todayColumn && !info.cancelled && isHappeningNow(ev, now);
                 const next = breakNow && i === todayColumn && ev === nextToday;
@@ -608,15 +677,17 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
                 const exam = info.cancelled ? undefined : info.exam;
                 const [firstName] = info.name.split(" + ");
                 return html`<div
-                  class="tl-lesson ${current ? "current" : ""} ${next ? "next" : ""} ${info.cancelled ? "off" : ""} ${changed && !info.cancelled ? "sub" : ""} ${ev.extra ? "xa" : ""} ${exam ? "exam" : ""}"
+                  class="tl-lesson ${current ? "current" : ""} ${next ? "next" : ""} ${info.cancelled ? "off" : ""} ${changed && !info.cancelled ? "sub" : ""} ${ev.extra ? "xa" : ""} ${exam ? "exam" : ""} ${freed ? "freed" : ""}"
                   style="top:${top}px;height:${h}px;left:calc(${width * column}% + 2px);width:calc(${width}% - 4px)"
-                  title=${`${hm(new Date(ev.start))}–${hm(new Date(ev.end))} ${this._tip([info])}${ev.location ? ` · ${ev.location}` : ""}${exam ? ` – ${this._examTip(exam)}` : ""}`}
+                  title=${`${timeRange(ev)} ${this._tip([info])}${freed ? ` (${t(hass, "card.week_timetable.free")})` : ""}${ev.location ? ` · ${ev.location}` : ""}${exam ? ` – ${this._examTip(exam)}` : ""}`}
                 >
                   <span class="tl-subj">${abbreviate(firstName)}</span>
                   ${h >= 26
                     ? html`<span class="tl-meta">${info.cancelled
                         ? t(hass, ev.extra ? "label.activity_cancelled" : "label.lesson_cancelled")
-                        : `${hm(new Date(ev.start))}${ev.location ? ` · ${ev.location}` : ""}`}</span>`
+                        : freed
+                          ? t(hass, "card.week_timetable.free")
+                          : `${wallTime(ev.start)}${ev.location ? ` · ${ev.location}` : ""}`}</span>`
                     : nothing}
                 </div>`;
               })}
@@ -955,6 +1026,12 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
       }
       .tl-lesson.off .tl-subj {
         text-decoration: line-through;
+      }
+      /* A lesson freed by a partial day off: hatched amber, like the grid. */
+      .tl-lesson.freed {
+        background: repeating-linear-gradient(135deg, var(--lc-amber-bg) 0 5px, transparent 5px 10px);
+        color: var(--secondary-text-color);
+        outline: none;
       }
       .tl-lesson.xa:not(.off):not(.current) {
         background: var(--lc-good-bg);

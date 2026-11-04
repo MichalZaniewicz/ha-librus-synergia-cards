@@ -41,9 +41,18 @@ function normalize(raw: string | RawCalendarDateTime): { value: string; allDay: 
   return { value: raw.dateTime ?? "", allDay: false };
 }
 
-/** How long an identical calendar request is shared, in ms. */
+/** How long a calendar request is shared, in ms. */
 const SHARED_FOR_MS = 30_000;
-const requests = new Map<string, { at: number; promise: Promise<LibrusCalendarEvent[]> }>();
+
+interface SharedRequest {
+  /** Entity + Last update stamp. */
+  key: string;
+  start: number;
+  end: number;
+  at: number;
+  promise: Promise<LibrusCalendarEvent[]>;
+}
+let requests: SharedRequest[] = [];
 
 /**
  * Fetches events for one calendar entity over [start, end) via Home
@@ -55,12 +64,15 @@ const requests = new Map<string, { at: number; promise: Promise<LibrusCalendarEv
  * both are normalized here defensively so the rest of this repo never has
  * to care which one a given HA version actually sends.
  *
- * Several cards on one dashboard ask for the same range at the same moment
- * (after every Librus refresh, the Today, Week and Bell schedule cards all
- * want this week's lessons): an identical request made within 30 s - and
- * for the same Librus refresh, by the calendar's Last update sensor - is
- * answered from the one already sent. A failed one isn't kept. Every caller
- * gets its own copy of the list, so sorting it in place is fine.
+ * Several cards on one dashboard ask for the same calendar at the same
+ * moment (after every Librus refresh, the Today, Week and Bell schedule
+ * cards all want this week's lessons; the Agenda, Next exam, Exam weeks and
+ * Month cards all read the Agenda, each over its own range): a request made
+ * within 30 s - and for the same Librus refresh, by the calendar's Last
+ * update sensor - is answered from one already sent (or still on its way)
+ * whose range covers it, keeping the events that overlap the range asked
+ * for. A failed one isn't kept. Every caller gets its own copy of the list,
+ * so sorting it in place is fine.
  *
  * Activities outside the timetable (`extra`) are left out unless
  * `options.extra` asks for them: most cards count lessons, start and end
@@ -73,23 +85,50 @@ export async function fetchCalendarEvents(
   end: Date,
   options: { extra?: boolean } = {}
 ): Promise<LibrusCalendarEvent[]> {
-  const path = `calendars/${entityId}?start=${encodeURIComponent(
-    start.toISOString()
-  )}&end=${encodeURIComponent(end.toISOString())}`;
-  const key = `${path}|${refreshStamp(hass, entityId)}`;
+  const key = `${entityId}|${refreshStamp(hass, entityId)}`;
+  const from = start.getTime();
+  const to = end.getTime();
   const now = Date.now();
-  let entry = requests.get(key);
-  if (!entry || now - entry.at > SHARED_FOR_MS) {
-    for (const [k, v] of requests) if (now - v.at > SHARED_FOR_MS) requests.delete(k);
-    const created = { at: now, promise: loadCalendarEvents(hass, path) };
+  requests = requests.filter((r) => now - r.at <= SHARED_FOR_MS);
+  let entry = requests.find((r) => r.key === key && r.start <= from && r.end >= to);
+  if (!entry) {
+    const path = `calendars/${entityId}?start=${encodeURIComponent(
+      start.toISOString()
+    )}&end=${encodeURIComponent(end.toISOString())}`;
+    const created: SharedRequest = { key, start: from, end: to, at: now, promise: loadCalendarEvents(hass, path) };
     entry = created;
-    requests.set(key, created);
+    requests.push(created);
     created.promise.catch(() => {
-      if (requests.get(key) === created) requests.delete(key);
+      requests = requests.filter((r) => r !== created);
     });
   }
-  const events = await entry.promise;
-  return events.filter((e) => options.extra || !e.extra).map((e) => ({ ...e }));
+  const covering = entry;
+  const events = await covering.promise;
+  const exact = covering.start === from && covering.end === to;
+  return events
+    .filter((e) => (options.extra || !e.extra) && (exact || overlapsRange(e, start, end)))
+    .map((e) => ({ ...e }));
+}
+
+/**
+ * True if the event falls in [start, end) the way the integration's
+ * calendars decide it: a timed event that starts before the end and ends
+ * after the start; an all-day event (dates, end exclusive) whose days meet
+ * the dates the range touches.
+ */
+function overlapsRange(ev: LibrusCalendarEvent, start: Date, end: Date): boolean {
+  if (ev.allDay) {
+    const startDay = isoDate(start);
+    const lastDay = isoDate(new Date(end.getTime() - 1));
+    const first = ev.start.slice(0, 10);
+    const after = (ev.end ?? "").slice(0, 10); // the day after the last one
+    // An end not after the start: a one-day event.
+    const endsInRange = after > first ? after > startDay : first >= startDay;
+    return first <= lastDay && endsInRange;
+  }
+  const s = new Date(ev.start).getTime();
+  const e = new Date(ev.end).getTime();
+  return s < end.getTime() && e > start.getTime();
 }
 
 /** The state of the Last update sensor of the calendar's own device ("" without one). */
@@ -158,13 +197,52 @@ const SUFFIX_RE = /\s*\((odwołane|zastępstwo|zmiana sali|przeniesiona)\)\s*$/i
 const ROOM_RE = /^Zmiana sali:\s*(.+?)\s*→\s*(.+)$/;
 const EXAM_RE = /^(Sprawdzian|Kartkówka)(?::\s*(.*))?$/;
 
+/** Detail lines the integration writes below the teacher (calendar.py):
+ * "Zastępstwo za: ...", "Temat: ...", "Przeniesiona z: ...", "Odwołane: ..."
+ * (a merged slot) - "Zmiana sali: ..." and tests are ROOM_RE / EXAM_RE. */
+const DETAIL_PREFIX_RE = /^(Zastępstwo za|Temat|Przeniesiona z|Odwołane):/;
+/** The kind line of an activity outside the timetable (calendar.py,
+ * _EXTRA_ACTIVITY_LABELS, plus its fallback "Zajęcia"). */
+const EXTRA_KIND_LINES = new Set([
+  "Zajęcia dodatkowe",
+  "Zindywidualizowana ścieżka kształcenia",
+  "Nauczanie indywidualne",
+  "Zajęcia",
+]);
+
+/** True for a description line that is a detail, never a teacher's name. */
+function isDetailLine(line: string): boolean {
+  return EXAM_RE.test(line) || ROOM_RE.test(line) || DETAIL_PREFIX_RE.test(line) || EXTRA_KIND_LINES.has(line);
+}
+
+// lessonInfo() per event object: the week timetable asks for the same
+// events on every render (30 s tick, hover...). The events come from
+// fetchCalendarEvents() and are never changed in place.
+const lessonInfoCache = new WeakMap<
+  LibrusCalendarEvent,
+  { summary: string; description?: string; value: LessonInfo }
+>();
+
 export function lessonInfo(event: LibrusCalendarEvent): LessonInfo {
+  const hit = lessonInfoCache.get(event);
+  if (hit && hit.summary === event.summary && hit.description === event.description) return hit.value;
+  const value = readLessonInfo(event);
+  lessonInfoCache.set(event, { summary: event.summary, description: event.description, value });
+  return value;
+}
+
+function readLessonInfo(event: LibrusCalendarEvent): LessonInfo {
   const kind = SUFFIX_RE.exec(event.summary)?.[1]?.toLowerCase();
   const name = event.summary.replace(SUFFIX_RE, "");
   const lines = (event.description ?? "").split("\n").map((l) => l.trim());
+  // The first line is the teacher - unless it's a detail: Home Assistant (or
+  // an older integration) drops the empty first line of a lesson without a
+  // teacher, and "Sprawdzian: ..." then moved up into the teacher's place.
+  const teacherLine = lines[0] && !isDetailLine(lines[0]) ? lines[0] : undefined;
+  const rest = lines[0] && !teacherLine ? lines : lines.slice(1);
   // Test lines become `exam` (shown as a tag), not a detail line.
-  const examLines = lines.slice(1).map((l) => EXAM_RE.exec(l)).filter((m): m is RegExpExecArray => Boolean(m));
-  const details = lines.slice(1).filter((l) => l && !EXAM_RE.test(l));
+  const examLines = rest.map((l) => EXAM_RE.exec(l)).filter((m): m is RegExpExecArray => Boolean(m));
+  const details = rest.filter((l) => l && !EXAM_RE.test(l));
   const roomLine = details.map((l) => ROOM_RE.exec(l)).find(Boolean);
   const exam = examLines.length
     ? {
@@ -180,7 +258,7 @@ export function lessonInfo(event: LibrusCalendarEvent): LessonInfo {
     substitution: kind === "zastępstwo",
     roomChange: kind === "zmiana sali" || Boolean(roomLine),
     moved: kind === "przeniesiona",
-    teacher: lines[0] || undefined,
+    teacher: teacherLine,
     details,
     rooms: roomLine ? [roomLine[1], roomLine[2]] : undefined,
     extra: Boolean(event.extra),
@@ -321,6 +399,48 @@ export function freeDayName(summary: string): string {
 /** Local "HH:MM" (24 h) of `d` - for comparing against bell-schedule times. */
 export function hm(d: Date): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+/** "HH:MM" in an ISO datetime that carries its own offset (or none) -
+ * not "Z", which is UTC, not the server's clock. */
+const WALL_TIME_RE = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?([+-]\d{2}:?\d{2})?$/;
+
+/**
+ * "HH:MM" of an event time as Home Assistant's clock shows it. Home
+ * Assistant sends timetable times in its own time zone ("...T08:00:00+01:00"),
+ * and the School sensor's bell schedule is in that zone too - so comparing
+ * against `hm(new Date(iso))` (the BROWSER's clock) put no lesson in any
+ * period on a phone set to another time zone. Falls back to the browser's
+ * clock for a UTC ("Z") time.
+ */
+export function wallTime(iso: string): string {
+  const m = WALL_TIME_RE.exec(iso);
+  return m ? `${m[2]}:${m[3]}` : hm(new Date(iso));
+}
+
+/** "YYYY-MM-DD" of an event time on Home Assistant's clock (see wallTime). */
+export function wallDate(iso: string): string {
+  const m = WALL_TIME_RE.exec(iso);
+  return m ? m[1] : isoDate(new Date(iso));
+}
+
+/** Minutes since midnight of an event time on Home Assistant's clock. */
+export function wallMinutes(iso: string): number {
+  const [h, m] = wallTime(iso).split(":").map(Number);
+  return h * 60 + m;
+}
+
+/** Minutes since midnight of `now` on the clock of `sample`'s offset
+ * ("+01:00"), so a "now" line sits right against wallMinutes() times;
+ * the browser's clock without one. */
+export function wallMinutesNow(now: Date, sample: string | undefined): number {
+  const offset = sample ? WALL_TIME_RE.exec(sample)?.[4] : undefined;
+  if (!offset) return now.getHours() * 60 + now.getMinutes();
+  const sign = offset.startsWith("-") ? -1 : 1;
+  const digits = offset.replace(/[+:-]/g, "");
+  const shift = sign * (Number(digits.slice(0, 2)) * 60 + Number(digits.slice(2, 4)));
+  const utc = now.getUTCHours() * 60 + now.getUTCMinutes();
+  return (((utc + shift) % 1440) + 1440) % 1440;
 }
 
 /** Next Mon-Fri after `from`, at local midnight (skips the weekend; does not know about holidays). */

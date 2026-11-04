@@ -36,6 +36,9 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
   // catches up.
   @state() private _markedRead: ReadonlySet<string> = new Set();
   @state() private _markError?: string;
+  // The sensor state "Mark all read" was pressed on: until the sensor
+  // changes, every notice shows read (the 15 listed may not hold them all).
+  @state() private _markedAllFor?: unknown;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -64,17 +67,28 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
 
   /** Marks the given notices (or every unread one, `ids` undefined) read in
    * Librus; they show read at once and go back to unread if Librus refuses. */
-  private async _markRead(deviceId: string, ids: string[] | undefined, all: string[] = []): Promise<void> {
+  private async _markRead(
+    deviceId: string,
+    ids: string[] | undefined,
+    all: string[] = [],
+    sensor?: unknown
+  ): Promise<void> {
     if (!this.hass || !hasLibrusService(this.hass, "mark_announcement_read")) return;
-    const shown = ids ?? all;
-    if (shown.every((id) => this._markedRead.has(id))) return;
+    // Mark all always goes to the service without ids (= every unread notice
+    // in Librus): the listed notices may hold none of the unread ones the
+    // sensor counts.
+    if (ids && ids.every((id) => this._markedRead.has(id))) return;
+    if (!ids && sensor !== undefined && this._markedAllFor === sensor) return;
     const before = this._markedRead;
-    this._markedRead = new Set([...before, ...shown]);
+    const beforeAll = this._markedAllFor;
+    this._markedRead = new Set([...before, ...(ids ?? all)]);
+    if (!ids) this._markedAllFor = sensor;
     this._markError = undefined;
     try {
       await markAnnouncementsRead(this.hass, deviceId, ids);
     } catch (err) {
       this._markedRead = before;
+      this._markedAllFor = beforeAll;
       this._markError = serviceErrorText(err);
     }
   }
@@ -96,9 +110,11 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
       (entity?.attributes.notices as RecentAnnouncement[] | undefined) ??
       (entity?.attributes.recent as RecentAnnouncement[] | undefined) ??
       [];
-    const isRead = (a: RecentAnnouncement): boolean => a.read !== false || (!!a.id && this._markedRead.has(a.id));
+    const allMarked = entity !== undefined && this._markedAllFor === entity;
+    const isRead = (a: RecentAnnouncement): boolean =>
+      allMarked || a.read !== false || (!!a.id && this._markedRead.has(a.id));
     const markedHere = recent.filter((a) => a.read === false && a.id && this._markedRead.has(a.id)).length;
-    const unread = Math.max(0, (Number(entity?.state) || 0) - markedHere);
+    const unread = allMarked ? 0 : Math.max(0, (Number(entity?.state) || 0) - markedHere);
     const canMark = hasLibrusService(hass, "mark_announcement_read");
     const unreadIds = recent.filter((a) => a.read === false && a.id).map((a) => a.id as string);
 
@@ -123,8 +139,8 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
                 class="chip hot mark-all"
                 role="button"
                 tabindex="0"
-                @click=${() => this._markRead(deviceId, undefined, unreadIds)}
-                @keydown=${activateOnKey(() => this._markRead(deviceId, undefined, unreadIds))}
+                @click=${() => this._markRead(deviceId, undefined, unreadIds, entity)}
+                @keydown=${activateOnKey(() => this._markRead(deviceId, undefined, unreadIds, entity))}
               >
                 <ha-icon icon="mdi:email-open-multiple-outline"></ha-icon>${t(hass, "card.announcements.mark_all")}
               </div>`
