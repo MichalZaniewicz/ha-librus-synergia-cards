@@ -85,7 +85,7 @@ The cards read the entities of the [Librus Synergia integration](https://github.
 | Announcements tile | `custom:librus-announcements-tile-card` | Compact single-row tile - unread count + latest subject |
 | Homework assignments | `custom:librus-homework-assignments-card` | Real "zadania domowe" with due dates - distinct from the general agenda feed. Files a teacher attached are listed under each homework; a tap downloads one (needs a newer integration) |
 | Homework checklist | `custom:librus-homework-checklist-card` | The same list with a tick-box per item: homework still due first (soonest first), then overdue (most recent first); ticked items drop to the bottom. With `ha-librus-synergia` 0.11.0+ the ticks go to its Homework to-do list, so every device sees the same; on older versions they stay in this browser. Files a teacher attached are listed under the homework; a tap downloads one without ticking the homework off (needs a newer integration) |
-| What's new | `custom:librus-recent-activity-card` | One chronological feed merging the most recent grades (point grades as "17/20 (85%)"), notices, announcements and messages |
+| What's new | `custom:librus-recent-activity-card` | A timeline of everything in the gradebook, grouped by day with a filter chip per kind: grades (point grades as "17/20 (85%)"; an edited grade comes back to the top with "changed from bz"), absences and late arrivals, homework, new Agenda entries, timetable changes, messages, announcements and notes. Each kind can be switched off in the editor, and the chips hidden (`hide_filters`). Absences, Agenda entries and timetable changes need `ha-librus-synergia` 0.12.42+; Agenda entries and timetable changes show from the day the integration first sees them (Librus gives no date for that) |
 | Today's lessons | `custom:librus-today-lessons-card` | A timeline of today's timetable, highlighting the current lesson. Marks cancelled lessons, substitutions (with what they replace), room changes ("room 12 → 21") and moved lessons. A free period between lessons (30 minutes or more, e.g. after a cancelled lesson) shows as *Free period* with its length. Activities outside the timetable (extra activities, individualised learning path, one-to-one teaching; integration 0.12.34+) are listed at their own times with an *outside the timetable* tag. |
 | Next lesson | `custom:librus-next-lesson-tile-card` | A single-row tile with the next (or current) lesson, for denser dashboards |
 | Agenda | `custom:librus-agenda-card` | Upcoming terminarz events, grouped by date |
@@ -200,6 +200,7 @@ card supports:
 | `weeks` | Attendance heatmap | Show only the last N weeks (default: the whole school year) |
 | `hide_changes` | Month calendar | Leave out cancelled lessons and substitutions - off by default |
 | `hide_absences` | Month calendar | Leave out the absence bars - off by default |
+| `hide_grades` / `hide_absences` / `hide_homework` / `hide_agenda` / `hide_plan` / `hide_messages` / `hide_notes` / `hide_filters` | What's new | Leave a kind of entry out of the timeline, or hide the filter chips - all off by default |
 | `days` | Grade trend | How much history to chart (default 60) |
 | `days` | Subject trends | How far back to compare (default 30) |
 | `days` | Grade log, Subject grades | Only include grades from the last N days (unset = no limit) |

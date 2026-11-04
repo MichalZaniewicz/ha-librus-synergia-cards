@@ -79,7 +79,11 @@ type EditorField =
         | "hide_grades"
         | "hide_messages"
         | "hide_lucky"
-        | "hide_history";
+        | "hide_history"
+        | "hide_agenda"
+        | "hide_plan"
+        | "hide_notes"
+        | "hide_filters";
       label: TranslationKey;
     }
   | {
@@ -259,7 +263,18 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
   "custom:librus-descriptive-grades-card": [
     { kind: "boolean", key: "hide_teacher", label: "editor.hide_teacher" },
   ],
-  "custom:librus-recent-activity-card": [TITLE_FIELD, MAX_ITEMS_FIELD(50)],
+  "custom:librus-recent-activity-card": [
+    TITLE_FIELD,
+    MAX_ITEMS_FIELD(100),
+    { kind: "boolean", key: "hide_filters", label: "editor.feed_hide_filters" },
+    { kind: "boolean", key: "hide_grades", label: "editor.feed_hide_grades" },
+    { kind: "boolean", key: "hide_absences", label: "editor.feed_hide_attendance" },
+    { kind: "boolean", key: "hide_homework", label: "editor.feed_hide_homework" },
+    { kind: "boolean", key: "hide_agenda", label: "editor.feed_hide_agenda" },
+    { kind: "boolean", key: "hide_plan", label: "editor.feed_hide_plan" },
+    { kind: "boolean", key: "hide_messages", label: "editor.feed_hide_messages" },
+    { kind: "boolean", key: "hide_notes", label: "editor.feed_hide_notes" },
+  ],
   "custom:librus-subject-attendance-card": [TITLE_FIELD, GOOD_ABOVE_FIELD, BAD_BELOW_FIELD],
   "custom:librus-report-card-card": [
     TITLE_FIELD,

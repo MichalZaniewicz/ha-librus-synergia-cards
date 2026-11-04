@@ -111,6 +111,12 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   hide_absences?: boolean;
   hide_grades?: boolean;
   hide_messages?: boolean;
+  /** Recent activity card: leave these kinds out (with hide_grades,
+   * hide_absences, hide_homework, hide_messages), and hide the filter chips. */
+  hide_agenda?: boolean;
+  hide_plan?: boolean;
+  hide_notes?: boolean;
+  hide_filters?: boolean;
   hide_lucky?: boolean;
   /** First-lesson card: hide the classroom. */
   hide_room?: boolean;

@@ -302,6 +302,12 @@
     attendanceByDate[iso(new Date(today.getTime() - 18 * 86400000))] = "bad";
     attendanceByDate[iso(new Date(today.getTime() - 25 * 86400000))] = "warn";
     addEntity("sensor.attendance", "attendance", {
+      // Latest absences and late arrivals (integration 0.12.42+), for Recent activity.
+      recent: [
+        { date: iso(today), lesson_no: 2, subject: "Matematyka", kind: "late", type: "Spóźnienie" },
+        { date: iso(new Date(today.getTime() - 2 * 86400000)), lesson_no: 7, subject: "Muzyka", kind: "excused", type: "Nieobecność uspr." },
+        { date: iso(new Date(today.getTime() - 6 * 86400000)), lesson_no: 1, subject: "Język polski", kind: "unexcused", type: "Nieobecność" },
+      ],
       // Includes a real excused absence ("Nieobecność uspr.") alongside a
       // still-open one ("Nieobecność") - confirmed live (2026-09-07) a
       // parent excusing a real absence via Librus reclassifies its type,
@@ -555,6 +561,10 @@
     };
     addEntity("sensor.next_exam", "next_exam", {
       this_week: weekOf(0), next_week: weekOf(1),
+      // Agenda entries that appeared lately (integration 0.12.42+).
+      recently_added: [
+        { seen: `${iso(new Date(today.getTime() - 86400000))}T12:20:00+01:00`, date: iso(new Date(today.getTime() + 5 * 86400000)), time: null, category: "Sprawdzian", subject: "Historia", content: "Średniowiecze" },
+      ],
       days_until: Math.round((tomorrowDay.getTime() - today.getTime()) / 86400000),
       subject: "Matematyka", category: "Sprawdzian", content: "Dział 3 - ułamki dziesiętne",
       // Topics to revise (integration 0.12.1+): made-up lessons since the
@@ -619,6 +629,11 @@
         })),
       }, books.length);
       addEntity("sensor.cancelled_lessons", "cancelled_lessons", {
+        // Plan changes that appeared lately (integration 0.12.42+).
+        recently_added: [
+          { seen: `${iso(new Date(today.getTime() - 86400000))}T14:05:00+01:00`, date: iso(new Date(today.getTime() + 86400000)), lesson_no: 6, subject: "Wychowanie fizyczne", kind: "cancelled", new_subject: null, new_teacher: null },
+          { seen: `${iso(new Date(today.getTime() - 2 * 86400000))}T15:40:00+01:00`, date: iso(new Date(today.getTime() - 86400000)), lesson_no: 4, subject: "Język angielski", kind: "substitution", new_subject: "Język angielski", new_teacher: "Anna Nowak" },
+        ],
         substitutions: 15, lessons_held: 240, cancelled_percent: 3.6, since: "2026-09-15",
         by_subject: {
           "Wychowanie fizyczne": { cancelled: 2, substitutions: 6 },
