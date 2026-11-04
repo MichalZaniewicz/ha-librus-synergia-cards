@@ -752,6 +752,13 @@
       }
       // A grade that doesn't count towards the average (integration 0.12.37+).
       if (s.id === 1) grades[2] = { ...grades[2], counts_to_average: false };
+      // A "bz" for missing homework the teacher turned into a 5 this morning
+      // (integration 0.12.42+ `changed_at` / `previous`, issue #28).
+      if (s.id === 2) {
+        const edited = new Date(today);
+        edited.setHours(7, 40, 0, 0);
+        grades.push({ value: "5", category: "Zadanie domowe", weight: 1, date: iso(new Date(today.getTime() - 9 * 86400000)), comments: ["Uzupełnione"], changed_at: edited.toISOString(), previous: { value: "bz" } });
+      }
       // Fizyka heads for a 1 so the forecast's "at risk" state shows.
       const avg = s.id === 9 ? 1.62 : 4 + (s.id % 7) * 0.28;
       // Grade forecast (backend 0.12.0+), on the default thresholds.

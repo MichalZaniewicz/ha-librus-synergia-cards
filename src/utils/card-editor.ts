@@ -198,6 +198,14 @@ const LAYOUT_OPTIONS: { value: string; label: TranslationKey }[] = [
 
 const CATEGORY_FILTER_FIELD: EditorField = { kind: "text", key: "category_filter", label: "editor.category_filter" };
 const SORT_FIELD: EditorField = { kind: "select", key: "sort", label: "editor.sort", options: SORT_OPTIONS };
+// Grade lists: "newest" puts a grade edited in Librus back at the top (issue
+// #28); "given" sorts by the date the grade was given, as before.
+const GRADE_SORT_FIELD: EditorField = {
+  kind: "select",
+  key: "sort",
+  label: "editor.sort",
+  options: [SORT_OPTIONS[0], { value: "given", label: "sort.given" }, SORT_OPTIONS[1]],
+};
 const DAYS_BACK_FIELD: EditorField = { kind: "number", key: "days", label: "editor.days_back", min: 7, max: 365 };
 
 const TITLE_FIELD: EditorField = { kind: "text", key: "title", label: "editor.title" };
@@ -244,7 +252,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     MAX_ITEMS_FIELD(100),
     CATEGORY_FILTER_FIELD,
     DAYS_BACK_FIELD,
-    SORT_FIELD,
+    GRADE_SORT_FIELD,
     { kind: "boolean", key: "show_descriptive", label: "editor.show_descriptive" },
     { kind: "boolean", key: "hide_teacher", label: "editor.hide_teacher" },
   ],
@@ -289,7 +297,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     MAX_ITEMS_FIELD(100),
     CATEGORY_FILTER_FIELD,
     DAYS_BACK_FIELD,
-    SORT_FIELD,
+    GRADE_SORT_FIELD,
   ],
   "custom:librus-grade-goal-card": [
     { kind: "subject" },

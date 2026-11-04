@@ -120,6 +120,7 @@ export const en = {
   "editor.category_filter": "Category filter (comma-separated, optional)",
   "editor.sort": "Sort order",
   "sort.newest": "Newest first",
+  "sort.given": "Newest first (date given)",
   "sort.oldest": "Oldest first",
 
   "card.grades.title": "Grade average",
@@ -244,6 +245,9 @@ export const en = {
 
   "card.grade_log.title": "Grade log",
   "label.grade_improves": "corrects {value}",
+  "label.grade_edited_from": "changed from {value}",
+  "label.grade_edited": "changed",
+  "label.grade_given": "given {date}",
   "label.grade_not_counted": "not in the average",
   "card.grade_log.subtitle": "All subjects",
   "card.grade_log.empty_filtered": "No grades match this filter",

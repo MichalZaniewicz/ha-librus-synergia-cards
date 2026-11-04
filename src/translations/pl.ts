@@ -121,6 +121,7 @@ export const pl: Record<keyof typeof en, string> = {
   "editor.category_filter": "Filtr kategorii (po przecinku, opcjonalnie)",
   "editor.sort": "Kolejność",
   "sort.newest": "Najpierw najnowsze",
+  "sort.given": "Najpierw najnowsze (data wystawienia)",
   "sort.oldest": "Najpierw najstarsze",
 
   "card.grades.title": "Średnia ocen",
@@ -245,6 +246,9 @@ export const pl: Record<keyof typeof en, string> = {
 
   "card.grade_log.title": "Dziennik ocen",
   "label.grade_improves": "poprawa z {value}",
+  "label.grade_edited_from": "zmieniona z {value}",
+  "label.grade_edited": "zmieniona",
+  "label.grade_given": "wystawiona {date}",
   "label.grade_not_counted": "nie do średniej",
   "card.grade_log.subtitle": "Wszystkie przedmioty",
   "card.grade_log.empty_filtered": "Brak ocen pasujących do filtra",

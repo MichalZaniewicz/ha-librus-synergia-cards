@@ -1,6 +1,7 @@
 /** The list options several cards share: `sort` and `max_items`. */
 export interface ListOptions {
-  sort?: "newest" | "oldest";
+  /** "given" (grade lists only) reads as newest first here. */
+  sort?: "newest" | "oldest" | "given";
   max_items?: number;
 }
 

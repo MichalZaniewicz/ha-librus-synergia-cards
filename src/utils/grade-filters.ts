@@ -23,6 +23,40 @@ export interface GradeLogEntry {
   /** False for a grade that doesn't count towards the average (its category's
    * "Licz do śr.", integration 0.12.37+ on ordinary grades). */
   counts_to_average?: boolean | null;
+  /** When the integration noticed a teacher editing the grade after giving
+   * it (ISO time, integration 0.12.42+; issue #28). */
+  changed_at?: string | null;
+  /** The edited fields before the first edit, e.g. `{ value: "bz" }`. */
+  previous?: Record<string, unknown> | null;
+}
+
+/** "YYYY-MM-DD HH:MM:SS" in local time - the shape of a grade's `date`. */
+function localStamp(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const p = (n: number): string => String(n).padStart(2, "0");
+  return `${isoDate(d)} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+/** The newest thing that happened to a grade: the edit if there was one,
+ * else when it was given. Grade lists sort and date by it, so an edited
+ * grade comes back to the top with the day of the change. */
+export function activityDate(g: GradeLogEntry): string | null {
+  const edited = g.changed_at ? localStamp(g.changed_at) : "";
+  return edited && edited > (g.date ?? "") ? edited : g.date;
+}
+
+/** True for a grade edited after it was given (and the edit is newer than the grade). */
+export function isEdited(g: GradeLogEntry): boolean {
+  return activityDate(g) !== g.date;
+}
+
+/** What an edit changed, for a label: the value before when the grade
+ * itself changed ("bz" for "bz -> 5"), else undefined (a weight or counting
+ * change). */
+export function previousValue(g: GradeLogEntry): string | undefined {
+  const value = g.previous?.value;
+  return value === undefined || value === null || value === "" ? undefined : String(value);
 }
 
 /** True only when Librus says the grade doesn't count (unknown = counts). */
@@ -38,6 +72,8 @@ export interface DescriptiveGradeAttr {
   teacher?: string | null;
   date: string | null;
   comments?: string[];
+  changed_at?: string | null;
+  previous?: Record<string, unknown> | null;
 }
 
 /**
@@ -59,6 +95,8 @@ export function descriptiveGradeEntries(
     comments: g.comments ?? [],
     teacher: g.teacher ?? null,
     descriptive: true,
+    changed_at: g.changed_at ?? null,
+    previous: g.previous ?? null,
   }));
 }
 
@@ -70,12 +108,23 @@ export function descriptiveGradeEntries(
 export function textGradeEntries(attributes: Record<string, unknown> | undefined): GradeLogEntry[] {
   const raw = attributes?.text_grades;
   if (!Array.isArray(raw)) return [];
-  return (raw as { value: string; category: string | null; date: string | null }[]).map((g) => ({
+  return (
+    raw as {
+      value: string;
+      category: string | null;
+      date: string | null;
+      changed_at?: string | null;
+      previous?: Record<string, unknown> | null;
+    }[]
+  ).map((g) => ({
     value: "✎",
     category: g.category,
     date: g.date,
     comments: g.value ? [g.value] : [],
     text: true,
+    changed_at: g.changed_at ?? null,
+    // A text grade's chip is a pencil: an edited text isn't "changed from X".
+    previous: null,
   }));
 }
 
@@ -88,6 +137,8 @@ interface PointGradeAttr {
   category: string | null;
   date: string | null;
   counts_to_average?: boolean | null;
+  changed_at?: string | null;
+  previous?: Record<string, unknown> | null;
 }
 
 /**
@@ -106,6 +157,10 @@ export function pointGradeEntries(attributes: Record<string, unknown> | undefine
     percentage: p.percentage,
     points: true,
     counts_to_average: p.counts_to_average,
+    changed_at: p.changed_at ?? null,
+    previous: p.previous?.points !== undefined && p.previous?.points !== null
+      ? { value: formatPoints(Number(p.previous.points)) }
+      : (p.previous ?? null),
   }));
 }
 
@@ -126,8 +181,9 @@ export interface GradeFilterConfig {
   category_filter?: string;
   /** Only keep grades dated within the last N days. */
   days?: number;
-  /** "newest" (default) or "oldest" first. */
-  sort?: "newest" | "oldest";
+  /** "newest" (default: an edited grade by the day of the edit), "given"
+   * (newest first by the date given) or "oldest" first. */
+  sort?: "newest" | "oldest" | "given";
 }
 
 /**
@@ -160,9 +216,12 @@ export function filterAndSortGrades<T extends GradeLogEntry>(grades: readonly T[
     // through UTC first and can land on the wrong calendar date depending
     // on the viewer's timezone.
     const cutoffIso = isoDate(cutoff);
-    result = result.filter((g) => !g.date || g.date >= cutoffIso);
+    const when = (g: T): string | null => (config.sort === "newest" || !config.sort ? activityDate(g) : g.date);
+    result = result.filter((g) => !when(g) || when(g)! >= cutoffIso);
   }
 
-  const sorted = [...result].sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
+  // Newest first counts an edit as the grade's newest moment (issue #28).
+  const key = (g: T): string => (config.sort === "newest" || !config.sort ? activityDate(g) : g.date) ?? "";
+  const sorted = [...result].sort((a, b) => key(a).localeCompare(key(b)));
   return config.sort === "oldest" ? sorted : sorted.reverse();
 }

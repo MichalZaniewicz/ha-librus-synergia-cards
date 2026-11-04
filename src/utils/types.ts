@@ -51,7 +51,7 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   /** Comma-separated category keywords - grade-log/subject-grades keep a grade if its category matches any. */
   category_filter?: string;
   /** Sort order for the list cards that support it ("newest" default). */
-  sort?: "newest" | "oldest";
+  sort?: "newest" | "oldest" | "given";
   /** Attendance colours: at or above this % is good (default 90). */
   good_above?: number;
   /** Attendance colours: below this % is bad (Attendance 75, Attendance by subject 50). */

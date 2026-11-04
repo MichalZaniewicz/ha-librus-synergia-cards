@@ -7,7 +7,7 @@ import { formatShortDate, formatNumber } from "./utils/format";
 import { t } from "./utils/localize";
 import type { LibrusCardConfig } from "./utils/types";
 import { librusCardEditor } from "./utils/card-editor";
-import { filterAndSortGrades, notCounted, pointGradeEntries, pointTone, textGradeEntries, type GradeLogEntry } from "./utils/grade-filters";
+import { activityDate, filterAndSortGrades, isEdited, notCounted, previousValue, pointGradeEntries, pointTone, textGradeEntries, type GradeLogEntry } from "./utils/grade-filters";
 import { UNAVAILABLE } from "./utils/entities";
 
 /**
@@ -98,8 +98,14 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
                   <div class="row1">
                     <span><span class="cat-label">${g.category ?? ""}</span>${g.improves
                       ? html` · <span class="fix-label">${t(hass, "label.grade_improves", { value: g.improves })}</span>`
-                      : nothing}${notCounted(g) ? html` · <span class="nocount-label">${t(hass, "label.grade_not_counted")}</span>` : nothing}</span>
-                    ${g.date ? html`<time>${formatShortDate(g.date, hass.language)}</time>` : nothing}
+                      : nothing}${notCounted(g) ? html` · <span class="nocount-label">${t(hass, "label.grade_not_counted")}</span>` : nothing}${isEdited(g)
+                      ? html` · <span class="edit-label">${previousValue(g) !== undefined ? t(hass, "label.grade_edited_from", { value: previousValue(g)! }) : t(hass, "label.grade_edited")}</span>`
+                      : nothing}</span>
+                    ${activityDate(g)
+                      ? html`<time title=${isEdited(g) && g.date ? t(hass, "label.grade_given", { date: formatShortDate(g.date, hass.language) }) : ""}
+                          >${formatShortDate(activityDate(g)!, hass.language)}</time
+                        >`
+                      : nothing}
                   </div>
                   ${g.comments.length ? html`<div class="quote ${g.text ? "" : "comment"}">${g.comments.join(" · ")}</div>` : nothing}
                 </div>
@@ -121,6 +127,10 @@ export class LibrusSubjectGradesCard extends LibrusBaseCard {
       }
       .fix-label {
         color: var(--lc-good);
+        font-weight: 600;
+      }
+      .edit-label {
+        color: var(--lc-amber);
         font-weight: 600;
       }
       .grade-chip {
