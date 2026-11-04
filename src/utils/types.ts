@@ -99,6 +99,10 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   names?: Record<string, string>;
   /** First-lesson card: which students to show, in this order (YAML only). */
   devices?: string[];
+  /** School hours card: device_id -> other Home Assistant calendars (entity ids)
+   * whose timed events count as time at school too - activities Librus
+   * doesn't know about. A single entity id is accepted as well. */
+  extra_calendars?: Record<string, string | string[]>;
   /** Family card: device_id -> dashboard path opened when that child's row is tapped. */
   links?: Record<string, string>;
   /** Family card: leave these out of every child's row. */

@@ -1338,6 +1338,7 @@
       { tag: "librus-family-card", family: true },
       { tag: "librus-first-lesson-card", family: true },
       { tag: "librus-siblings-card", family: true },
+      { tag: "librus-siblings-card", family: true, config: { type: "custom:librus-siblings-card", title: "Z dodatkowymi kalendarzami", extra_calendars: { dev_ala: ["calendar.zajecia_ala"], dev_ola: "calendar.zajecia_ola" } } },
       { tag: "librus-first-lesson-card", family: true, config: { type: "custom:librus-first-lesson-card", only_tomorrow: true, hide_room: true, title: "Jutro rano" } },
       "librus-week-summary-card", "librus-lucky-number-card",
       "librus-student-card", "librus-streak-card", "librus-rank-card", "librus-achievements-card",
@@ -1379,6 +1380,16 @@
       }));
       familyCalendars[entityId] = [...toEvents(today, kid.today), ...toEvents(tomorrowDay, kid.next)];
     }
+    // Calendars of the family's own (not Librus): activities Librus doesn't
+    // know about, for the School hours card's extra_calendars.
+    familyCalendars["calendar.zajecia_ala"] = [
+      { start: `${iso(today)}T08:45:00`, end: `${iso(today)}T10:30:00`, allDay: false, summary: "Świetlica" },
+      { start: `${iso(today)}T12:00:00`, end: `${iso(today)}T13:00:00`, allDay: false, summary: "Koło szachowe" },
+      { start: `${iso(today)}`, end: `${iso(tomorrowDay)}`, allDay: true, summary: "Urodziny babci" },
+    ];
+    familyCalendars["calendar.zajecia_ola"] = [
+      { start: `${iso(today)}T14:00:00`, end: `${iso(today)}T15:00:00`, allDay: false, summary: "Basen" },
+    ];
     // The Family card's sensors for the two extra students (made up).
     const addKid = (deviceId, key, state, attrs = {}) => {
       const entityId = `sensor.${key}_${deviceId}`;
