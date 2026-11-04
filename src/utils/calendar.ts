@@ -1,4 +1,4 @@
-import type { LibrusCardConfig, LibrusHass } from "./types";
+import type { LibrusHass } from "./types";
 import { registryIndex } from "./entities";
 
 export interface LibrusCalendarEvent {
@@ -495,11 +495,3 @@ export function mondayOfSchoolWeek(d: Date): Date {
   return monday;
 }
 
-/** The `extra_calendars` a card's config gives one student (School hours
- * card): always a list of calendar entity ids, whether YAML used a single
- * id or a list. */
-export function extraCalendarsOf(config: LibrusCardConfig | undefined, deviceId: string): string[] {
-  const raw = config?.extra_calendars?.[deviceId];
-  const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
-  return list.filter((id): id is string => typeof id === "string" && id.startsWith("calendar."));
-}

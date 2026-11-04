@@ -6,7 +6,6 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import {
   allDayDates,
-  extraCalendarsOf,
   fetchCalendarEvents,
   freeDayLessons,
   freeDayName,
@@ -30,17 +29,14 @@ interface ChildWeek {
   week: string;
   timetable?: LibrusCalendarEvent[];
   free: LibrusCalendarEvent[];
-  /** Timed events from the student's `extra_calendars` (other HA calendars). */
-  other: LibrusCalendarEvent[];
-  /** The `extra_calendars` these were read for. */
-  calendars: string;
 }
 
 /** A piece of a child's day on the time axis, in minutes since midnight. */
 interface Segment {
   from: number;
   to: number;
-  /** An activity outside the timetable (Librus's own or another calendar's). */
+  /** An activity outside the timetable (Librus's own, or from a calendar the
+   * integration's "Other calendars with activities" option adds). */
   extra: boolean;
   label: string;
 }
@@ -87,9 +83,9 @@ function partOn(ev: LibrusCalendarEvent, date: string): { from: number; to: numb
  * for the day picked in the tabs (today by default), from the first lesson
  * that takes place to the last one, with a "now" line on today. Reads every
  * student's timetable and days off. Activities outside the timetable -
- * Librus's own, and timed events from the calendars a student's
- * `extra_calendars` names (issue #13: after-school activities Librus
- * doesn't know about) - stretch the bar and are drawn striped.
+ * Librus's own, and those from other calendars picked under the
+ * integration's Configure (issue #13, 0.12.42+) - stretch the bar and
+ * are drawn striped.
  */
 @customElement("librus-siblings-card")
 export class LibrusSiblingsCard extends LibrusBaseCard {
@@ -145,14 +141,12 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
     const week = isoDate(monday);
     // Each student on its own Last update stamp: a Librus refresh of one
     // child refetches only that child's week.
-    const calendarsOf = (id: string): string[] => extraCalendarsOf(this._config, id);
-    const keyOf = (id: string): string => `${week}:${this._deviceDataStamp(id)}:${calendarsOf(id).join(",")}`;
+    const keyOf = (id: string): string => `${week}:${this._deviceDataStamp(id)}`;
     const due = this._fetches.due(this._deviceIds(), keyOf, force);
     await Promise.all(
       due.map(async (id) => {
         const generation = this._fetches.begin(id, keyOf(id));
         const map = mapByTranslationKey(hass, id);
-        const calendars = calendarsOf(id);
         let failed = false;
         const load = async (entityId?: string, extra = false): Promise<LibrusCalendarEvent[] | undefined> => {
           if (!entityId) return [];
@@ -163,29 +157,19 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
             return undefined;
           }
         };
-        // Activities Librus keeps outside the timetable (integration
-        // 0.12.34+) count as time at school too.
-        const [timetable, free, ...others] = await Promise.all([
-          load(map.timetable, true),
-          load(map.free_days),
-          ...calendars.map((c) => load(c)),
-        ]);
+        // Activities outside the timetable (Librus's own, 0.12.34+, and
+        // other calendars' from the integration's Configure, 0.12.42+)
+        // count as time at school too.
+        const [timetable, free] = await Promise.all([load(map.timetable, true), load(map.free_days)]);
         if (!this._fetches.isCurrent(id, generation)) return;
         // A failed refresh keeps that student's week from before.
         const previous = this._weeks.get(id);
         const kept = previous?.week === week ? previous : undefined;
-        const calendarsKey = calendars.join(",");
-        const keptOther = kept?.calendars === calendarsKey ? kept.other : undefined;
-        const other = others.some((o) => o === undefined) && keptOther
-          ? keptOther
-          : others.flatMap((o) => (o ?? []).filter((e) => !e.allDay));
         const weeks = new Map(this._weeks);
         weeks.set(id, {
           week,
           timetable: map.timetable ? (timetable ?? kept?.timetable) : undefined,
           free: free ?? kept?.free ?? [],
-          other,
-          calendars: calendarsKey,
         });
         this._weeks = weeks;
         if (failed) this._fetches.failed(id, generation);
@@ -235,7 +219,7 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
           label: t(hass, "card.siblings.lessons"),
         });
       }
-      for (const e of [...held.filter((e) => e.extra), ...week.other]) {
+      for (const e of held.filter((e) => e.extra)) {
         const part = partOn(e, date);
         if (part) segments.push({ ...part, extra: true, label: lessonInfo(e).name || t(hass, "card.siblings.extra") });
       }

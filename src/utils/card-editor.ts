@@ -4,7 +4,6 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig, LibrusHass } from "./types";
 import { findLibrusDeviceIds, resolveLibrusDevice, mapAllByTranslationKey } from "./entities";
 import { t, type TranslationKey } from "./localize";
-import { extraCalendarsOf } from "./calendar";
 
 /**
  * One shared visual editor for every Librus card. Which controls it shows
@@ -44,7 +43,6 @@ type EditorField =
   | { kind: "subject" }
   | { kind: "names" }
   | { kind: "links" }
-  | { kind: "calendars" }
   | { kind: "action" }
   | { kind: "color" }
   | {
@@ -244,7 +242,7 @@ export const EDITOR_FIELDS: Record<string, EditorField[]> = {
     { kind: "boolean", key: "hide_changes", label: "editor.hide_changes" },
     { kind: "boolean", key: "hide_absences", label: "editor.month_hide_absences" },
   ],
-  "custom:librus-siblings-card": [TITLE_FIELD, { kind: "names" }, { kind: "calendars" }],
+  "custom:librus-siblings-card": [TITLE_FIELD, { kind: "names" }],
   "custom:librus-substitutions-card": [
     TITLE_FIELD,
     { kind: "number", key: "days_ahead", label: "editor.days_ahead", min: 1, max: 30 },
@@ -652,33 +650,6 @@ export class LibrusCardEditor extends LitElement {
         `;
       })}`;
     }
-    if (field.kind === "calendars") {
-      // The integration's own calendars are read anyway - not offered here.
-      const librusCalendars = Object.values(hass.entities ?? {})
-        .filter((e) => e.platform === "librus_synergia" && e.entity_id.startsWith("calendar."))
-        .map((e) => e.entity_id);
-      return html`${findLibrusDeviceIds(hass).map((id) => {
-        const device = hass.devices?.[id];
-        const label = t(hass, "editor.student_calendars", { device: device?.name_by_user || device?.name || id });
-        const current = extraCalendarsOf(config, id);
-        if (!customElements.get("ha-selector")) {
-          // No HA entity picker (the dev harness): entity ids, comma-separated.
-          return this._input(label, current.join(", "), (value) =>
-            this._onCalendars(id, value.split(",").map((v) => v.trim()))
-          );
-        }
-        return html`
-          <ha-selector
-            .hass=${hass}
-            .selector=${{ entity: { multiple: true, filter: { domain: "calendar" }, exclude_entities: librusCalendars } }}
-            .label=${label}
-            .value=${current}
-            @value-changed=${(ev: CustomEvent<{ value?: unknown }>) =>
-              this._onCalendars(id, Array.isArray(ev.detail.value) ? ev.detail.value.map(String) : [])}
-          ></ha-selector>
-        `;
-      })}`;
-    }
     if (field.kind === "text") {
       return this._input(t(hass, field.label), (config[field.key] as string | undefined) ?? "", (value) =>
         this._onText(field.key, value)
@@ -862,14 +833,6 @@ export class LibrusCardEditor extends LitElement {
     if (value.trim()) links[deviceId] = value.trim();
     else delete links[deviceId];
     this._patch({ links: Object.keys(links).length ? links : undefined });
-  }
-
-  private _onCalendars(deviceId: string, entityIds: string[]): void {
-    const wanted = [...new Set(entityIds.filter((v) => v.startsWith("calendar.")))];
-    const all = { ...(this._config?.extra_calendars ?? {}) };
-    if (wanted.length) all[deviceId] = wanted;
-    else delete all[deviceId];
-    this._patch({ extra_calendars: Object.keys(all).length ? all : undefined });
   }
 
   private _onText(

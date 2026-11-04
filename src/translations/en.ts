@@ -500,7 +500,6 @@ export const en = {
   "editor.month_hide_absences": "Hide absences",
   "card.siblings.title": "School hours",
   "card.siblings.off_named": "off – {name}",
-  "editor.student_calendars": "Other calendars with activities for {device} (optional)",
   "card.siblings.lessons": "Lessons",
   "card.siblings.extra": "Other activities",
 

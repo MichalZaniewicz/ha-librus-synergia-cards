@@ -501,7 +501,6 @@ export const pl: Record<keyof typeof en, string> = {
   "editor.month_hide_absences": "Ukryj nieobecności",
   "card.siblings.title": "Godziny w szkole",
   "card.siblings.off_named": "wolne – {name}",
-  "editor.student_calendars": "Dodatkowe kalendarze z zajęciami dla: {device} (opcjonalnie)",
   "card.siblings.lessons": "Lekcje",
   "card.siblings.extra": "Zajęcia dodatkowe",
 
