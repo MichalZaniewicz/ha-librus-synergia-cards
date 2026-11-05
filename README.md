@@ -165,6 +165,8 @@ strategy:
     - <device id>
 ```
 
+Rather pick a layout yourself? The wiki has [**example dashboards**](https://github.com/MichalZaniewicz/ha-librus-synergia/wiki/Example-dashboards) to copy, from a minimal one for the phone to a full one for a wall tablet, each with a screenshot and its YAML.
+
 ## Installation
 
 1. HACS → ⋮ → **Custom repositories** → add this repo as category **Dashboard** (or use the
