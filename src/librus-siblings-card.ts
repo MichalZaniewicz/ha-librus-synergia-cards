@@ -219,9 +219,24 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
           label: t(hass, "card.siblings.lessons"),
         });
       }
+      // An activity counts only where it makes the day longer: the child is
+      // at school during the lessons anyway, so a part inside them (e.g.
+      // "omówienie lektury" entered as an activity during a lesson - cards
+      // issue #13) isn't drawn.
+      const lessonSpan = segments[0];
       for (const e of held.filter((e) => e.extra)) {
         const part = partOn(e, date);
-        if (part) segments.push({ ...part, extra: true, label: lessonInfo(e).name || t(hass, "card.siblings.extra") });
+        if (!part) continue;
+        const label = lessonInfo(e).name || t(hass, "card.siblings.extra");
+        const pieces = lessonSpan
+          ? [
+              { from: part.from, to: Math.min(part.to, lessonSpan.from) },
+              { from: Math.max(part.from, lessonSpan.to), to: part.to },
+            ]
+          : [part];
+        for (const piece of pieces) {
+          if (piece.to > piece.from) segments.push({ ...piece, extra: true, label });
+        }
       }
       if (!segments.length) {
         const free = week.free.find((e) => allDayDates(e).includes(date) && !freeDayLessons(e.summary));
