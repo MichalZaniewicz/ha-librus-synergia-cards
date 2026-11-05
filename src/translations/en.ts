@@ -114,6 +114,8 @@ export const en = {
   "language.auto": "Home Assistant language",
   "language.pl": "Polski",
   "language.en": "English",
+  "language.uk": "Українська",
+  "language.pt": "Português",
   "editor.hide_outage_warning": "Hide the \"Librus not responding\" warning",
   "outage.title": "Librus not responding",
   "outage.data_from": "data from {time}",

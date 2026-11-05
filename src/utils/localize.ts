@@ -1,5 +1,7 @@
 import { en } from "../translations/en";
 import { pl } from "../translations/pl";
+import { pt } from "../translations/pt";
+import { uk } from "../translations/uk";
 import type { LibrusHass } from "./types";
 
 export type TranslationKey = keyof typeof en;
@@ -7,6 +9,8 @@ export type TranslationKey = keyof typeof en;
 const LANGUAGES: Record<string, Record<TranslationKey, string>> = {
   en,
   pl,
+  uk,
+  pt,
 };
 
 function dictFor(hass: LibrusHass | undefined): Record<TranslationKey, string> {

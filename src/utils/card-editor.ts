@@ -128,6 +128,8 @@ const COMMON_FIELDS: EditorField[] = [
       { value: "auto", label: "language.auto" },
       { value: "pl", label: "language.pl" },
       { value: "en", label: "language.en" },
+      { value: "uk", label: "language.uk" },
+      { value: "pt", label: "language.pt" },
     ],
   },
   { kind: "boolean", key: "hide_header", label: "editor.hide_header" },

@@ -29,7 +29,7 @@ into <ha-alert> and drops every child whose textContent is empty, which silently
   <img src="https://raw.githubusercontent.com/MichalZaniewicz/ha-librus-synergia-cards/main/docs/trailer.webp" alt="Librus Synergia Cards trailer: 65 cards, light and dark, English and Polish, the visual editor">
 </p>
 
-75 cards built for one job: showing a child's school life from Librus on a Home Assistant dashboard. Today's lessons and what changed, grades with a report card forecast, attendance, messages, homework, tests and the lucky number. Every card follows your light or dark theme, speaks English or Polish, and is set up in the visual editor, without YAML. With more than one child, each card picks a student, and some show all of them at once.
+75 cards built for one job: showing a child's school life from Librus on a Home Assistant dashboard. Today's lessons and what changed, grades with a report card forecast, attendance, messages, homework, tests and the lucky number. Every card follows your light or dark theme, speaks English, Polish, Ukrainian or Portuguese, and is set up in the visual editor, without YAML. With more than one child, each card picks a student, and some show all of them at once.
 
 The cards read the entities of the [Librus Synergia integration](https://github.com/MichalZaniewicz/ha-librus-synergia), so install that first.
 
@@ -144,8 +144,10 @@ subject_id: 42005 # omit for the overall average
 
 ## Languages
 
-Every label follows your Home Assistant language automatically - English and Polish are built in
-(`src/translations/`). Anything else falls back to English. Adding a language is one new typed
+Every label follows your Home Assistant language automatically - English, Polish, Ukrainian and
+Portuguese are built in (`src/translations/`). Anything else falls back to English. Data from Librus
+(subject names, categories, messages) stays as the school writes it; the integration's Subject and
+category names under Configure translate the subjects and grade categories. Adding a language is one new typed
 file - see [Adding a language](#adding-a-language) below.
 
 ## Ready-made dashboard
@@ -229,7 +231,7 @@ card supports:
 | `icon` | every card | Override the header icon, e.g. `mdi:star` |
 | `accent_color` | every card | Any CSS color (`#e91e63`, `teal`, `rgb(0 150 136)`) instead of the indigo accent - rings, bars, chips and the icon badge follow it. The exact color is used in both themes, so pick one that reads on a dark background too. An invalid value is ignored |
 | `text_size` | every card | Bigger text: `large` (115%), `larger` (130%), `largest` (150%), or any factor such as `1.2`. Icons, charts and spacing grow with it and the card reflows to fit its width. To enlarge every card at once, add `librus-cards-scale: 1.2` to your Home Assistant theme instead; a card's own `text_size` wins over it |
-| `language` | every card | `pl` or `en`: the card's labels, dates and numbers in that language, whatever language Home Assistant uses. Unset follows Home Assistant. Data from Librus (subjects, messages, the AI summary text) stays as it is - the weekly AI summary has its own Language option in the integration |
+| `language` | every card | `pl`, `en`, `uk` or `pt`: the card's labels, dates and numbers in that language, whatever language Home Assistant uses. Unset follows Home Assistant. Data from Librus (subjects, messages, the AI summary text) stays as it is - the weekly AI summary has its own Language option in the integration |
 | `hide_header` | every card | Hide the header row entirely |
 | `hide_icon` / `hide_subtitle` | every card with a header | Hide just the icon badge, or just the line under the title |
 | `compact` | every card | Tighter padding, smaller icon badge, subtitle hidden - for a denser dashboard |

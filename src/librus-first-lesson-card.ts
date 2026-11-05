@@ -358,7 +358,7 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
       }
       .line {
         display: grid;
-        grid-template-columns: 3.4rem 3rem 1fr;
+        grid-template-columns: 4.4rem 3rem 1fr;
         gap: 6px;
         align-items: baseline;
         font-size: 0.84rem;

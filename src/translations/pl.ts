@@ -115,6 +115,8 @@ export const pl: Record<keyof typeof en, string> = {
   "language.auto": "Język Home Assistant",
   "language.pl": "Polski",
   "language.en": "English",
+  "language.uk": "Українська",
+  "language.pt": "Português",
   "editor.hide_outage_warning": "Ukryj ostrzeżenie „Librus nie odpowiada”",
   "outage.title": "Librus nie odpowiada",
   "outage.data_from": "dane z {time}",

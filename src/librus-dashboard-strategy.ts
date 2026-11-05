@@ -32,7 +32,7 @@ interface CardConfig {
   [key: string]: unknown;
 }
 
-type Language = "pl" | "en";
+type Language = "pl" | "en" | "uk" | "pt";
 
 const HEADINGS: Record<Language, Record<string, string>> = {
   pl: {
@@ -67,7 +67,44 @@ const HEADINGS: Record<Language, Record<string, string>> = {
     none_text:
       "No student from the Librus Synergia integration was found. Add the integration under Settings → Devices & services, then reload this dashboard.",
   },
+  uk: {
+    family: "Родина",
+    all: "Усі діти",
+    morning: "Ранок",
+    today: "Сьогодні",
+    todo: "Зробити",
+    week: "Цей тиждень",
+    news: "Що нового",
+    grades: "Оцінки",
+    attendance: "Відвідуваність",
+    timetable: "Розклад",
+    school: "Школа",
+    none: "Немає учнів",
+    none_text:
+      "Не знайдено жодного учня з інтеграції Librus Synergia. Додайте інтеграцію в Налаштуваннях → Пристрої та служби, а потім оновіть цю панель.",
+  },
+  pt: {
+    family: "Família",
+    all: "Todos os filhos",
+    morning: "Manhã",
+    today: "Hoje",
+    todo: "Por fazer",
+    week: "Esta semana",
+    news: "Novidades",
+    grades: "Notas",
+    attendance: "Assiduidade",
+    timetable: "Horário",
+    school: "Escola",
+    none: "Sem alunos",
+    none_text:
+      "Não foi encontrado nenhum aluno da integração Librus Synergia. Adicione a integração em Definições → Dispositivos e serviços e depois recarregue este painel.",
+  },
 };
+
+function languageOf(hass: { language?: string }): Language {
+  const code = (hass.language ?? "").toLowerCase().split("-")[0];
+  return code === "pl" || code === "uk" || code === "pt" ? code : "en";
+}
 
 const ICONS: Record<string, string> = {
   all: "mdi:account-group-outline",
@@ -128,7 +165,7 @@ function card(name: string, deviceId: string | undefined): CardConfig {
 
 export class LibrusDashboardStrategy extends HTMLElement {
   static async generate(config: LibrusStrategyConfig, hass: LibrusHass): Promise<Record<string, unknown>> {
-    const lang: Language = (hass.language ?? "").toLowerCase().startsWith("pl") ? "pl" : "en";
+    const lang = languageOf(hass);
     const t = HEADINGS[lang];
     const found = findLibrusDeviceIds(hass);
     const ids = config.students?.length
@@ -137,7 +174,7 @@ export class LibrusDashboardStrategy extends HTMLElement {
 
     if (ids.length === 0) {
       return {
-        title: lang === "pl" ? "Szkoła" : "School",
+        title: HEADINGS[lang].school,
         views: [
           {
             title: t.none,
@@ -201,7 +238,7 @@ export class LibrusDashboardStrategy extends HTMLElement {
       });
     }
 
-    return { title: lang === "pl" ? "Szkoła" : "School", views };
+    return { title: HEADINGS[lang].school, views };
   }
 }
 
