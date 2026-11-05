@@ -3,6 +3,8 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
+import { subjectColorer } from "./utils/subject-colors";
+import { subjectDot } from "./utils/render-helpers";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { progressRing } from "./utils/render-helpers";
@@ -14,6 +16,8 @@ import { formatNumber } from "./utils/format";
 @customElement("librus-grades-card")
 export class LibrusGradesCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  /** This render's subject colours (see utils/subject-colors.ts). */
+  private _color: (subject?: string | null) => string | undefined = () => undefined;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -38,6 +42,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
 
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
+    this._color = subjectColorer(this.hass, resolved.deviceId, this._config);
     const { deviceId, map } = resolved;
     const hass = this.hass;
 
@@ -89,7 +94,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
                   if (s.points !== undefined) {
                     return html`
                       <div class="sub-row">
-                        <span class="name" title=${s.subject}>${s.subject}</span>
+                        <span class="name" title=${s.subject}>${subjectDot(this._color(s.subject))}${s.subject}</span>
                         <span class="bar"><span style="width:${Math.min(100, s.points)}%"></span></span>
                         <span class="val">${formatNumber(s.points, hass.language, { maximumFractionDigits: 1 })}%</span>
                       </div>
@@ -99,7 +104,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
                   const forecast = subjectForecast(s.state);
                   return html`
                     <div class="sub-row">
-                      <span class="name" title=${s.subject}>${s.subject}</span>
+                      <span class="name" title=${s.subject}>${subjectDot(this._color(s.subject))}${s.subject}</span>
                       <span class="bar"
                         ><span
                           style="width:${Math.min(100, (value / maxSubject) * 100)}%"

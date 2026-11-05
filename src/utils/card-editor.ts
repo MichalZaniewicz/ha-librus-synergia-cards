@@ -81,7 +81,8 @@ type EditorField =
         | "hide_agenda"
         | "hide_plan"
         | "hide_notes"
-        | "hide_filters";
+        | "hide_filters"
+        | "hide_subject_colors";
       label: TranslationKey;
     }
   | {
@@ -436,6 +437,11 @@ addField(["grade-log", "subject-grades", "descriptive-grades", "latest-grade", "
   label: "editor.hide_comments",
 });
 addField(["bell-schedule", "today-lessons", "tomorrow"], { kind: "boolean", key: "hide_room", label: "editor.hide_room" });
+// Subject colours (integration 0.12.43+) are on by default; this turns them off.
+addField(
+  ["week-timetable", "today-lessons", "tomorrow", "bell-schedule", "school-day", "grades", "grade-log"],
+  { kind: "boolean", key: "hide_subject_colors", label: "editor.hide_subject_colors" }
+);
 addField(["behaviour-grade"], { kind: "boolean", key: "hide_history", label: "editor.hide_history" });
 addField(
   ["attendance", "attendance-heatmap", "attendance-subject", "attendance-weekday", "grades-radar", "subject-attendance"],

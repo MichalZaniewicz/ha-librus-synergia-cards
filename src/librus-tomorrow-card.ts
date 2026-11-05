@@ -3,6 +3,8 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
+import { subjectColorer } from "./utils/subject-colors";
+import { subjectDot } from "./utils/render-helpers";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, freePeriods, isoDate, lessonInfo, lessonMeta, nextSchoolDay, type LibrusCalendarEvent } from "./utils/calendar";
 import { lessonTag } from "./utils/render-helpers";
@@ -31,6 +33,8 @@ interface UpcomingExam {
 @customElement("librus-tomorrow-card")
 export class LibrusTomorrowCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  /** This render's subject colours (see utils/subject-colors.ts). */
+  private _color: (subject?: string | null) => string | undefined = () => undefined;
   @state() private _lessons: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
 
@@ -92,6 +96,7 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
 
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
+    this._color = subjectColorer(this.hass, resolved.deviceId, this._config);
     const { map } = resolved;
     const hass = this.hass;
 
@@ -210,7 +215,7 @@ export class LibrusTomorrowCard extends LibrusBaseCard {
                     <div class="list-item ${info.cancelled ? "lesson-cancelled" : ""}">
                       <span class="lt">${formatTime(ev.start)}</span>
                       <div class="body">
-                        <div class="row1"><span><span class="lesson-name">${info.name}</span>${lessonTag(hass, info)}</span></div>
+                        <div class="row1"><span>${subjectDot(this._color(info.name.split(" + ")[0]))}<span class="lesson-name">${info.name}</span>${lessonTag(hass, info)}</span></div>
                         ${lessonMeta(ev, info, this._config?.hide_room)
                           ? html`<div class="item-text">${lessonMeta(ev, info, this._config?.hide_room)}</div>`
                           : nothing}

@@ -25,6 +25,7 @@ import { t } from "./utils/localize";
 import { daysBetween, formatDate, minutesUntil, parseCategory } from "./utils/format";
 import { librusCardEditor } from "./utils/card-editor";
 import { abbreviate } from "./utils/subjects";
+import { subjectColorer } from "./utils/subject-colors";
 
 interface BellPeriod {
   lesson_no: number;
@@ -118,6 +119,8 @@ function overlapColumns(day: LibrusCalendarEvent[]): Placed[] {
 @customElement("librus-week-timetable-card")
 export class LibrusWeekTimetableCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  /** This render's subject colours (see utils/subject-colors.ts). */
+  private _color: (subject?: string | null) => string | undefined = () => undefined;
   @state() private _events: LibrusCalendarEvent[] = [];
   @state() private _free: LibrusCalendarEvent[] = [];
   @state() private _agenda: LibrusCalendarEvent[] = [];
@@ -288,6 +291,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
     const hass = this.hass;
+    this._color = subjectColorer(hass, resolved.deviceId, this._config);
 
     void this._fetch();
 
@@ -539,8 +543,10 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
             const exam = infos.find((i) => i.exam && !i.cancelled)?.exam;
             const tip =
               this._tip(infos) + (planNote ? ` (${planNote})` : "") + (exam ? ` – ${this._examTip(exam)}` : "");
+            const color = this._color(firstName);
             return html`<div
-              class="cell on ${current ? "current" : ""} ${next ? "next" : ""} ${cancelled ? "off" : ""} ${substitution && !cancelled ? "sub" : ""} ${extra && !cancelled ? "extra" : ""} ${exam ? "exam" : ""}"
+              style=${color ? `--subj:${color}` : ""}
+              class="cell on ${color ? "subj" : ""} ${current ? "current" : ""} ${next ? "next" : ""} ${cancelled ? "off" : ""} ${substitution && !cancelled ? "sub" : ""} ${extra && !cancelled ? "extra" : ""} ${exam ? "exam" : ""}"
               title=${tip}
             >${abbreviate(firstName)}${parallel ? "+" : ""}</div>`;
           })}
@@ -676,9 +682,10 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
                 const changed = info.substitution || info.roomChange || info.moved;
                 const exam = info.cancelled ? undefined : info.exam;
                 const [firstName] = info.name.split(" + ");
+                const color = ev.extra ? undefined : this._color(firstName);
                 return html`<div
-                  class="tl-lesson ${current ? "current" : ""} ${next ? "next" : ""} ${info.cancelled ? "off" : ""} ${changed && !info.cancelled ? "sub" : ""} ${ev.extra ? "xa" : ""} ${exam ? "exam" : ""} ${freed ? "freed" : ""}"
-                  style="top:${top}px;height:${h}px;left:calc(${width * column}% + 2px);width:calc(${width}% - 4px)"
+                  class="tl-lesson ${color ? "subj" : ""} ${current ? "current" : ""} ${next ? "next" : ""} ${info.cancelled ? "off" : ""} ${changed && !info.cancelled ? "sub" : ""} ${ev.extra ? "xa" : ""} ${exam ? "exam" : ""} ${freed ? "freed" : ""}"
+                  style="top:${top}px;height:${h}px;left:calc(${width * column}% + 2px);width:calc(${width}% - 4px)${color ? `;--subj:${color}` : ""}"
                   title=${`${timeRange(ev)} ${this._tip([info])}${freed ? ` (${t(hass, "card.week_timetable.free")})` : ""}${ev.location ? ` · ${ev.location}` : ""}${exam ? ` – ${this._examTip(exam)}` : ""}`}
                 >
                   <span class="tl-subj">${abbreviate(firstName)}</span>
@@ -1070,6 +1077,12 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         .tl-now i {
           animation: none;
         }
+      }
+      /* Subject colours (integration 0.12.43+): a stripe on the left edge,
+         whatever the cell's own state colour is. */
+      .cell.on.subj,
+      .tl-day .tl-lesson.subj {
+        background-image: linear-gradient(90deg, var(--subj) 0 3px, transparent 3px);
       }
     `,
   ];

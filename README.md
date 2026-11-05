@@ -199,6 +199,7 @@ card supports:
 | `weeks` | Attendance heatmap | Show only the last N weeks (default: the whole school year) |
 | `hide_changes` | Month calendar | Leave out cancelled lessons and substitutions - off by default |
 | `hide_absences` | Month calendar | Leave out the absence bars - off by default |
+| `hide_subject_colors` | Weekly timetable, Today's lessons, Tomorrow, Today's schedule, School day, Grade average, Grade log | Turn off the subject colours - with `ha-librus-synergia` 0.12.43+ every subject has its own colour, the same in every card (a stripe on timetable cells, a dot before the subject in lists). The colours pick themselves; to choose some, use the integration's Configure → *Subject colours* ("Matematyka: #2563eb", one a line) |
 | `hide_grades` / `hide_absences` / `hide_homework` / `hide_agenda` / `hide_plan` / `hide_messages` / `hide_notes` / `hide_filters` | What's new | Leave a kind of entry out of the timeline, or hide the filter chips - all off by default |
 | `days` | Grade trend | How much history to chart (default 60) |
 | `days` | Subject trends | How far back to compare (default 30) |

@@ -3,6 +3,8 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
+import { subjectColorer } from "./utils/subject-colors";
+import { subjectDot } from "./utils/render-helpers";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, hm, isoDate, lessonInfo, type LessonInfo, type LibrusCalendarEvent } from "./utils/calendar";
 import { UNAVAILABLE } from "./utils/entities";
@@ -31,6 +33,8 @@ interface BellPeriod {
 @customElement("librus-bell-schedule-card")
 export class LibrusBellScheduleCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  /** This render's subject colours (see utils/subject-colors.ts). */
+  private _color: (subject?: string | null) => string | undefined = () => undefined;
   @state() private _events: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
 
@@ -115,6 +119,7 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
 
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
+    this._color = subjectColorer(this.hass, resolved.deviceId, this._config);
     const { map } = resolved;
     const hass = this.hass;
 
@@ -186,7 +191,7 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
                 <span class="ptime">${p.start}<span class="dash">–</span>${p.end}</span>
                 ${slot
                   ? html`<span class="psubj"
-                      ><span class="lesson-name">${slot.info.name}</span>${lessonTag(hass, slot.info)}${slot.room && !this._config?.hide_room
+                      >${subjectDot(this._color(slot.info.name.split(" + ")[0]))}<span class="lesson-name">${slot.info.name}</span>${lessonTag(hass, slot.info)}${slot.room && !this._config?.hide_room
                         ? html` <span class="proom">${slot.room}</span>`
                         : nothing}</span
                     >`

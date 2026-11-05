@@ -362,3 +362,9 @@ export function activateOnKey(activate: () => void): (ev: KeyboardEvent) => void
     }
   };
 }
+
+/** The subject's colour dot (utils/subject-colors.ts), before its name in a
+ * list; nothing when the subject has no colour. */
+export function subjectDot(color: string | undefined): TemplateResult | typeof nothing {
+  return color ? html`<i class="subj-dot" style="--subj:${color}"></i>` : nothing;
+}

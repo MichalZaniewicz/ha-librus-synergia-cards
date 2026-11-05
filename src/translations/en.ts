@@ -657,6 +657,7 @@ export const en = {
   "label.after_school": "School's out for today",
 
   "editor.hide_room": "Hide classroom",
+  "editor.hide_subject_colors": "Hide subject colours",
   "editor.student_link": "Open on tap for {device} (optional, e.g. /school/ola)",
   "editor.hide_exams": "Hide tests",
   "editor.hide_homework": "Hide homework due",

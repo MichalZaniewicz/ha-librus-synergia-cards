@@ -111,6 +111,17 @@ export const librusTokens = css`
 
 /** Layout/component classes shared by every card - keeps the family visually consistent. */
 export const librusSharedStyles = css`
+  /* A subject's colour (utils/subject-colors.ts) before its name. */
+  .subj-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--subj);
+    margin-right: 6px;
+    vertical-align: 0.05em;
+    flex: none;
+  }
   /* Text size: the universal \`text_size\` option sets --lc-scale inline on
      the host (LibrusBaseCard._syncTheme); otherwise a theme variable
      \`librus-cards-scale\` sets it for every card at once. \`zoom\` scales

@@ -658,6 +658,7 @@ export const pl: Record<keyof typeof en, string> = {
   "label.after_school": "Lekcje na dziś zakończone",
 
   "editor.hide_room": "Ukryj salę",
+  "editor.hide_subject_colors": "Ukryj kolory przedmiotów",
   "editor.student_link": "Otwórz po kliknięciu dla: {device} (opcjonalnie, np. /szkola/ola)",
   "editor.hide_exams": "Ukryj sprawdziany",
   "editor.hide_homework": "Ukryj zadania na termin",

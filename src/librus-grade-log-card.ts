@@ -3,6 +3,8 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
+import { subjectColorer } from "./utils/subject-colors";
+import { subjectDot } from "./utils/render-helpers";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
@@ -30,6 +32,8 @@ const DEFAULT_MAX = 25;
 @customElement("librus-grade-log-card")
 export class LibrusGradeLogCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  /** This render's subject colours (see utils/subject-colors.ts). */
+  private _color: (subject?: string | null) => string | undefined = () => undefined;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -54,6 +58,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
 
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
+    this._color = subjectColorer(this.hass, resolved.deviceId, this._config);
     const { deviceId, map } = resolved;
     const hass = this.hass;
 
@@ -109,7 +114,7 @@ export class LibrusGradeLogCard extends LibrusBaseCard {
                 </div>
                 <div class="body">
                   <div class="row1">
-                    <span>${g.subject}${g.category ? html` · <span class="cat-label">${g.category}</span>` : nothing}${g.improves ? html` · <span class="fix-label">${t(hass, "label.grade_improves", { value: g.improves })}</span>` : nothing}${notCounted(g) ? html` · <span class="nocount-label">${t(hass, "label.grade_not_counted")}</span>` : nothing}${isEdited(g)
+                    <span>${subjectDot(this._color(g.subject))}${g.subject}${g.category ? html` · <span class="cat-label">${g.category}</span>` : nothing}${g.improves ? html` · <span class="fix-label">${t(hass, "label.grade_improves", { value: g.improves })}</span>` : nothing}${notCounted(g) ? html` · <span class="nocount-label">${t(hass, "label.grade_not_counted")}</span>` : nothing}${isEdited(g)
                       ? html` · <span class="edit-label">${previousValue(g) !== undefined ? t(hass, "label.grade_edited_from", { value: previousValue(g)! }) : t(hass, "label.grade_edited")}</span>`
                       : nothing}</span>
                     ${activityDate(g)

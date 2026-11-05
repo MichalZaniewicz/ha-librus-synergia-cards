@@ -3,6 +3,8 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
+import { subjectColorer } from "./utils/subject-colors";
+import { subjectDot } from "./utils/render-helpers";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, freePeriods, isHappeningNow, hasEnded, lessonInfo, lessonMeta, type FreePeriod, type LibrusCalendarEvent } from "./utils/calendar";
@@ -13,6 +15,8 @@ import { t } from "./utils/localize";
 @customElement("librus-today-lessons-card")
 export class LibrusTodayLessonsCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  /** This render's subject colours (see utils/subject-colors.ts). */
+  private _color: (subject?: string | null) => string | undefined = () => undefined;
   @state() private _events: LibrusCalendarEvent[] = [];
   private _fetchedFor?: string;
 
@@ -78,6 +82,7 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
 
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
+    this._color = subjectColorer(this.hass, resolved.deviceId, this._config);
     const hass = this.hass;
 
     void this._fetch();
@@ -115,7 +120,7 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
                 <span class="tl-dot"></span>
                 <div class="tl-body">
                   <div class="subj">
-                    <span class="lesson-name">${info.name}</span>${lessonTag(hass, info)}
+                    ${subjectDot(this._color(info.name.split(" + ")[0]))}<span class="lesson-name">${info.name}</span>${lessonTag(hass, info)}
                     ${now_ ? html`<span class="pill-now">${t(hass, "label.now")}</span>` : nothing}
                   </div>
                   ${meta ? html`<div class="meta">${meta}</div>` : nothing}

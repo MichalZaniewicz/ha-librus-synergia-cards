@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
+import { subjectColorer } from "./utils/subject-colors";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import {
@@ -59,6 +60,8 @@ const STATUS_LABEL = {
 @customElement("librus-school-day-card")
 export class LibrusSchoolDayCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  /** This render's subject colours (see utils/subject-colors.ts). */
+  private _color: (subject?: string | null) => string | undefined = () => undefined;
   @state() private _events: LibrusCalendarEvent[] = [];
   @state() private _loaded = false;
   private _fetchedFor?: string;
@@ -125,6 +128,7 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
 
     const resolved = this._resolveEntities();
     if ("error" in resolved) return resolved.error;
+    this._color = subjectColorer(this.hass, resolved.deviceId, this._config);
     const hass = this.hass;
     void this._fetch();
 
@@ -229,7 +233,8 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
             const tip = `${formatTime(l.ev.start)}–${formatTime(l.ev.end)} ${where(l)}${
               l.cancelled ? ` (${t(hass, "card.school_day.cancelled")})` : l.substitution ? ` (${t(hass, "card.school_day.substitution")})` : ""
             }`;
-            return html`<div class="seg ${cls} ${l.substitution || l.roomChange || l.moved ? "sub" : ""}" title=${tip}>${abbreviate(l.name)}</div>`;
+            const color = this._color(l.name.split(" + ")[0]);
+            return html`<div class="seg ${cls} ${color ? "subj" : ""} ${l.substitution || l.roomChange || l.moved ? "sub" : ""}" style=${color ? `--subj:${color}` : ""} title=${tip}>${abbreviate(l.name)}</div>`;
           })}
         </div>
         <div class="ends"><span>${formatTime(first.ev.start)}</span><span>${formatTime(last.ev.end)}</span></div>
@@ -282,6 +287,10 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
         color: var(--secondary-text-color);
         overflow: hidden;
         white-space: nowrap;
+      }
+      /* Subject colour (integration 0.12.43+): a stripe on the left edge. */
+      div.seg.subj {
+        background-image: linear-gradient(90deg, var(--subj) 0 3px, transparent 3px);
       }
       .seg.past {
         background: var(--lc-brand-bg);
