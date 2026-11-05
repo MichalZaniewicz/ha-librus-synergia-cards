@@ -1,5 +1,5 @@
 import type { LibrusHass } from "./utils/types";
-import { findLibrusDeviceIds } from "./utils/entities";
+import { findLibrusDeviceIds, mapByTranslationKey } from "./utils/entities";
 import { studentName } from "./librus-first-lesson-card";
 
 /**
@@ -12,8 +12,10 @@ import { studentName } from "./librus-first-lesson-card";
  *     students: [<device id>] # optional: these children only, in this order
  *
  * A "Family" view with every child at once (only with two or more), then a
- * view per child with six sections - today, grades, tests and homework,
- * attendance, messages, timetable. Built from the integration's devices
+ * view per child, most important first: today, what needs doing (tests,
+ * absences to excuse, messages, homework), the weekly AI summary (when it's
+ * set up), what's new, grades, attendance, timetable, school. Every card
+ * full width. Built from the integration's devices
  * each time the dashboard loads, so a new child or a card added in a later
  * version shows up by itself. "Take control" in the dashboard's menu turns
  * it into an ordinary dashboard to edit by hand.
@@ -38,11 +40,13 @@ const HEADINGS: Record<Language, Record<string, string>> = {
     all: "Wszystkie dzieci",
     morning: "Rano",
     today: "Dziś",
+    todo: "Do zrobienia",
+    week: "Tydzień",
+    news: "Co nowego",
     grades: "Oceny",
-    tests: "Sprawdziany i zadania",
     attendance: "Frekwencja",
-    messages: "Wiadomości",
     timetable: "Plan",
+    school: "Szkoła",
     none: "Brak uczniów",
     none_text:
       "Nie znaleziono żadnego ucznia z integracji Librus Synergia. Dodaj integrację w Ustawieniach → Urządzenia i usługi, a potem odśwież ten dashboard.",
@@ -52,11 +56,13 @@ const HEADINGS: Record<Language, Record<string, string>> = {
     all: "All children",
     morning: "Morning",
     today: "Today",
+    todo: "To do",
+    week: "This week",
+    news: "What's new",
     grades: "Grades",
-    tests: "Tests and homework",
     attendance: "Attendance",
-    messages: "Messages",
     timetable: "Timetable",
+    school: "School",
     none: "No students",
     none_text:
       "No student from the Librus Synergia integration was found. Add the integration under Settings → Devices & services, then reload this dashboard.",
@@ -67,30 +73,31 @@ const ICONS: Record<string, string> = {
   all: "mdi:account-group-outline",
   morning: "mdi:alarm",
   today: "mdi:calendar-today",
+  todo: "mdi:bell-alert-outline",
+  week: "mdi:robot-outline",
+  news: "mdi:bell-outline",
   grades: "mdi:star-outline",
-  tests: "mdi:file-document-alert-outline",
   attendance: "mdi:account-check-outline",
-  messages: "mdi:email-outline",
   timetable: "mdi:timetable",
+  school: "mdi:school-outline",
 };
 
-/** The cards of a child's view, section by section ("half" = two side by side). */
-const CHILD_SECTIONS: [string, (string | [string, "half"])[]][] = [
-  [
-    "today",
-    [
-      "school-day",
-      "today-lessons",
-      "tomorrow",
-      ["lucky-number", "half"],
-      ["next-lesson-tile", "half"],
-    ],
-  ],
+/**
+ * The cards of a child's view, section by section, most important first:
+ * what's on today, what needs doing, the week at a glance, then what
+ * changes slowly or is there to look things up. With three columns the
+ * first three sections are the top row. "week" (the weekly AI summary) is
+ * left out when the summary isn't set up.
+ */
+const CHILD_SECTIONS: [string, string[]][] = [
+  ["today", ["school-day", "today-lessons", "tomorrow"]],
+  ["todo", ["exam-countdown", "justifications", "messages", "homework-checklist"]],
+  ["week", ["ai-summary"]],
+  ["news", ["recent-activity"]],
   ["grades", ["report-card", "semester", "grade-log"]],
-  ["tests", ["exam-countdown", "exam-prep", "homework-checklist"]],
-  ["attendance", ["attendance", "subject-attendance", "justifications"]],
-  ["messages", ["messages", "announcements"]],
+  ["attendance", ["attendance", "subject-attendance"]],
   ["timetable", ["week-timetable", "substitutions", "month-calendar"]],
+  ["school", ["announcements", "lucky-number"]],
 ];
 
 /** "Zośka Kowalska" -> "zoska-kowalska" (a view path). */
@@ -110,11 +117,12 @@ function heading(lang: Language, key: string): CardConfig {
   return { type: "heading", heading: HEADINGS[lang][key], icon: ICONS[key] };
 }
 
-function card(name: string, deviceId: string | undefined, half = false): CardConfig {
+function card(name: string, deviceId: string | undefined): CardConfig {
+  // Full width: a card squeezed next to another cuts its text.
   return {
     type: `custom:librus-${name}-card`,
     ...(deviceId ? { device_id: deviceId } : {}),
-    grid_options: { columns: half ? 6 : 12 },
+    grid_options: { columns: 12 },
   };
 }
 
@@ -184,12 +192,11 @@ export class LibrusDashboardStrategy extends HTMLElement {
         icon: "mdi:school-outline",
         type: "sections",
         max_columns: 3,
-        sections: CHILD_SECTIONS.map(([key, cards]) => ({
+        sections: CHILD_SECTIONS.filter(
+          ([key]) => key !== "week" || mapByTranslationKey(hass, id).weekly_summary
+        ).map(([key, cards]) => ({
           type: "grid",
-          cards: [
-            heading(lang, key),
-            ...cards.map((entry) => (Array.isArray(entry) ? card(entry[0], deviceId, true) : card(entry, deviceId))),
-          ],
+          cards: [heading(lang, key), ...cards.map((name) => card(name, deviceId))],
         })),
       });
     }

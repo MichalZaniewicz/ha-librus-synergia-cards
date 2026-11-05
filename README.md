@@ -153,7 +153,7 @@ file - see [Adding a language](#adding-a-language) below.
 Don't want to place cards one by one? After installing the cards, go to **Settings → Dashboards → Add dashboard** and pick **Szkoła (Librus)**. You get a finished dashboard:
 
 - with two or more children, a **Family** tab with the Family and First lesson cards,
-- a tab for every child, with six sections: **Today** (School day, Today's lessons, Tomorrow, the lucky number, the next lesson), **Grades** (Report card, Semester in numbers, Grade log), **Tests and homework** (Next exam, Test revision, Homework checklist), **Attendance** (Attendance, Attendance by subject, Justifications), **Messages** (Messages, Announcements) and **Timetable** (Week timetable, Timetable changes, Month calendar).
+- a tab for every child, most important first: **Today** (School day, Today's lessons, Tomorrow), **To do** (Next exam, Justifications, Messages, Homework checklist), **This week** (the Weekly AI summary, when it's set up), **What's new** (the timeline), **Grades** (Report card, Semester in numbers, Grade log), **Attendance** (Attendance, Attendance by subject), **Timetable** (Week timetable, Timetable changes, Month calendar) and **School** (Announcements, Lucky number). On a wide screen the first three are the top row. Every card is full width.
 
 The dashboard is built from the integration each time it opens, so a child added later, or a card added to this layout in a newer version, shows up by itself. It doesn't touch your other dashboards. To change it by hand, use **Take control** in the dashboard's menu: it turns into an ordinary dashboard you can edit. The same in YAML, with its two options:
 
