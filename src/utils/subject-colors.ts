@@ -21,7 +21,7 @@ const NONE: Colorer = () => undefined;
 const cache = new WeakMap<object, Map<string, string>>();
 
 /**
- * The colour of each subject, the same in every card (integration 0.12.43+):
+ * The colour of each subject, the same in every card (integration 0.12.44+):
  * the School sensor's `subject_colors` (picked under Configure) win, else
  * `subject_palette`'s slot of the cards' 16-colour palette
  * (`--lc-chart-1..16`, so it follows the light/dark theme). Undefined for a

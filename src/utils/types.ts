@@ -113,7 +113,7 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   hide_plan?: boolean;
   hide_notes?: boolean;
   hide_filters?: boolean;
-  /** Cards with subjects: no subject colours (integration 0.12.43+). */
+  /** Cards with subjects: no subject colours (integration 0.12.44+). */
   hide_subject_colors?: boolean;
   hide_lucky?: boolean;
   /** First-lesson card: hide the classroom. */

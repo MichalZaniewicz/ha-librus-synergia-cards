@@ -1078,7 +1078,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
           animation: none;
         }
       }
-      /* Subject colours (integration 0.12.43+): a stripe on the left edge,
+      /* Subject colours (integration 0.12.44+): a stripe on the left edge,
          whatever the cell's own state colour is. */
       .cell.on.subj,
       .tl-day .tl-lesson.subj {

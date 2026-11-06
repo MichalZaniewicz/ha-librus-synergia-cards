@@ -288,7 +288,7 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
         overflow: hidden;
         white-space: nowrap;
       }
-      /* Subject colour (integration 0.12.43+): a stripe on the left edge. */
+      /* Subject colour (integration 0.12.44+): a stripe on the left edge. */
       div.seg.subj {
         background-image: linear-gradient(90deg, var(--subj) 0 3px, transparent 3px);
       }

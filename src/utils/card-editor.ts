@@ -439,7 +439,7 @@ addField(["grade-log", "subject-grades", "descriptive-grades", "latest-grade", "
   label: "editor.hide_comments",
 });
 addField(["bell-schedule", "today-lessons", "tomorrow"], { kind: "boolean", key: "hide_room", label: "editor.hide_room" });
-// Subject colours (integration 0.12.43+) are on by default; this turns them off.
+// Subject colours (integration 0.12.44+) are on by default; this turns them off.
 addField(
   ["week-timetable", "today-lessons", "tomorrow", "bell-schedule", "school-day", "grades", "grade-log"],
   { kind: "boolean", key: "hide_subject_colors", label: "editor.hide_subject_colors" }
