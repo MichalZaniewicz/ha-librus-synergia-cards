@@ -606,7 +606,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
   private _einkKey(): TemplateResult {
     const hass = this.hass!;
     const row = (key: Parameters<LibrusWeekTimetableCard["_letter"]>[0], open: boolean) =>
-      html`<span><b class=${open ? "open" : ""}>${this._letter(key)}</b>${t(hass, key)}</span>`;
+      html`<span><b class="${open ? "open" : ""} ${key === "label.lesson_substitution" ? "sub" : ""}">${this._letter(key)}</b>${t(hass, key)}</span>`;
     return html`<div class="eink-key">
       ${row("label.lesson_test", false)} ${row("label.lesson_quiz", false)} ${row("label.lesson_substitution", true)}
       ${row("label.lesson_cancelled", true)}

@@ -81,8 +81,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   hide_subtitle?: boolean;
   /** Any CSS color ("#e91e63", "teal") replacing the indigo accent. Universal. */
   accent_color?: string;
-  /** Pure black and white for e-paper screens (eink-styles.ts). Universal. */
-  eink?: boolean;
+  /** For e-paper screens (eink-styles.ts): true / "bw", "gray", "red", "yellow" or "color". Universal. */
+  eink?: boolean | string;
   /** Text size: "normal" / "large" / "larger" / "largest" or a factor (1.2). Universal. */
   text_size?: string | number;
   /** Card language ("pl", "en"), whatever Home Assistant uses. Universal. */

@@ -13,6 +13,7 @@ import {
 import { t } from "./localize";
 import { formatShortDate, formatTime } from "./format";
 import { isoDate } from "./calendar";
+import { EINK_PALETTES, einkMode, type EinkMode } from "./eink-styles";
 
 /**
  * Shared plumbing for every Librus card: dark-mode class sync, device
@@ -142,7 +143,7 @@ export abstract class LibrusBaseCard extends LitElement {
   private _timers: CardTimer[] = [];
   private _memos = new Map<string, { deps: readonly unknown[]; value: unknown }>();
   // The config + dark mode _syncTheme() last applied.
-  private _themedFor?: { config: unknown; dark: boolean; eink: boolean };
+  private _themedFor?: { config: unknown; dark: boolean; eink: EinkMode | undefined };
   // The `icon` option updated() last stamped on the header icon.
   private _appliedIcon?: string;
 
@@ -436,7 +437,7 @@ export abstract class LibrusBaseCard extends LitElement {
   protected _syncTheme(): void {
     const dark = Boolean(this.hass?.themes?.darkMode);
     const config = this._cardConfig;
-    const eink = this._einkOn(config);
+    const eink = this._einkMode(config);
     if (
       this._themedFor &&
       this._themedFor.config === config &&
@@ -447,7 +448,8 @@ export abstract class LibrusBaseCard extends LitElement {
     }
     this._themedFor = { config, dark, eink };
     this.classList.toggle("dark", dark && !eink);
-    this.classList.toggle("eink", eink);
+    this.classList.toggle("eink", Boolean(eink));
+    for (const palette of EINK_PALETTES) this.classList.toggle(`eink-${palette}`, eink === palette);
     this.classList.toggle("compact", Boolean(config?.compact));
     this.classList.toggle("hide-header", Boolean(config?.hide_header));
     this.classList.toggle("hide-icon", Boolean(config?.hide_icon));
@@ -465,14 +467,9 @@ export abstract class LibrusBaseCard extends LitElement {
 
   /** E-ink mode (eink-styles.ts): the card's `eink` option, else the
    * `librus-cards-eink` theme variable, which turns it on for every card. */
-  private _einkOn(config: LibrusCardConfig | undefined): boolean {
-    if (typeof config?.eink === "boolean") return config.eink;
-    const value = getComputedStyle(this)
-      .getPropertyValue("--librus-cards-eink")
-      .trim()
-      .replace(/^["']|["']$/g, "")
-      .toLowerCase();
-    return value !== "" && value !== "false" && value !== "0" && value !== "off";
+  private _einkMode(config: LibrusCardConfig | undefined): EinkMode | undefined {
+    if (config?.eink !== undefined) return einkMode(config.eink);
+    return einkMode(getComputedStyle(this).getPropertyValue("--librus-cards-eink"));
   }
 
   /**

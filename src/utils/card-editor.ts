@@ -4,6 +4,7 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig, LibrusHass } from "./types";
 import { findLibrusDeviceIds, resolveLibrusDevice, mapAllByTranslationKey } from "./entities";
 import { t, type TranslationKey } from "./localize";
+import { einkMode } from "./eink-styles";
 
 /**
  * One shared visual editor for every Librus card. Which controls it shows
@@ -63,7 +64,6 @@ type EditorField =
         | "hide_legend"
         | "hide_comments"
         | "compact"
-        | "eink"
         | "hide_outage_warning"
         | "hide_room"
         | "only_tomorrow"
@@ -96,7 +96,7 @@ type EditorField =
     }
   | {
       kind: "select";
-      key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version" | "language";
+      key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version" | "language" | "eink";
       label: TranslationKey;
       options: { value: string; label: TranslationKey }[];
     };
@@ -137,7 +137,19 @@ const COMMON_FIELDS: EditorField[] = [
   { kind: "boolean", key: "hide_icon", label: "editor.hide_icon" },
   { kind: "boolean", key: "hide_subtitle", label: "editor.hide_subtitle" },
   { kind: "boolean", key: "compact", label: "editor.compact" },
-  { kind: "boolean", key: "eink", label: "editor.eink" },
+  {
+    kind: "select",
+    key: "eink",
+    label: "editor.eink",
+    options: [
+      { value: "off", label: "eink.off" },
+      { value: "bw", label: "eink.bw" },
+      { value: "gray", label: "eink.gray" },
+      { value: "red", label: "eink.red" },
+      { value: "yellow", label: "eink.yellow" },
+      { value: "color", label: "eink.color" },
+    ],
+  },
   { kind: "boolean", key: "hide_outage_warning", label: "editor.hide_outage_warning" },
 ];
 
@@ -695,7 +707,9 @@ export class LibrusCardEditor extends LitElement {
     return html`
       <ha-select
         label=${t(hass, field.label)}
-        .value=${(config[field.key] as string | undefined) ?? field.options[0].value}
+        .value=${field.key === "eink"
+          ? (einkMode(config.eink) ?? field.options[0].value)
+          : ((config[field.key] as string | undefined) ?? field.options[0].value)}
         .options=${field.options.map((o) => ({ value: o.value, label: t(hass, o.label) }))}
         naturalMenuWidth
         fixedMenuPosition
@@ -821,7 +835,7 @@ export class LibrusCardEditor extends LitElement {
     this._patch({ subject_id: Number.isNaN(next as number) ? undefined : next });
   }
 
-  private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version" | "language"; options: { value: string }[] }, ev: Event): void {
+  private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version" | "language" | "eink"; options: { value: string }[] }, ev: Event): void {
     const value = LibrusCardEditor._selectValue(ev);
     if (!value) return;
     const current = (this._config?.[field.key] as string | undefined) ?? field.options[0].value;

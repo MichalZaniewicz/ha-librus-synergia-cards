@@ -1509,14 +1509,17 @@
         emptyHass.themes.darkMode = hass.themes.darkMode;
         [...cardEls, ...emptyEls].forEach((el) => { el.hass = { ...el.hass, themes: { darkMode: hass.themes.darkMode } }; });
       });
-      // E-ink mode on every card; ?eink=1 starts with it on.
-      let eink = false;
-      const setEink = (on) => {
-        eink = on;
-        [...cardEls, ...emptyEls].forEach((el) => el.setConfig({ ...el._config, eink }));
+      // E-ink on every card: the button walks through the modes, ?eink=gray starts in one.
+      const EINK = [false, "bw", "gray", "red", "yellow", "color"];
+      let einkAt = 0;
+      const setEink = (mode) => {
+        einkAt = Math.max(0, EINK.indexOf(mode));
+        document.getElementById("eink").textContent = `E-ink: ${mode || "off"}`;
+        [...cardEls, ...emptyEls].forEach((el) => el.setConfig({ ...el._config, eink: mode }));
       };
-      document.getElementById("eink").addEventListener("click", () => setEink(!eink));
-      if (new URLSearchParams(location.search).get("eink") === "1") setEink(true);
+      document.getElementById("eink").addEventListener("click", () => setEink(EINK[(einkAt + 1) % EINK.length]));
+      const einkParam = new URLSearchParams(location.search).get("eink");
+      if (einkParam) setEink(einkParam === "1" ? "bw" : einkParam);
       let outage = false;
       document.getElementById("outage").addEventListener("click", (e) => {
         outage = !outage;

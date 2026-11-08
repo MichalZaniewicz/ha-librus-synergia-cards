@@ -13,7 +13,29 @@ import { css } from "lit";
  * Every rule sits under `:host(.eink)`, which outranks a card's own local
  * rule, so this one file covers all cards. Tracks use --lc-track rather than
  * --divider-color, which is black here.
+ *
+ * Screens with greys or colours add a palette on top (`.eink-gray`,
+ * `.eink-red`, `.eink-yellow`, `.eink-color`). The shapes stay, so a card
+ * still reads on a screen that shows a colour poorly, and the values are the
+ * palette's pure colours so a screenshot tool has nothing to dither.
  */
+export type EinkMode = "bw" | "gray" | "red" | "yellow" | "color";
+
+/** Modes that add a palette, each with its own host class. */
+export const EINK_PALETTES: readonly EinkMode[] = ["gray", "red", "yellow", "color"];
+
+/** The `eink` option or theme variable as a mode; undefined means off. */
+export function einkMode(value: unknown): EinkMode | undefined {
+  const text = String(value ?? "")
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .toLowerCase();
+  if (["", "false", "off", "0", "no", "none"].includes(text)) return undefined;
+  if (text === "grey") return "gray";
+  if (text === "colour") return "color";
+  return (EINK_PALETTES as readonly string[]).includes(text) ? (text as EinkMode) : "bw";
+}
+
 export const librusEinkStyles = css`
   :host(.eink) {
     --primary-text-color: #000;
@@ -25,6 +47,14 @@ export const librusEinkStyles = css`
     --ha-card-box-shadow: none;
     --ha-card-border-radius: 0;
     --lc-track: #fff;
+    /* What each palette recolours. Black and white by default. */
+    --lc-e-now: #000;
+    --lc-e-alert: #000;
+    --lc-e-on-alert: #fff;
+    --lc-e-alert-edge: #000;
+    --lc-e-alert-bar: #fff;
+    --lc-e-second: #fff;
+    --lc-e-free: #fff;
     --lc-brand: #000;
     --lc-brand-strong: #000;
     --lc-brand-bg: #fff;
@@ -882,5 +912,173 @@ export const librusEinkStyles = css`
   :host(.eink) .fc-arrow {
     display: inline;
     font-weight: 900;
+  }
+
+  /* --- Palettes --- */
+  :host(.eink-gray) {
+    --secondary-text-color: #555;
+    --lc-e-second: #aaa;
+    --lc-e-free: #aaa;
+  }
+  :host(.eink-red) {
+    --lc-e-alert: #f00;
+    --lc-e-alert-edge: #f00;
+    --lc-e-alert-bar: #f00;
+  }
+  /* Yellow text would vanish on white: yellow only ever fills under black. */
+  :host(.eink-yellow) {
+    --lc-e-alert: #ff0;
+    --lc-e-on-alert: #000;
+    --lc-e-alert-bar: #ff0;
+  }
+  :host(.eink-color) {
+    --lc-e-alert: #f00;
+    --lc-e-alert-edge: #f00;
+    --lc-e-alert-bar: #f00;
+    --lc-e-now: #00f;
+    --lc-e-second: #ff0;
+  }
+
+  /* What needs attention: tests, unexcused absences, a grade at risk. */
+  :host(.eink) .stat.bad,
+  :host(.eink) .tile.bad,
+  :host(.eink) .sub-row .fc.bad,
+  :host(.eink) .mgrade.bad,
+  :host(.eink) .lesson-tag.exam {
+    background: var(--lc-e-alert);
+    color: var(--lc-e-on-alert);
+    border-color: var(--lc-e-alert-edge);
+  }
+  :host(.eink) .stat.bad .stat-value,
+  :host(.eink) .stat.bad .stat-label,
+  :host(.eink) .stat.bad .unit,
+  :host(.eink) .stat.bad b,
+  :host(.eink) .stat.bad span,
+  :host(.eink) .tile.bad * {
+    color: var(--lc-e-on-alert);
+  }
+  :host(.eink) .tl-item.now .lesson-tag.exam {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+  }
+  :host(.eink) .eink-key b:not(.open),
+  :host(.eink) .week-grid .cell.exam[data-mark]::after,
+  :host(.eink) .tl-lesson.exam[data-mark]::after {
+    background: var(--lc-e-alert);
+    color: var(--lc-e-on-alert);
+  }
+  :host(.eink) .dot.bad,
+  :host(.eink) .legend-dot.bad,
+  :host(.eink) .dot.series-unexcused,
+  :host(.eink) .dot.k-test,
+  :host(.eink) .dot.a-bad,
+  :host(.eink) .weekday-bar-stack .seg.unexcused,
+  :host(.eink) .sbar-seg.unexcused,
+  :host(.eink) .sw[style*="lc-bad"] {
+    background: var(--lc-e-alert) !important;
+  }
+  :host(.eink) .heatmap .cell.bad,
+  :host(.eink) .heatmap-legend .cell.bad,
+  :host(.eink) .abs.a-bad,
+  :host(.eink) .abs-key.a-bad {
+    background: var(--lc-e-alert);
+  }
+  :host(.eink) svg rect[fill="var(--lc-bad)"] {
+    fill: var(--lc-e-alert);
+  }
+  :host(.eink) .bar .seg.bad {
+    background: var(--lc-e-alert-bar) !important;
+  }
+  :host(.eink-yellow) .eink-key b:not(.open),
+  :host(.eink-yellow) .week-grid .cell.exam[data-mark]::after,
+  :host(.eink-yellow) .tl-lesson.exam[data-mark]::after,
+  :host(.eink-yellow) .weekday-bar-stack .seg.unexcused,
+  :host(.eink-yellow) .sbar-seg.unexcused,
+  :host(.eink-yellow) .abs.a-bad,
+  :host(.eink-yellow) .abs-key.a-bad {
+    box-sizing: border-box;
+    border: 1px solid #000;
+  }
+  :host(.eink-yellow) svg rect[fill="var(--lc-bad)"] {
+    stroke: #000;
+    stroke-width: 1.5px;
+  }
+
+  /* The second series: excused absences, substitutions, quizzes. */
+  :host(.eink) .bar .seg.warn,
+  :host(.eink) .dot.warn,
+  :host(.eink) .legend-dot.warn,
+  :host(.eink) .dot.series-excused,
+  :host(.eink) .weekday-bar-stack .seg.excused,
+  :host(.eink) .sbar-seg.excused,
+  :host(.eink) .seg.c-amber,
+  :host(.eink) .key.c-amber,
+  :host(.eink) .sw[style*="lc-amber"] {
+    background: var(--lc-e-second) !important;
+  }
+  :host(.eink) .heatmap .cell.warn,
+  :host(.eink) .heatmap-legend .cell.warn,
+  :host(.eink) .abs.a-warn,
+  :host(.eink) .abs-key.a-warn {
+    background: var(--lc-e-second);
+  }
+  :host(.eink) svg rect[fill="var(--lc-amber)"] {
+    fill: var(--lc-e-second);
+  }
+
+  /* Days off. */
+  :host(.eink) .free-span,
+  :host(.eink) .week-grid .cell.free,
+  :host(.eink) .day.free,
+  :host(.eink) .free-box,
+  :host(.eink) .tl-day.free,
+  :host(.eink) .tl-lesson.freed {
+    background: var(--lc-e-free);
+  }
+
+  :host(.eink) .day.free .n {
+    color: #000;
+  }
+
+  /* Right now. */
+  :host(.eink) .h.today,
+  :host(.eink) .week-grid .cell.current,
+  :host(.eink) .tl-lesson.current,
+  :host(.eink) .xa.current,
+  :host(.eink) .tl-item.now,
+  :host(.eink) .daybar .seg.now,
+  :host(.eink) .day.today .n {
+    background: var(--lc-e-now);
+    color: #fff;
+  }
+
+  /* 4 greys: what's over or secondary steps back. */
+  :host(.eink-gray) .stat-label {
+    color: #000;
+  }
+  :host(.eink-gray) .tl-item.done .subj {
+    color: #555;
+  }
+
+  /* 6 colours: present is green, a substitution yellow. */
+  :host(.eink-color) .bar .seg:not(.warn):not(.bad):not(.late),
+  :host(.eink-color) .legend-dot.good:not(.late) {
+    background: #0f0 !important;
+  }
+  :host(.eink-color) .heatmap .cell.good,
+  :host(.eink-color) .heatmap-legend .cell.good {
+    background: #0f0;
+  }
+  :host(.eink-color) .week-grid .cell.sub:not(.exam)[data-mark]::after,
+  :host(.eink-color) .tl-lesson.sub:not(.exam)[data-mark]::after,
+  :host(.eink-color) .eink-key b.sub {
+    background: #ff0;
+    color: #000;
+  }
+  :host(.eink-color) .lesson-tag.substitution {
+    background: #ff0;
+    color: #000;
+    border-color: #000;
   }
 `;
