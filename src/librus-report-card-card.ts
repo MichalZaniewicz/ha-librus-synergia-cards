@@ -235,7 +235,7 @@ export class LibrusReportCardCard extends LibrusBaseCard {
       .hbar {
         height: 6px;
         border-radius: 3px;
-        background: var(--divider-color);
+        background: var(--lc-track);
         position: relative;
         overflow: hidden;
       }

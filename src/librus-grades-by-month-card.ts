@@ -109,7 +109,7 @@ export class LibrusGradesByMonthCard extends LibrusBaseCard {
           </div>
         </div>
         ${this._chart(bars, todayMonth)}
-        <div class="legend">
+        <div class="legend grade-legend">
           ${[...GRADES].reverse().map(
             (g) => html`<span class="legend-item"><span class="sw" style="background:var(--lc-grade-${g})"></span>${g}</span>`
           )}
@@ -143,7 +143,8 @@ export class LibrusGradesByMonthCard extends LibrusBaseCard {
             const h = count * scale;
             y -= h;
             return svg`<rect x=${x} y=${y} width=${barW} height=${Math.max(h - 1.5, 1)} rx="3"
-              fill="var(--lc-grade-${gi + 1})"><title>${gi + 1}: ${count}</title></rect>`;
+              fill="var(--lc-grade-${gi + 1})"><title>${gi + 1}: ${count}</title></rect>
+              ${h >= 12 ? svg`<text x=${x + barW / 2} y=${y + h / 2 + 3} class="seg-digit">${gi + 1}</text>` : nothing}`;
           });
           const label = monthLabel(b.month, hass.language);
           return svg`

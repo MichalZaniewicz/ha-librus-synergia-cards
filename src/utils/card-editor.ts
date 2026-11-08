@@ -63,6 +63,7 @@ type EditorField =
         | "hide_legend"
         | "hide_comments"
         | "compact"
+        | "eink"
         | "hide_outage_warning"
         | "hide_room"
         | "only_tomorrow"
@@ -136,6 +137,7 @@ const COMMON_FIELDS: EditorField[] = [
   { kind: "boolean", key: "hide_icon", label: "editor.hide_icon" },
   { kind: "boolean", key: "hide_subtitle", label: "editor.hide_subtitle" },
   { kind: "boolean", key: "compact", label: "editor.compact" },
+  { kind: "boolean", key: "eink", label: "editor.eink" },
   { kind: "boolean", key: "hide_outage_warning", label: "editor.hide_outage_warning" },
 ];
 

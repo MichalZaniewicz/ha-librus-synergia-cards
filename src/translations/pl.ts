@@ -106,6 +106,7 @@ export const pl: Record<keyof typeof en, string> = {
   "editor.icon": "Własna ikona (np. mdi:star)",
   "editor.hide_header": "Ukryj nagłówek",
   "editor.compact": "Tryb kompaktowy",
+  "editor.eink": "Tryb e-ink (czerń i biel)",
   "editor.text_size": "Rozmiar tekstu",
   "text_size.normal": "Normalny",
   "text_size.large": "Większy (115%)",

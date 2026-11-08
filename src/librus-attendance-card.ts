@@ -33,6 +33,9 @@ const EXCUSED_HINT = /uspr\.?/i;
 
 type AttendanceStatus = "good" | "warn" | "bad";
 
+/** "Spóźnienie" counts as present; only e-ink mode draws it differently. */
+const LATE_HINT = /późn/i;
+
 function attendanceStatus(name: string, presenceByType: Record<string, boolean> | undefined): AttendanceStatus {
   const isPresent = presenceByType?.[name] ?? PRESENT_HINT.test(name);
   if (isPresent) return "good";
@@ -103,6 +106,7 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
       flexGrow: Math.max(count, 0.001),
       colorVar: statusColorVar[attendanceStatus(name, presenceByType)],
       title: `${name}: ${count}`,
+      className: `${attendanceStatus(name, presenceByType)} ${LATE_HINT.test(name) ? "late" : ""}`,
     }));
 
     return html`
@@ -158,7 +162,7 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
                 ${entries.map(
                   ([name, count]) => html`
                     <span class="legend-item">
-                      <span class="legend-dot ${attendanceStatus(name, presenceByType)}"></span>${name}
+                      <span class="legend-dot ${attendanceStatus(name, presenceByType)} ${LATE_HINT.test(name) ? "late" : ""}"></span>${name}
                       <b>${count}</b>
                     </span>
                   `

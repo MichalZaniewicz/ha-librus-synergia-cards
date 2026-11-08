@@ -234,6 +234,7 @@ card supports:
 | `language` | every card | `pl`, `en`, `uk` or `pt`: the card's labels, dates and numbers in that language, whatever language Home Assistant uses. Unset follows Home Assistant. Data from Librus (subjects, messages, the AI summary text) stays as it is - the weekly AI summary has its own Language option in the integration |
 | `hide_header` | every card | Hide the header row entirely |
 | `hide_icon` / `hide_subtitle` | every card with a header | Hide just the icon badge, or just the line under the title |
+| `eink` | every card | Pure black and white for e-paper screens: no tints, gradients, shadows or animation, sharp frames, and shapes or corner letters wherever a colour alone used to carry the meaning. Lists show every entry instead of scrolling (`list_height` still limits them) and the week and month arrows are hidden. To turn it on for every card, add `librus-cards-eink: true` to your Home Assistant theme; a card's own `eink: false` wins over it. `accent_color` is ignored in this mode |
 | `compact` | every card | Tighter padding, smaller icon badge, subtitle hidden - for a denser dashboard |
 | `hide_outage_warning` | every card | Hide the "Librus not responding" strip. By default a card with a header shows it under the header while the integration's *Connection status* sensor is `stale` (Librus isn't answering and the last data is shown), with the time of that data |
 | `tap_action` | the glanceable cards: the tiles (except Last update), Student card, Today, Week in review, End of school year, Today's schedule, Grade goal, Lucky number, Next exam, Streaks, Rank | Standard Lovelace action - `navigate`, `more-info`, `url`, `perform-action`, `none`. Set it in the editor (Home Assistant's own action picker) or in YAML. A card with an action can also be reached with Tab and run with Enter or Space |
@@ -291,7 +292,7 @@ and empty state, with a light/dark toggle and a language switcher.
    renders the student picker automatically whenever more than one Librus device exists, adds a `title`
    field to every card with a title line, the action picker to cards listed in `TAP_ACTION_CARDS`, and
    always appends the universal `icon` / `accent_color` / `text_size` / `language` / `hide_header` / `hide_icon` / `hide_subtitle` /
-   `compact` / `hide_outage_warning` fields - those are honored generically by `LibrusBaseCard` (see
+   `compact` / `eink` / `hide_outage_warning` fields - those are honored generically by `LibrusBaseCard` (see
    `utils/base-card.ts`), so a new card gets them for free. A new card's title should read
    `${this._config.title ?? t(hass, "...")}`; a list should go through `applyListOptions`
    (`utils/list-options.ts`) when it takes `sort` / `max_items`.

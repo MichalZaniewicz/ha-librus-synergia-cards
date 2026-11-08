@@ -348,7 +348,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
       return html`<div class="h ${i === todayColumn ? "today" : ""}">
         <span class="dn">${dayNames[i]}</span>
         <span class="dd">${date.slice(8, 10)}.${date.slice(5, 7)}</span>
-        ${label ? html`<span class="free-chip" title=${label}>${label}</span>` : nothing}
+        ${label ? html`<span class="free-chip ${free && !free.lessons ? "whole" : ""}" title=${label}>${label}</span>` : nothing}
       </div>`;
     });
 
@@ -500,9 +500,10 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
           </span>
           ${grid[row].map((slot, dayIndex) => {
             const free = isFree(dayIndex, label);
+            const whole = freeByDate.has(dates[dayIndex]) && !freeByDate.get(dates[dayIndex])!.lessons;
             const change = planChanges.get(`${dates[dayIndex]}|${label}`);
             if (!slot.length) {
-              if (free) return html`<div class="cell free"></div>`;
+              if (free) return html`<div class="cell free ${whole ? "whole" : ""}"></div>`;
               if (change?.kind === "missing" && change.planned_subject) {
                 return html`<div
                   class="cell missing"
@@ -518,7 +519,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
             const [firstName, ...otherNames] = info.name.split(" + ");
             const parallel = slot.length > 1 || otherNames.length > 0;
             if (free) {
-              return html`<div class="cell free" title=${`${info.name} (${t(hass, "card.week_timetable.free")})`}>
+              return html`<div class="cell free ${whole ? "whole" : ""}" title=${`${info.name} (${t(hass, "card.week_timetable.free")})`}>
                 <span>${abbreviate(firstName)}${parallel ? "+" : ""}</span>
                 <span class="free-note">${t(hass, "card.week_timetable.free")}</span>
               </div>`;
@@ -547,6 +548,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
             return html`<div
               style=${color ? `--subj:${color}` : ""}
               class="cell on ${color ? "subj" : ""} ${current ? "current" : ""} ${next ? "next" : ""} ${cancelled ? "off" : ""} ${substitution && !cancelled ? "sub" : ""} ${extra && !cancelled ? "extra" : ""} ${exam ? "exam" : ""}"
+              data-mark=${this._mark(exam, cancelled, substitution, extra) ?? nothing}
               title=${tip}
             >${abbreviate(firstName)}${parallel ? "+" : ""}</div>`;
           })}
@@ -569,8 +571,46 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
               )}
             `
           : nothing}
+        ${dates.map((date, dayIndex) => {
+          const free = freeByDate.get(date);
+          return free && !free.lessons
+            ? html`<div class="free-span" style="grid-column:${dayIndex + 2};grid-row:2 / span ${rowLabels.length}" title=${free.name}>
+                <span>${free.name}</span>
+              </div>`
+            : nothing;
+        })}
       </div>
+      ${this._einkKey()}
     `;
+  }
+
+  /** The first letter of a label: the corner mark e-ink mode draws instead of a colour. */
+  private _letter(key: "label.lesson_test" | "label.lesson_quiz" | "label.lesson_substitution" | "label.lesson_cancelled"): string {
+    return t(this.hass!, key).charAt(0).toUpperCase();
+  }
+
+  /** A lesson's corner letter in e-ink mode (hidden otherwise, see eink-styles.ts). */
+  private _mark(
+    exam: NonNullable<ReturnType<typeof lessonInfo>["exam"]> | undefined,
+    cancelled: boolean,
+    substitution: boolean,
+    extra: boolean
+  ): string | undefined {
+    if (cancelled) return this._letter("label.lesson_cancelled");
+    if (exam) return this._letter(exam.kind === "test" ? "label.lesson_test" : "label.lesson_quiz");
+    if (substitution) return this._letter("label.lesson_substitution");
+    return extra ? "+" : undefined;
+  }
+
+  /** What the corner letters mean; shown only in e-ink mode. */
+  private _einkKey(): TemplateResult {
+    const hass = this.hass!;
+    const row = (key: Parameters<LibrusWeekTimetableCard["_letter"]>[0], open: boolean) =>
+      html`<span><b class=${open ? "open" : ""}>${this._letter(key)}</b>${t(hass, key)}</span>`;
+    return html`<div class="eink-key">
+      ${row("label.lesson_test", false)} ${row("label.lesson_quiz", false)} ${row("label.lesson_substitution", true)}
+      ${row("label.lesson_cancelled", true)}
+    </div>`;
   }
 
   /** "Test: Chapter 5" - the test part of a lesson's tooltip. */
@@ -685,6 +725,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
                 const color = ev.extra ? undefined : this._color(firstName);
                 return html`<div
                   class="tl-lesson ${color ? "subj" : ""} ${current ? "current" : ""} ${next ? "next" : ""} ${info.cancelled ? "off" : ""} ${changed && !info.cancelled ? "sub" : ""} ${ev.extra ? "xa" : ""} ${exam ? "exam" : ""} ${freed ? "freed" : ""}"
+                  data-mark=${this._mark(exam, info.cancelled, Boolean(changed), false) ?? nothing}
                   style="top:${top}px;height:${h}px;left:calc(${width * column}% + 2px);width:calc(${width}% - 4px)${color ? `;--subj:${color}` : ""}"
                   title=${`${timeRange(ev)} ${this._tip([info])}${freed ? ` (${t(hass, "card.week_timetable.free")})` : ""}${ev.location ? ` · ${ev.location}` : ""}${exam ? ` – ${this._examTip(exam)}` : ""}`}
                 >
@@ -704,6 +745,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
           </div>`;
         })}
       </div>
+      ${this._einkKey()}
     `;
   }
 
@@ -803,7 +845,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         font-variant-numeric: tabular-nums;
       }
       .cell {
-        background: var(--divider-color);
+        background: var(--lc-track);
         border-radius: 5px;
         padding: 3px 2px;
         text-align: center;
@@ -981,7 +1023,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
         left: 0;
         right: 0;
         height: 1px;
-        background: var(--divider-color);
+        background: var(--lc-track);
         opacity: 0.5;
       }
       .tl-lesson {

@@ -106,6 +106,7 @@ export const uk: Record<keyof typeof en, string> = {
   "editor.icon": "Власний значок (напр. mdi:star)",
   "editor.hide_header": "Приховати заголовок",
   "editor.compact": "Компактний режим",
+  "editor.eink": "Режим e-ink (чорно-білий)",
   "editor.text_size": "Розмір тексту",
   "text_size.normal": "Звичайний",
   "text_size.large": "Великий (115%)",

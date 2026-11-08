@@ -1,4 +1,5 @@
 import { css } from "lit";
+import { librusEinkStyles } from "./eink-styles";
 
 /**
  * Brand palette sampled from the librus_synergia integration's own brand
@@ -24,6 +25,8 @@ export const librusTokens = css`
     --lc-bad: #c6444b;
     --lc-bad-bg: #f9e3e4;
     --lc-neutral-dot: #b4b0cf;
+    /* An empty bar or cell. Its own token: e-ink mode needs it white. */
+    --lc-track: var(--divider-color);
     /* 16-color chart palette (grade categories, subjects, ...) - the first
        6 alias the tokens above for continuity; the rest are new hues, kept
        in the same muted-professional family as the brand indigo/amber.
@@ -312,7 +315,7 @@ export const librusSharedStyles = css`
     height: 9px;
     border-radius: 5px;
     overflow: hidden;
-    background: var(--divider-color);
+    background: var(--lc-track);
   }
   .seg {
     min-width: 2px;
@@ -341,7 +344,7 @@ export const librusSharedStyles = css`
   .hbar-track {
     height: 10px;
     border-radius: 5px;
-    background: var(--divider-color);
+    background: var(--lc-track);
     overflow: hidden;
   }
   .hbar-fill {
@@ -707,4 +710,6 @@ export const librusSharedStyles = css`
     font-size: 0.76rem;
     max-width: 46ch;
   }
+
+  ${librusEinkStyles}
 `;

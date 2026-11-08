@@ -105,6 +105,7 @@ export const en = {
   "editor.icon": "Icon override (e.g. mdi:star)",
   "editor.hide_header": "Hide header",
   "editor.compact": "Compact mode",
+  "editor.eink": "E-ink mode (black and white)",
   "editor.text_size": "Text size",
   "text_size.normal": "Normal",
   "text_size.large": "Large (115%)",

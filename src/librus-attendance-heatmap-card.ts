@@ -182,7 +182,7 @@ export class LibrusAttendanceHeatmapCard extends LibrusBaseCard {
         height: 11px;
         border-radius: 3px;
         display: inline-block;
-        background: var(--divider-color);
+        background: var(--lc-track);
       }
       .cell.good {
         background: var(--lc-good);

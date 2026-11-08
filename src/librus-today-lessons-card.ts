@@ -170,7 +170,7 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
         top: 28px;
         bottom: -6px;
         width: 1px;
-        background: var(--divider-color);
+        background: var(--lc-track);
       }
       .tl-time {
         width: 38px;

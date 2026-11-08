@@ -9,6 +9,8 @@ export interface BarSegment {
   flexGrow: number;
   colorVar: string;
   title?: string;
+  /** Extra class: e-ink mode can't tell segments apart by colour. */
+  className?: string;
 }
 
 /** Reused by Attendance, mailbox breakdowns, and any proportional breakdown. */
@@ -18,7 +20,7 @@ export function segmentedBar(segments: BarSegment[]): TemplateResult {
       ${segments.map(
         (s) =>
           html`<div
-            class="seg"
+            class="seg ${s.className ?? ""}"
             style="flex-grow:${s.flexGrow};background:${s.colorVar}"
             title=${s.title ?? ""}
           ></div>`

@@ -114,7 +114,7 @@ export class LibrusAttendanceWeekdayCard extends LibrusBaseCard {
                   ${CATEGORIES.filter((c) => b && b[c] > 0).map(
                     (c) => html`
                       <div
-                        class="seg"
+                        class="seg ${c}"
                         style="height:${((b![c] / total) * stackHeight).toFixed(1)}px;background:${COLOR[c]}"
                         title="${t(hass, LABEL_KEY[c])}: ${b![c]}"
                       ></div>
@@ -130,7 +130,7 @@ export class LibrusAttendanceWeekdayCard extends LibrusBaseCard {
           ${CATEGORIES.map(
             (c) => html`
               <span class="legend-item">
-                <span class="dot" style="background:${COLOR[c]}"></span>${t(hass, LABEL_KEY[c])} <b>${sums[c]}</b>
+                <span class="dot series-${c}" style="background:${COLOR[c]}"></span>${t(hass, LABEL_KEY[c])} <b>${sums[c]}</b>
               </span>
             `
           )}

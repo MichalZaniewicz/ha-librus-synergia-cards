@@ -212,7 +212,7 @@ export class LibrusCancelledLessonsCard extends LibrusBaseCard {
         display: flex;
         height: 10px;
         border-radius: 5px;
-        background: var(--divider-color);
+        background: var(--lc-track);
         overflow: hidden;
       }
       .strack .seg {

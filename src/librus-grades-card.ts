@@ -111,6 +111,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
                         ></span
                       ></span>
                       <span class="val">${formatNumber(value, hass.language, { maximumFractionDigits: 2 })}</span>
+                      ${forecast?.declining ? html`<span class="fc-arrow">↓</span>` : nothing}
                       ${forecast
                         ? html`<span
                             class="fc ${forecastTone(forecast)}"
@@ -188,7 +189,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
         flex: 1;
         height: 8px;
         border-radius: 4px;
-        background: var(--divider-color);
+        background: var(--lc-track);
         overflow: hidden;
         display: block;
       }
@@ -208,7 +209,7 @@ export class LibrusGradesCard extends LibrusBaseCard {
         justify-content: center;
         font-size: 0.72rem;
         font-weight: 800;
-        background: var(--divider-color);
+        background: var(--lc-track);
         color: var(--primary-text-color);
       }
       .sub-row .fc.warn {

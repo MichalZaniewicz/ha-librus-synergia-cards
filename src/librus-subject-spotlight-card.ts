@@ -138,7 +138,7 @@ export class LibrusSubjectSpotlightCard extends LibrusBaseCard {
         gap: 2px;
         padding: 12px 8px;
         border-radius: var(--ha-card-border-radius, 12px);
-        background: var(--divider-color);
+        background: var(--lc-track);
       }
       .spotlight-tile.good {
         background: var(--lc-good-bg);

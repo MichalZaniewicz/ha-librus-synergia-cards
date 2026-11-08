@@ -94,8 +94,8 @@ export class LibrusAttendanceSubjectCard extends LibrusBaseCard {
           })}
         </div>
         <div class="legend">
-          <span class="legend-item"><span class="dot" style="background:var(--lc-bad)"></span>${t(hass, "stat.unexcused")}</span>
-          <span class="legend-item"><span class="dot" style="background:var(--lc-warn)"></span>${t(hass, "stat.excused")}</span>
+          <span class="legend-item"><span class="dot series-unexcused" style="background:var(--lc-bad)"></span>${t(hass, "stat.unexcused")}</span>
+          <span class="legend-item"><span class="dot series-excused" style="background:var(--lc-warn)"></span>${t(hass, "stat.excused")}</span>
         </div>
       </ha-card>
     `;
@@ -108,7 +108,7 @@ export class LibrusAttendanceSubjectCard extends LibrusBaseCard {
       .sbar-track {
         height: 10px;
         border-radius: 5px;
-        background: var(--divider-color);
+        background: var(--lc-track);
         overflow: hidden;
         display: flex;
       }

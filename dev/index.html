@@ -82,6 +82,7 @@
 <body>
   <h1>librus-synergia-cards dev harness (mock hass, no live HA needed)</h1>
   <button id="toggle" type="button">Toggle dark mode</button>
+  <button id="eink" type="button">E-ink</button>
   <button id="outage" type="button">Symuluj awarię Librusa</button>
   <select id="lang">
     <option value="pl">Polski</option>
@@ -1508,6 +1509,14 @@
         emptyHass.themes.darkMode = hass.themes.darkMode;
         [...cardEls, ...emptyEls].forEach((el) => { el.hass = { ...el.hass, themes: { darkMode: hass.themes.darkMode } }; });
       });
+      // E-ink mode on every card; ?eink=1 starts with it on.
+      let eink = false;
+      const setEink = (on) => {
+        eink = on;
+        [...cardEls, ...emptyEls].forEach((el) => el.setConfig({ ...el._config, eink }));
+      };
+      document.getElementById("eink").addEventListener("click", () => setEink(!eink));
+      if (new URLSearchParams(location.search).get("eink") === "1") setEink(true);
       let outage = false;
       document.getElementById("outage").addEventListener("click", (e) => {
         outage = !outage;

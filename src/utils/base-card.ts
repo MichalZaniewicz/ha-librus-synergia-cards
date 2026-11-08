@@ -142,7 +142,7 @@ export abstract class LibrusBaseCard extends LitElement {
   private _timers: CardTimer[] = [];
   private _memos = new Map<string, { deps: readonly unknown[]; value: unknown }>();
   // The config + dark mode _syncTheme() last applied.
-  private _themedFor?: { config: unknown; dark: boolean };
+  private _themedFor?: { config: unknown; dark: boolean; eink: boolean };
   // The `icon` option updated() last stamped on the header icon.
   private _appliedIcon?: string;
 
@@ -436,22 +436,43 @@ export abstract class LibrusBaseCard extends LitElement {
   protected _syncTheme(): void {
     const dark = Boolean(this.hass?.themes?.darkMode);
     const config = this._cardConfig;
-    if (this._themedFor && this._themedFor.config === config && this._themedFor.dark === dark) return;
-    this._themedFor = { config, dark };
-    this.classList.toggle("dark", dark);
+    const eink = this._einkOn(config);
+    if (
+      this._themedFor &&
+      this._themedFor.config === config &&
+      this._themedFor.dark === dark &&
+      this._themedFor.eink === eink
+    ) {
+      return;
+    }
+    this._themedFor = { config, dark, eink };
+    this.classList.toggle("dark", dark && !eink);
+    this.classList.toggle("eink", eink);
     this.classList.toggle("compact", Boolean(config?.compact));
     this.classList.toggle("hide-header", Boolean(config?.hide_header));
     this.classList.toggle("hide-icon", Boolean(config?.hide_icon));
     this.classList.toggle("hide-subtitle", Boolean(config?.hide_subtitle));
     this.classList.toggle("hide-legend", Boolean(config?.hide_legend));
     this.classList.toggle("hide-comments", Boolean(config?.hide_comments));
-    this._syncAccent(config?.accent_color, dark);
+    this._syncAccent(eink ? undefined : config?.accent_color, dark);
     const height = config?.list_height;
     if (height && height > 0) this.style.setProperty("--lc-list-height", `${height}px`);
     else this.style.removeProperty("--lc-list-height");
     const scale = textScale(config?.text_size);
     if (scale) this.style.setProperty("--lc-scale", String(scale));
     else this.style.removeProperty("--lc-scale");
+  }
+
+  /** E-ink mode (eink-styles.ts): the card's `eink` option, else the
+   * `librus-cards-eink` theme variable, which turns it on for every card. */
+  private _einkOn(config: LibrusCardConfig | undefined): boolean {
+    if (typeof config?.eink === "boolean") return config.eink;
+    const value = getComputedStyle(this)
+      .getPropertyValue("--librus-cards-eink")
+      .trim()
+      .replace(/^["']|["']$/g, "")
+      .toLowerCase();
+    return value !== "" && value !== "false" && value !== "0" && value !== "off";
   }
 
   /**

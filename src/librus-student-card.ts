@@ -221,7 +221,7 @@ export class LibrusStudentCard extends LibrusBaseCard {
         flex: 1;
         height: 6px;
         border-radius: 3px;
-        background: var(--divider-color);
+        background: var(--lc-track);
         overflow: hidden;
         display: block;
       }

@@ -379,7 +379,7 @@ export class LibrusSemesterCard extends LibrusBaseCard {
         content: "";
         flex: 1;
         height: 1px;
-        background: var(--divider-color);
+        background: var(--lc-track);
       }
       .stats {
         display: grid;
@@ -477,7 +477,7 @@ export class LibrusSemesterCard extends LibrusBaseCard {
       }
       .sub .track {
         height: 8px;
-        background: var(--divider-color);
+        background: var(--lc-track);
         border-radius: 4px;
         overflow: hidden;
       }

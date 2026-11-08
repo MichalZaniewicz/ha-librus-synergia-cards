@@ -137,7 +137,7 @@ export class LibrusSubjectAttendanceCard extends LibrusBaseCard {
             `
           )}
         </div>
-        <div class="legend">
+        <div class="legend tone-legend">
           <span class="legend-item"><span class="dot" style="background:var(--lc-good)"></span>${t(hass, "card.subject_attendance.legend_good")}</span>
           <span class="legend-item"><span class="dot" style="background:var(--lc-warn)"></span>${t(hass, "card.subject_attendance.legend_warn")}</span>
           <span class="legend-item"><span class="dot" style="background:var(--lc-bad)"></span>${t(hass, "card.subject_attendance.legend_bad")}</span>
