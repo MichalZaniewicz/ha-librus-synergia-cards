@@ -100,6 +100,7 @@ export const uk: Record<keyof typeof en, string> = {
   "editor.hide_history": "Приховати смугу місяців",
   "editor.hide_comments": "Приховати коментарі",
   "editor.list_height": "Висота списку (px)",
+  "editor.max_lines": "Рядків тексту в записі",
   "editor.more_items": "Скільки ще показати в списку",
   "editor.tap_action": "Дія при натисканні",
   "editor.exam_keywords": "Ключові слова категорій контрольних (через кому)",

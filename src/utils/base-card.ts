@@ -457,6 +457,10 @@ export abstract class LibrusBaseCard extends LitElement {
     this.classList.toggle("hide-legend", Boolean(config?.hide_legend));
     this.classList.toggle("hide-comments", Boolean(config?.hide_comments));
     this._syncAccent(eink ? undefined : config?.accent_color, dark);
+    const lines = Math.floor(Number(config?.max_lines));
+    this.classList.toggle("clamp-text", lines > 0);
+    if (lines > 0) this.style.setProperty("--lc-max-lines", String(lines));
+    else this.style.removeProperty("--lc-max-lines");
     const height = config?.list_height;
     if (height && height > 0) this.style.setProperty("--lc-list-height", `${height}px`);
     else this.style.removeProperty("--lc-list-height");

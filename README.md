@@ -196,6 +196,7 @@ card supports:
 | `max_items` | Grade log, Subject grades, Recent activity, Announcements, Messages, Homework checklist, School trips, Agenda, Behaviour notices, Homework assignments, Teachers, Substitutions, Descriptive grades, Hero History, Subject trends | Row cap (School trips: default 4; no cap by default where there was none) |
 | `max_items` | Next exam, Free days | How many later exams / free days to list under the next one (default 4, `0` hides them) |
 | `list_height` | the cards with a scrolling list (Grade log, Agenda, Messages, Announcements, Grades, ...) | Height limit of the list in px (default 320; Grades 220) |
+| `max_lines` | every card with entries of text (in the editor of Homework, Agenda, Messages, Announcements and others) | Shortens each entry's text to this many lines, with an ellipsis, so one long entry can't fill the card. A message or announcement you open still shows in full |
 | `days_ahead` | Agenda | How far forward to look (default 14) |
 | `days_ahead` | Next exam | How far forward to look for tests when there's no Next exam sensor (default 90) |
 | `good_above` / `bad_below` | Attendance, Attendance by subject | Colour lines in %: good from `good_above` (default 90), bad below `bad_below` (Attendance 75, Attendance by subject 50) |

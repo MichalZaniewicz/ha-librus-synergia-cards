@@ -641,6 +641,14 @@ export const librusSharedStyles = css`
     margin-top: 2px;
     line-height: 1.4;
   }
+  /* max_lines (LibrusBaseCard._syncTheme). An opened message or announcement
+     is .full-text, so it stays whole. */
+  :host(.clamp-text) .item-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--lc-max-lines);
+    overflow: hidden;
+  }
   .quote {
     font-size: 0.72rem;
     color: var(--secondary-text-color);

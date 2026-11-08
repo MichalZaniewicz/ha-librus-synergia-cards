@@ -100,6 +100,7 @@ export const pl: Record<keyof typeof en, string> = {
   "editor.hide_history": "Ukryj pasek miesięcy",
   "editor.hide_comments": "Ukryj komentarze",
   "editor.list_height": "Wysokość listy (px)",
+  "editor.max_lines": "Liczba linii tekstu we wpisie",
   "editor.more_items": "Ile kolejnych pokazać",
   "editor.tap_action": "Akcja po kliknięciu",
   "editor.exam_keywords": "Słowa-klucze kategorii sprawdzianów (po przecinku)",

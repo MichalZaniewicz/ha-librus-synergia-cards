@@ -100,6 +100,7 @@ export const pt: Record<keyof typeof en, string> = {
   "editor.hide_history": "Ocultar a faixa dos meses",
   "editor.hide_comments": "Ocultar comentários",
   "editor.list_height": "Altura da lista (px)",
+  "editor.max_lines": "Linhas de texto por entrada",
   "editor.more_items": "Quantos mais listar",
   "editor.tap_action": "Ação ao tocar",
   "editor.exam_keywords": "Palavras-chave das categorias de teste (separadas por vírgulas)",

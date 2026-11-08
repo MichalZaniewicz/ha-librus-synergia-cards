@@ -89,6 +89,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   language?: string;
   /** Height limit of the scrolling lists, in px (320 by default). */
   list_height?: number;
+  /** Shortens an entry's text to this many lines, with an ellipsis. Universal. */
+  max_lines?: number;
   /** Hides the colour legend under the attendance charts and the grade radar. */
   hide_legend?: boolean;
   /** Hides teachers' comments under grades and notes. */
