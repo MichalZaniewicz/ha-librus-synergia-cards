@@ -125,6 +125,7 @@ export const pt: Record<keyof typeof en, string> = {
   "language.en": "Inglês",
   "language.uk": "Ucraniano",
   "language.pt": "Português",
+  "language.ru": "Russo",
   "editor.hide_outage_warning": "Ocultar o aviso \"O Librus não responde\"",
   "outage.title": "O Librus não responde",
   "outage.data_from": "dados de {time}",

@@ -1,6 +1,7 @@
 import { en } from "../translations/en";
 import { pl } from "../translations/pl";
 import { pt } from "../translations/pt";
+import { ru } from "../translations/ru";
 import { uk } from "../translations/uk";
 import type { LibrusHass } from "./types";
 
@@ -11,6 +12,7 @@ const LANGUAGES: Record<string, Record<TranslationKey, string>> = {
   pl,
   uk,
   pt,
+  ru,
 };
 
 function dictFor(hass: LibrusHass | undefined): Record<TranslationKey, string> {
