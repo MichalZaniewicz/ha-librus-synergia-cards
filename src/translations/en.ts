@@ -125,6 +125,8 @@ export const en = {
   "language.uk": "Українська",
   "language.pt": "Português",
   "language.ru": "Русский",
+  "language.de": "Deutsch",
+  "language.fr": "Français",
   "editor.hide_outage_warning": "Hide the \"Librus not responding\" warning",
   "outage.title": "Librus not responding",
   "outage.data_from": "data from {time}",

@@ -144,8 +144,8 @@ subject_id: 42005 # omit for the overall average
 
 ## Languages
 
-Every label follows your Home Assistant language automatically - English, Polish, Ukrainian and
-Portuguese are built in (`src/translations/`). Anything else falls back to English. Data from Librus
+Every label follows your Home Assistant language automatically - English, Polish, Ukrainian,
+Portuguese, Russian, German and French are built in (`src/translations/`). Anything else falls back to English. Data from Librus
 (subject names, categories, messages) stays as the school writes it; the integration's Subject and
 category names under Configure translate the subjects and grade categories. Adding a language is one new typed
 file - see [Adding a language](#adding-a-language) below.
@@ -232,7 +232,7 @@ card supports:
 | `icon` | every card | Override the header icon, e.g. `mdi:star` |
 | `accent_color` | every card | Any CSS color (`#e91e63`, `teal`, `rgb(0 150 136)`) instead of the indigo accent - rings, bars, chips and the icon badge follow it. The exact color is used in both themes, so pick one that reads on a dark background too. An invalid value is ignored |
 | `text_size` | every card | Bigger text: `large` (115%), `larger` (130%), `largest` (150%), or any factor such as `1.2`. Icons, charts and spacing grow with it and the card reflows to fit its width. To enlarge every card at once, add `librus-cards-scale: 1.2` to your Home Assistant theme instead; a card's own `text_size` wins over it |
-| `language` | every card | `pl`, `en`, `uk` or `pt`: the card's labels, dates and numbers in that language, whatever language Home Assistant uses. Unset follows Home Assistant. Data from Librus (subjects, messages, the AI summary text) stays as it is - the weekly AI summary has its own Language option in the integration |
+| `language` | every card | `pl`, `en`, `uk`, `pt`, `ru`, `de` or `fr`: the card's labels, dates and numbers in that language, whatever language Home Assistant uses. Unset follows Home Assistant. Data from Librus (subjects, messages, the AI summary text) stays as it is - the weekly AI summary has its own Language option in the integration |
 | `hide_header` | every card | Hide the header row entirely |
 | `hide_icon` / `hide_subtitle` | every card with a header | Hide just the icon badge, or just the line under the title |
 | `eink` | every card | For e-paper screens. Choose the screen: `bw` or `true` (black and white), `gray` (4 shades of grey), `red` or `yellow` (black and white plus that colour), `color` (6 colours, such as Spectra 6). No tints, gradients, shadows or animation, sharp frames, and shapes or corner letters wherever a colour alone used to carry the meaning; colour only adds emphasis on top. Colours are the palette's pure values, so a screenshot tool has nothing to dither. Lists show every entry instead of scrolling (`list_height` still limits them) and the week and month arrows are hidden. To set it for every card, add `librus-cards-eink: gray` (or any other mode) to your Home Assistant theme; a card's own `eink` wins over it, `eink: false` included. `accent_color` is ignored in this mode |
@@ -349,6 +349,7 @@ Thanks to everyone who sent code to this project:
 
 - <img src="https://github.com/keysim86.png?size=40" width="20" height="20" alt=""> [@keysim86](https://github.com/keysim86): point-graded subjects in the radar, spotlight, distribution, report card and hero cards
 - <img src="https://github.com/emes30.png?size=40" width="20" height="20" alt=""> [@emes30](https://github.com/emes30): lesson hours in the week timetable
+- <img src="https://github.com/snooppoland-cpu.png?size=40" width="20" height="20" alt=""> [@snooppoland-cpu](https://github.com/snooppoland-cpu): Russian translation
 
 ## Supporters
 

@@ -126,6 +126,8 @@ export const uk: Record<keyof typeof en, string> = {
   "language.uk": "Українська",
   "language.pt": "Португальська",
   "language.ru": "Російська",
+  "language.de": "Німецька",
+  "language.fr": "Французька",
   "editor.hide_outage_warning": "Приховати попередження \"Librus не відповідає\"",
   "outage.title": "Librus не відповідає",
   "outage.data_from": "дані станом на {time}",

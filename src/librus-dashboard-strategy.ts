@@ -32,7 +32,7 @@ interface CardConfig {
   [key: string]: unknown;
 }
 
-type Language = "pl" | "en" | "uk" | "pt";
+type Language = "pl" | "en" | "uk" | "pt" | "ru" | "de" | "fr";
 
 const HEADINGS: Record<Language, Record<string, string>> = {
   pl: {
@@ -99,11 +99,59 @@ const HEADINGS: Record<Language, Record<string, string>> = {
     none_text:
       "Não foi encontrado nenhum aluno da integração Librus Synergia. Adicione a integração em Definições → Dispositivos e serviços e depois recarregue este painel.",
   },
+  ru: {
+    family: "Семья",
+    all: "Все дети",
+    morning: "Утро",
+    today: "Сегодня",
+    todo: "Нужно сделать",
+    week: "Эта неделя",
+    news: "Что нового",
+    grades: "Оценки",
+    attendance: "Посещаемость",
+    timetable: "Расписание",
+    school: "Школа",
+    none: "Нет учеников",
+    none_text:
+      "Не найдено ни одного ученика из интеграции Librus Synergia. Добавьте интеграцию в разделе Настройки → Устройства и службы, затем обновите эту панель.",
+  },
+  de: {
+    family: "Familie",
+    all: "Alle Kinder",
+    morning: "Morgen",
+    today: "Heute",
+    todo: "Zu erledigen",
+    week: "Diese Woche",
+    news: "Neuigkeiten",
+    grades: "Noten",
+    attendance: "Anwesenheit",
+    timetable: "Stundenplan",
+    school: "Schule",
+    none: "Keine Schüler",
+    none_text:
+      "Es wurde kein Schüler aus der Integration Librus Synergia gefunden. Füge die Integration unter Einstellungen → Geräte & Dienste hinzu und lade dann dieses Dashboard neu.",
+  },
+  fr: {
+    family: "Famille",
+    all: "Tous les enfants",
+    morning: "Matin",
+    today: "Aujourd'hui",
+    todo: "À faire",
+    week: "Cette semaine",
+    news: "Nouveautés",
+    grades: "Notes",
+    attendance: "Assiduité",
+    timetable: "Emploi du temps",
+    school: "École",
+    none: "Aucun élève",
+    none_text:
+      "Aucun élève de l'intégration Librus Synergia n'a été trouvé. Ajoutez l'intégration dans Paramètres → Appareils et services, puis rechargez ce tableau de bord.",
+  },
 };
 
 function languageOf(hass: { language?: string }): Language {
   const code = (hass.language ?? "").toLowerCase().split("-")[0];
-  return code === "pl" || code === "uk" || code === "pt" ? code : "en";
+  return code in HEADINGS ? (code as Language) : "en";
 }
 
 const ICONS: Record<string, string> = {
