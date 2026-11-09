@@ -331,7 +331,7 @@ export const de: Record<keyof typeof en, string> = {
   "stat.excused_short": "Entsch.",
   "stat.late": "Verspätungen",
   "stat.records": "Einträge",
-  "stat.percentage": "Anwesenheit",
+  "stat.percentage": "Anwesend",
 
   "card.behaviour_notices.title": "Verhaltensnotizen",
   "card.behaviour_notices.empty": "Keine Notizen",
