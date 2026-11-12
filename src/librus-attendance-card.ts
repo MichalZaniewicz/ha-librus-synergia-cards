@@ -99,7 +99,7 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
     const excused = entity.attributes.excused_count as number | undefined;
     const hasSplit = unexcused !== undefined;
     // Late arrivals count as present, so they're not in the state; the
-    // integration counts them since 0.12.47 (no tile on an older one).
+    // integration counts them since 0.12.48 (no tile on an older one).
     const lateCount = entity.attributes.late_count as number | undefined;
     const lateSemester = entity.attributes.late_this_semester as number | null | undefined;
     const entries = Object.entries(breakdown);
