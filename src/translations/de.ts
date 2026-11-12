@@ -330,6 +330,7 @@ export const de: Record<keyof typeof en, string> = {
   "stat.unexcused_short": "Unentsch.",
   "stat.excused_short": "Entsch.",
   "stat.late": "Verspätungen",
+  "stat.late_semester": "In diesem Halbjahr: {n}",
   "stat.records": "Einträge",
   "stat.percentage": "Anwesend",
 

@@ -330,6 +330,7 @@ export const ru: Record<keyof typeof en, string> = {
   "stat.unexcused_short": "Без уваж.",
   "stat.excused_short": "По уваж.",
   "stat.late": "Опоздания",
+  "stat.late_semester": "В этом полугодии: {n}",
   "stat.records": "Записи",
   "stat.percentage": "Явка",
 

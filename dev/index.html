@@ -349,9 +349,12 @@
       last_absence_date: iso(new Date(today.getTime() - 18 * 86400000)),
       percentage: 99.3,
       by_semester: {
-        "1": { total: 149, present: 148, percentage: 99.3 },
-        "2": { total: 0, present: 0, percentage: null },
+        "1": { total: 149, present: 148, late: 2, percentage: 99.3 },
+        "2": { total: 0, present: 0, late: 0, percentage: null },
       },
+      // ha-librus-synergia 0.12.47+: late arrivals (count as present).
+      late_count: 2,
+      late_this_semester: 2,
     }, 2);
     // "Lowest subject attendance" sensor (backend 0.9.0+) - one subject per
     // colour band, plus two with too few lessons (librus-subject-attendance-card).

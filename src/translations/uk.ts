@@ -330,6 +330,7 @@ export const uk: Record<keyof typeof en, string> = {
   "stat.unexcused_short": "Непояснені",
   "stat.excused_short": "Пояснені",
   "stat.late": "Запізнення",
+  "stat.late_semester": "У цьому семестрі: {n}",
   "stat.records": "Записи",
   "stat.percentage": "Відвідуваність",
 

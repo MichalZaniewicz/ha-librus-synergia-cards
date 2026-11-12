@@ -329,6 +329,7 @@ export const en = {
   "stat.unexcused_short": "Unexcused",
   "stat.excused_short": "Excused",
   "stat.late": "Late",
+  "stat.late_semester": "This semester: {n}",
   "stat.records": "Records",
   "stat.percentage": "Attendance",
 

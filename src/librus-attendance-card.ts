@@ -81,7 +81,10 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
     const percentage = entity.attributes.percentage as number | null | undefined;
     const bySemester =
       (entity.attributes.by_semester as
-        | Record<string, { total: number; present: number; percentage: number | null }>
+        | Record<
+            string,
+            { total: number; present: number; late?: number; percentage: number | null }
+          >
         | undefined) ?? {};
     const semesters = Object.entries(bySemester).sort(([a], [b]) => Number(a) - Number(b));
     const absences = Number(entity.state) || 0;
@@ -95,6 +98,10 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
     const unexcused = entity.attributes.unexcused_count as number | undefined;
     const excused = entity.attributes.excused_count as number | undefined;
     const hasSplit = unexcused !== undefined;
+    // Late arrivals count as present, so they're not in the state; the
+    // integration counts them since 0.12.47 (no tile on an older one).
+    const lateCount = entity.attributes.late_count as number | undefined;
+    const lateSemester = entity.attributes.late_this_semester as number | null | undefined;
     const entries = Object.entries(breakdown);
     const statusColorVar: Record<AttendanceStatus, string> = {
       good: "var(--lc-good)",
@@ -150,10 +157,26 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
                   <div class="stat-label">${t(hass, "stat.absences")}</div>
                 </div>
               `}
-          <div class="stat">
-            <div class="stat-value">${total}</div>
-            <div class="stat-label">${t(hass, "stat.records")}</div>
-          </div>
+          ${lateCount !== undefined
+            ? html`
+                <div
+                  class="stat"
+                  title=${lateSemester != null
+                    ? t(hass, "stat.late_semester", { n: lateSemester })
+                    : t(hass, "stat.late")}
+                >
+                  <div class="stat-value">${lateCount}</div>
+                  <div class="stat-label">${t(hass, "stat.late")}</div>
+                </div>
+              `
+            : // The record count is mostly lessons held - it gives its place to
+              // the late tile, so four tiles still fit on one row.
+              html`
+                <div class="stat">
+                  <div class="stat-value">${total}</div>
+                  <div class="stat-label">${t(hass, "stat.records")}</div>
+                </div>
+              `}
         </div>
         ${segments.length ? segmentedBar(segments) : nothing}
         ${entries.length
@@ -179,7 +202,14 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
                   ([n, s]) => html`
                     <div class="semester-row">
                       <span>${t(hass, "card.attendance.semester", { n })}</span>
-                      <span class="semester-pct">${s.percentage != null ? `${s.percentage}%` : "–"}</span>
+                      <span class="semester-values">
+                        ${s.late
+                          ? html`<span class="semester-late" title=${t(hass, "stat.late")}
+                              ><ha-icon icon="mdi:clock-alert-outline"></ha-icon>${s.late}</span
+                            >`
+                          : nothing}
+                        <span class="semester-pct">${s.percentage != null ? `${s.percentage}%` : "–"}</span>
+                      </span>
                     </div>
                   `
                 )}
@@ -205,6 +235,21 @@ export class LibrusAttendanceCard extends LibrusBaseCard {
         display: inline-flex;
         align-items: center;
         gap: 5px;
+      }
+      .semester-values {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .semester-late {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 0.75rem;
+        color: var(--secondary-text-color);
+      }
+      .semester-late ha-icon {
+        --mdc-icon-size: 14px;
       }
       .legend-item b {
         color: var(--primary-text-color);
