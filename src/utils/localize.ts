@@ -94,6 +94,27 @@ export function formatTimeAgo(hass: LibrusHass | undefined, iso: string | undefi
   return t(hass, "label.days_ago", { days });
 }
 
+/** Text bases with `_one` / `_few` / `_many` / `_other` keys in every language. */
+export type CountedText = "label.lessons_before" | "label.lessons_before_short" | "card.exam_prep.lessons";
+
+/**
+ * "{count}" text in the right plural form for the card's language - Polish,
+ * Ukrainian and Russian need three ("1 lekcja", "2 lekcje", "5 lekcji"), so
+ * the form comes from Intl.PluralRules. A language the browser doesn't know
+ * falls back to `_other`.
+ */
+export function tCount(hass: LibrusHass | undefined, count: number, base: CountedText): string {
+  const language = (hass?.language ?? "en").split("-")[0]?.toLowerCase() || "en";
+  let form = "other";
+  try {
+    form = new Intl.PluralRules(language).select(count);
+  } catch {
+    form = "other";
+  }
+  if (form !== "one" && form !== "few" && form !== "many") form = "other";
+  return t(hass, `${base}_${form}` as TranslationKey, { count });
+}
+
 /** Picks a `*_one` / `*_other` key pair by count - a two-way plural split. */
 export function tPlural(
   hass: LibrusHass | undefined,

@@ -7,7 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, isoDate, type LibrusCalendarEvent } from "./utils/calendar";
 import { UNAVAILABLE } from "./utils/entities";
 import { daysBetween, formatShortDate, parseCategory } from "./utils/format";
-import { t } from "./utils/localize";
+import { t, tCount } from "./utils/localize";
 import { tapAction } from "./utils/actions";
 import { librusCardEditor } from "./utils/card-editor";
 
@@ -38,6 +38,8 @@ interface SensorExam {
   subject: string | null;
   category: string | null;
   content: string | null;
+  /** Lessons of the subject after today and before the test (integration 0.12.49+). */
+  lessons_left?: number | null;
 }
 
 /** Normalized "date + one-line label" for an upcoming exam, from either
@@ -45,6 +47,8 @@ interface SensorExam {
 interface ExamRef {
   date: string;
   text: string;
+  /** Lessons of the subject left before the test; unknown without the next_exam sensor. */
+  lessons?: number | null;
 }
 
 /**
@@ -97,13 +101,20 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
       .map((e) => ({
         date: e.date,
         text: [e.subject, e.content].filter(Boolean).join(" — ") || e.category || "",
+        lessons: e.lessons_left,
       }));
     // Sensor present but `upcoming` empty/older integration - still honour
     // its own state (the next exam's date) with the subject attribute, but
     // only while that date hasn't passed: a state left over from an exam
     // that already took place showed a negative countdown.
     if (refs.length === 0 && entity.state.slice(0, 10) >= todayIso) {
-      return [{ date: entity.state, text: (entity.attributes.subject as string | undefined) ?? "" }];
+      return [
+        {
+          date: entity.state,
+          text: (entity.attributes.subject as string | undefined) ?? "",
+          lessons: entity.attributes.lessons_left as number | null | undefined,
+        },
+      ];
     }
     return refs;
   }
@@ -179,14 +190,27 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
         </div>
         <div class="countdown">
           <span class="big">${days}</span>
-          <span class="unit">${t(hass, "label.days_until")}<br /><b>${next.text}</b></span>
+          <span class="unit"
+            >${t(hass, "label.days_until")}<br /><b>${next.text}</b>${typeof next.lessons === "number"
+              ? html`<br /><span class="lessons">${next.lessons === 0
+                  ? t(hass, "label.lessons_before_none")
+                  : tCount(hass, next.lessons, "label.lessons_before")}</span>`
+              : nothing}</span
+          >
         </div>
         ${rest.length
           ? html`
               <hr />
               <div class="chips">
                 ${rest.slice(0, this._config?.max_items ?? 4).map(
-                  (e) => html`<span class="chip">${e.text} <span class="n">${formatShortDate(e.date, hass.language)}</span></span>`
+                  (e) => html`<span class="chip"
+                    >${e.text}
+                    <span class="n"
+                      >${formatShortDate(e.date, hass.language)}${typeof e.lessons === "number"
+                        ? ` · ${tCount(hass, e.lessons, "label.lessons_before_short")}`
+                        : ""}</span
+                    ></span
+                  >`
                 )}
               </div>
             `
@@ -215,6 +239,10 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
         font-size: 0.76rem;
         color: var(--secondary-text-color);
         line-height: 1.4;
+      }
+      .countdown .lessons {
+        color: var(--lc-brand-strong);
+        font-weight: 600;
       }
     `,
   ];

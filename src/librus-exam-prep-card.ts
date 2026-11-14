@@ -4,7 +4,7 @@ import type { LovelaceCardEditor } from "custom-card-helpers";
 import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
-import { t } from "./utils/localize";
+import { t, tCount } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { daysBetween, formatShortDate, formatDate } from "./utils/format";
 
@@ -30,6 +30,8 @@ interface Exam {
   topics_since?: string | null;
   missed_topics?: number;
   more_topics?: number;
+  /** Lessons of the subject after today and before the test (integration 0.12.49+). */
+  lessons_left?: number | null;
 }
 
 /** Days from today to the test - worked out from its date (newer integrations
@@ -122,8 +124,15 @@ export class LibrusExamPrepCard extends LibrusBaseCard {
     const since = exam.topics_since
       ? t(hass, "card.exam_prep.since", { date: formatShortDate(exam.topics_since, hass.language) })
       : t(hass, "card.exam_prep.since_start");
+    const lessons =
+      typeof exam.lessons_left !== "number"
+        ? null
+        : exam.lessons_left === 0
+          ? t(hass, "label.lessons_before_none")
+          : tCount(hass, exam.lessons_left, "card.exam_prep.lessons");
     const meta = [
       exam.category,
+      lessons,
       topics.length ? `${t(hass, "card.exam_prep.topics", { count: topics.length })} ${since}` : null,
       exam.missed_topics ? t(hass, "card.exam_prep.missed", { count: exam.missed_topics }) : null,
     ]
