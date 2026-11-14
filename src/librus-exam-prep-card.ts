@@ -30,7 +30,7 @@ interface Exam {
   topics_since?: string | null;
   missed_topics?: number;
   more_topics?: number;
-  /** Lessons of the subject after today and before the test (integration 0.12.49+). */
+  /** Lessons of the subject after today and before the test (integration 0.12.50+). */
   lessons_left?: number | null;
 }
 

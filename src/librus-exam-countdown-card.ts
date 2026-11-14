@@ -38,7 +38,7 @@ interface SensorExam {
   subject: string | null;
   category: string | null;
   content: string | null;
-  /** Lessons of the subject after today and before the test (integration 0.12.49+). */
+  /** Lessons of the subject after today and before the test (integration 0.12.50+). */
   lessons_left?: number | null;
 }
 
