@@ -171,10 +171,13 @@ export function weightedClusterAverage(
   subjects: SubjectStat[],
   names: string[]
 ): { avg: number; count: number } | null {
+  // Schools write subject names in their own case ("wychowanie fizyczne", "Matematyka"):
+  // match without regard to case, or a lower-case school never lands in any cluster.
+  const wanted = new Set(names.map((n) => n.toLocaleLowerCase("pl")));
   let weighted = 0;
   let count = 0;
   for (const s of subjects) {
-    if (!names.includes(s.subject) || s.average === null || s.gradeCount <= 0) continue;
+    if (!wanted.has(s.subject.toLocaleLowerCase("pl")) || s.average === null || s.gradeCount <= 0) continue;
     weighted += s.average * s.gradeCount;
     count += s.gradeCount;
   }
