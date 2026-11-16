@@ -144,6 +144,10 @@ export abstract class LibrusBaseCard extends LitElement {
   private _memos = new Map<string, { deps: readonly unknown[]; value: unknown }>();
   // The config + dark mode _syncTheme() last applied.
   private _themedFor?: { config: unknown; dark: boolean; eink: EinkMode | undefined };
+  /** The theme's `librus-cards-eink` value, read once per `hass.themes`
+   * object: reading computed style on every render forced a style
+   * recalculation per card on each state change. */
+  private _themeEink?: { themes: unknown; mode: EinkMode | undefined };
   // The `icon` option updated() last stamped on the header icon.
   private _appliedIcon?: string;
 
@@ -210,6 +214,8 @@ export abstract class LibrusBaseCard extends LitElement {
 
   public connectedCallback(): void {
     super.connectedCallback();
+    // A card moved to another view may get that view's own theme.
+    this._themeEink = undefined;
     document.addEventListener("visibilitychange", this._onVisibilityChange);
   }
 
@@ -473,7 +479,14 @@ export abstract class LibrusBaseCard extends LitElement {
    * `librus-cards-eink` theme variable, which turns it on for every card. */
   private _einkMode(config: LibrusCardConfig | undefined): EinkMode | undefined {
     if (config?.eink !== undefined) return einkMode(config.eink);
-    return einkMode(getComputedStyle(this).getPropertyValue("--librus-cards-eink"));
+    const themes = this.hass?.themes;
+    if (this._themeEink && this._themeEink.themes === themes && themes !== undefined) {
+      return this._themeEink.mode;
+    }
+    const mode = einkMode(getComputedStyle(this).getPropertyValue("--librus-cards-eink"));
+    // Not cached while the card isn't attached yet: there is no theme to read.
+    if (this.isConnected) this._themeEink = { themes, mode };
+    return mode;
   }
 
   /**

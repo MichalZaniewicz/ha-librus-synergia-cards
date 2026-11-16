@@ -7,7 +7,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { isoDate, nextSchoolDay } from "./utils/calendar";
 import { findLibrusDeviceIds, mapAllByTranslationKey, mapByTranslationKey } from "./utils/entities";
 import { formatDate, formatTime } from "./utils/format";
-import { t, type TranslationKey } from "./utils/localize";
+import { pluralForm, t, type TranslationKey } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 import { studentName } from "./librus-first-lesson-card";
 
@@ -24,8 +24,11 @@ const AVATAR_COLORS = [
 const HEAVY_WEEK = 3;
 
 /** "3 sprawdziany" / "5 sprawdzianów" - `base` + "_one" / "_few" / "_many". */
+/** These texts have `_one` / `_few` / `_many` keys; a language's "other"
+ * (English "2 tests") uses the `_many` text. */
 function countText(hass: LibrusHass, n: number, base: string): string {
-  const form = n === 1 ? "one" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "few" : "many";
+  const plural = pluralForm(hass, n);
+  const form = plural === "other" ? "many" : plural;
   return t(hass, `${base}_${form}` as TranslationKey, { n });
 }
 

@@ -191,7 +191,7 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
         <div class="countdown">
           <span class="big">${days}</span>
           <span class="unit"
-            >${t(hass, "label.days_until")}<br /><b>${next.text}</b>${typeof next.lessons === "number"
+            >${t(hass, "label.days_until")}<br /><b>${next.text}</b>${typeof next.lessons === "number" && days > 0
               ? html`<br /><span class="lessons">${next.lessons === 0
                   ? t(hass, "label.lessons_before_none")
                   : tCount(hass, next.lessons, "label.lessons_before")}</span>`
@@ -206,8 +206,11 @@ export class LibrusExamCountdownCard extends LibrusBaseCard {
                   (e) => html`<span class="chip"
                     >${e.text}
                     <span class="n"
-                      >${formatShortDate(e.date, hass.language)}${typeof e.lessons === "number"
-                        ? ` · ${tCount(hass, e.lessons, "label.lessons_before_short")}`
+                      >${formatShortDate(e.date, hass.language)}${typeof e.lessons === "number" &&
+                      daysBetween(new Date(), new Date(`${e.date.slice(0, 10)}T00:00:00`)) > 0
+                        ? ` · ${e.lessons === 0
+                            ? t(hass, "label.lessons_before_none")
+                            : tCount(hass, e.lessons, "label.lessons_before_short")}`
                         : ""}</span
                     ></span
                   >`

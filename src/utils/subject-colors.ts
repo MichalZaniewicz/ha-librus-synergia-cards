@@ -3,7 +3,21 @@ import { mapByTranslationKey } from "./entities";
 
 /** A subject name as the integration compares them: case, Polish letters
  * and extra spaces don't matter ("Język  polski" = "jezyk polski"). */
+const subjectKeys = new Map<string, string>();
+
+/** Folded subject name (case, Polish letters, spaces) - memoised, the
+ * timetable cards look up the same few names on every render. */
 function subjectKey(name: string): string {
+  let key = subjectKeys.get(name);
+  if (key === undefined) {
+    if (subjectKeys.size > 500) subjectKeys.clear();
+    key = foldName(name);
+    subjectKeys.set(name, key);
+  }
+  return key;
+}
+
+function foldName(name: string): string {
   return name
     .replace(/ł/g, "l")
     .replace(/Ł/g, "L")

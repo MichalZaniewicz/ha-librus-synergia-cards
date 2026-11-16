@@ -849,7 +849,15 @@ export class LibrusCardEditor extends LitElement {
   private _pickSelect(field: { key: "mailbox" | "sort" | "mode" | "semester" | "layout" | "text_size" | "version" | "language" | "eink"; options: { value: string }[] }, ev: Event): void {
     const value = LibrusCardEditor._selectValue(ev);
     if (!value) return;
-    const current = (this._config?.[field.key] as string | undefined) ?? field.options[0].value;
+    const raw = this._config?.[field.key];
+    // E-ink is stored loosely (true, false, "grey"...): compare the mode the
+    // select shows, so opening and closing it on an older HA (which fires
+    // `closed` every time) doesn't rewrite the config. A card's `eink: false`
+    // opts out of the theme's e-ink mode and reads as "off", so it stays.
+    const current =
+      field.key === "eink"
+        ? (einkMode(raw) ?? field.options[0].value)
+        : ((raw as string | undefined) ?? field.options[0].value);
     if (value === current) return;
     // Storing the first option (the default) as an explicit value is noise;
     // drop back to "unset" so the card falls through to its own default.

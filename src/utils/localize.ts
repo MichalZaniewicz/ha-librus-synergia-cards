@@ -104,15 +104,27 @@ export type CountedText = "label.lessons_before" | "label.lessons_before_short" 
  * falls back to `_other`.
  */
 export function tCount(hass: LibrusHass | undefined, count: number, base: CountedText): string {
+  return t(hass, `${base}_${pluralForm(hass, count)}` as TranslationKey, { count });
+}
+
+const pluralRules = new Map<string, Intl.PluralRules | null>();
+
+/** The plural category of `count` in the user's language - "one", "few",
+ * "many" or "other" (zero/two fold into "other"). The rules object is built
+ * once per language; a language the browser doesn't know gives "other". */
+export function pluralForm(hass: LibrusHass | undefined, count: number): "one" | "few" | "many" | "other" {
   const language = (hass?.language ?? "en").split("-")[0]?.toLowerCase() || "en";
-  let form = "other";
-  try {
-    form = new Intl.PluralRules(language).select(count);
-  } catch {
-    form = "other";
+  let rules = pluralRules.get(language);
+  if (rules === undefined) {
+    try {
+      rules = new Intl.PluralRules(language);
+    } catch {
+      rules = null;
+    }
+    pluralRules.set(language, rules);
   }
-  if (form !== "one" && form !== "few" && form !== "many") form = "other";
-  return t(hass, `${base}_${form}` as TranslationKey, { count });
+  const form = rules?.select(count) ?? "other";
+  return form === "one" || form === "few" || form === "many" ? form : "other";
 }
 
 /** Picks a `*_one` / `*_other` key pair by count - a two-way plural split. */

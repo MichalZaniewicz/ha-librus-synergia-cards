@@ -124,8 +124,10 @@ export class LibrusExamPrepCard extends LibrusBaseCard {
     const since = exam.topics_since
       ? t(hass, "card.exam_prep.since", { date: formatShortDate(exam.topics_since, hass.language) })
       : t(hass, "card.exam_prep.since_start");
+    // On the test day itself the count is 0 all day (today is left out), so
+    // "it's the next lesson" would stay up even after the test - say nothing.
     const lessons =
-      typeof exam.lessons_left !== "number"
+      typeof exam.lessons_left !== "number" || days <= 0
         ? null
         : exam.lessons_left === 0
           ? t(hass, "label.lessons_before_none")

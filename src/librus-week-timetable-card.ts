@@ -584,9 +584,17 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     `;
   }
 
-  /** The first letter of a label: the corner mark e-ink mode draws instead of a colour. */
+  /** The corner mark e-ink mode draws instead of a colour - an explicit
+   * letter per language, so two marks never share a letter (in German both
+   * Klassenarbeit and Kurztest start with K). */
   private _letter(key: "label.lesson_test" | "label.lesson_quiz" | "label.lesson_substitution" | "label.lesson_cancelled"): string {
-    return t(this.hass!, key).charAt(0).toUpperCase();
+    const mark = {
+      "label.lesson_test": "label.mark_test",
+      "label.lesson_quiz": "label.mark_quiz",
+      "label.lesson_substitution": "label.mark_substitution",
+      "label.lesson_cancelled": "label.mark_cancelled",
+    } as const;
+    return t(this.hass!, mark[key]);
   }
 
   /** A lesson's corner letter in e-ink mode (hidden otherwise, see eink-styles.ts). */
