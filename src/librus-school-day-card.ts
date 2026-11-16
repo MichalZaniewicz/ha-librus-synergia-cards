@@ -87,7 +87,7 @@ export class LibrusSchoolDayCard extends LibrusBaseCard {
     super.connectedCallback();
     this._every(15 * 60_000, () => void this._fetch(this._forceRefresh()));
     // Re-render (no refetch) so the highlight and countdowns move along.
-    this._every(30_000, () => this.requestUpdate());
+    this._everyMinute(() => this.requestUpdate());
   }
 
 

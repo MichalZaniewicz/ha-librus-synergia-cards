@@ -40,7 +40,7 @@ export class LibrusTodayLessonsCard extends LibrusBaseCard {
   public connectedCallback(): void {
     super.connectedCallback();
     this._every(5 * 60_000, () => void this._fetch(this._forceRefresh()));
-    this._every(60_000, () => this.requestUpdate());
+    this._everyMinute(() => this.requestUpdate());
   }
 
 

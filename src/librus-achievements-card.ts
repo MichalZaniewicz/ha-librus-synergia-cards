@@ -166,6 +166,12 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
    * resolution that's no longer current unsubscribes itself immediately
    * instead of overwriting `_unsubscribe`.
    */
+  /** A failed subscription is tried again on a render a minute later -
+   * keep the base card's heartbeat render until it's back. */
+  protected _needsHeartbeat(): boolean {
+    return this._subscribedDeviceId === undefined && this._subscribeRetryAt > 0;
+  }
+
   private async _subscribe(deviceId: string): Promise<void> {
     if (this._subscribedDeviceId === deviceId || !this.hass) return;
     if (Date.now() < this._subscribeRetryAt) return;

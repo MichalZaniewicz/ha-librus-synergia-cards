@@ -39,7 +39,7 @@ export class LibrusNextLessonTileCard extends LibrusBaseCard {
 
   public connectedCallback(): void {
     super.connectedCallback();
-    this._every(30_000, () => this.requestUpdate());
+    this._everyMinute(() => this.requestUpdate());
   }
 
 

@@ -113,7 +113,7 @@ export class LibrusFamilyCard extends LibrusBaseCard {
   public connectedCallback(): void {
     super.connectedCallback();
     // The school-day status ("in school until 14:20") moves with the clock.
-    this._every(60_000, () => this.requestUpdate());
+    this._everyMinute(() => this.requestUpdate());
   }
 
   private _deviceIds(): string[] {

@@ -58,7 +58,7 @@ export class LibrusBellScheduleCard extends LibrusBaseCard {
   public connectedCallback(): void {
     super.connectedCallback();
     this._every(15 * 60_000, () => void this._fetch(this._forceRefresh()));
-    this._every(30_000, () => this.requestUpdate());
+    this._everyMinute(() => this.requestUpdate());
   }
 
 

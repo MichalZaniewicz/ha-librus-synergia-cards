@@ -216,7 +216,7 @@ function isDetailLine(line: string): boolean {
 }
 
 // lessonInfo() per event object: the week timetable asks for the same
-// events on every render (30 s tick, hover...). The events come from
+// events on every render (the minute tick, hover...). The events come from
 // fetchCalendarEvents() and are never changed in place.
 const lessonInfoCache = new WeakMap<
   LibrusCalendarEvent,

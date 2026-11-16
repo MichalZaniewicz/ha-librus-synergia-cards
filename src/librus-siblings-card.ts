@@ -116,7 +116,7 @@ export class LibrusSiblingsCard extends LibrusBaseCard {
     super.connectedCallback();
     this._every(30 * 60_000, () => void this._fetch(this._forceRefresh()));
     // Moves the "now" line along.
-    this._every(60_000, () => this.requestUpdate());
+    this._everyMinute(() => this.requestUpdate());
   }
 
   private _deviceIds(): string[] {

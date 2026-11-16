@@ -119,7 +119,7 @@ export class LibrusFirstLessonCard extends LibrusBaseCard {
     super.connectedCallback();
     this._every(30 * 60_000, () => void this._fetch(this._forceRefresh()));
     // Re-render once a minute so a started first lesson fades out on time.
-    this._every(60_000, () => this.requestUpdate());
+    this._everyMinute(() => this.requestUpdate());
   }
 
 

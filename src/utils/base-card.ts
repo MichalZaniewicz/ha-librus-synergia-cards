@@ -22,9 +22,16 @@ import { EINK_PALETTES, einkMode, type EinkMode } from "./eink-styles";
  */
 type ResolvedEntities = { deviceId: string; map: Record<string, string> } | { error: TemplateResult };
 
-/** A card with nothing else to re-render for still renders once a minute
- * when a new `hass` arrives - day changes, "X min ago" texts and the like. */
+/** How often, at most, a new `hass` re-renders a card whose own entities
+ * didn't change - and only when the date has changed since its last render
+ * or it has something to try again (see `_heartbeatDue()`). Cards showing
+ * minute-level time ("in 12 min", the current lesson) have their own
+ * `_everyMinute()` timer; re-rendering every card every minute for nothing
+ * was ~95% of all renders on a dashboard. */
 const HEARTBEAT_MS = 60_000;
+
+/** One minute - `_everyMinute()` ticks on the full minute. */
+const MINUTE_MS = 60_000;
 
 /** A failed on-demand fetch is tried again no sooner than this. */
 const FETCH_RETRY_MS = 60_000;
@@ -50,6 +57,8 @@ export function cardLanguage(value: string | undefined): string | undefined {
 
 interface CardTimer {
   fn: () => void;
+  /** An interval, or (for `_everyMinute()`) first the timeout to the next
+   * full minute - cleared the same way. */
   handle: ReturnType<typeof setInterval>;
   /** A tick was skipped while the page was hidden. */
   missed: boolean;
@@ -139,6 +148,8 @@ export abstract class LibrusBaseCard extends LitElement {
     darkMode: boolean;
   };
   private _lastRenderAt = 0;
+  // The local date of the last render - see _heartbeatDue().
+  private _lastRenderDay = "";
 
   private _timers: CardTimer[] = [];
   private _memos = new Map<string, { deps: readonly unknown[]; value: unknown }>();
@@ -158,9 +169,10 @@ export abstract class LibrusBaseCard extends LitElement {
    * card used to re-render for each of them. Now a `hass` change alone
    * renders only when the registry, language, locale or dark mode changed,
    * when one of this card's own Librus entities changed (every Librus
-   * entity with `_watchAllDevices`), or when the last render is more than a
-   * minute old. Config/@state changes and a timer's `requestUpdate()`
-   * always render.
+   * entity with `_watchAllDevices`), or - at most once a minute - when the
+   * date changed or something is waiting to be tried again (see
+   * `_heartbeatDue()`). Config/@state changes and a timer's
+   * `requestUpdate()` always render.
    */
   protected shouldUpdate(changed: PropertyValues): boolean {
     if (changed.size === 0) return true; // requestUpdate() from a timer
@@ -178,7 +190,7 @@ export abstract class LibrusBaseCard extends LitElement {
     ) {
       return true;
     }
-    if (Date.now() - this._lastRenderAt >= HEARTBEAT_MS) return true;
+    if (this._heartbeatDue()) return true;
     if (prev.states === hass.states) return false;
     for (const id of this._watchedEntityIds()) {
       if (prev.states[id] !== hass.states[id]) return true;
@@ -201,6 +213,30 @@ export abstract class LibrusBaseCard extends LitElement {
       darkMode: Boolean(hass.themes?.darkMode),
     };
     this._lastRenderAt = Date.now();
+    this._lastRenderDay = isoDate(new Date());
+  }
+
+  /**
+   * Whether a new `hass` should re-render the card although none of its
+   * entities changed: at most once a minute, and only when the local date
+   * changed since the last render (day-level texts: "today", "in 3 days"),
+   * a failed fetch is waiting for its retry (`_retryDue()` needs a render),
+   * or the card itself asks (`_needsHeartbeat()`).
+   */
+  private _heartbeatDue(): boolean {
+    if (Date.now() - this._lastRenderAt < HEARTBEAT_MS) return false;
+    return (
+      isoDate(new Date()) !== this._lastRenderDay ||
+      this._fetchFailedAt !== undefined ||
+      this._needsHeartbeat()
+    );
+  }
+
+  /** Override to keep the once-a-minute re-render while the card waits to
+   * retry something of its own (the Achievements card's event
+   * subscription). */
+  protected _needsHeartbeat(): boolean {
+    return false;
   }
 
   /** The Librus entities whose state changes re-render this card. */
@@ -222,7 +258,10 @@ export abstract class LibrusBaseCard extends LitElement {
   public disconnectedCallback(): void {
     super.disconnectedCallback();
     document.removeEventListener("visibilitychange", this._onVisibilityChange);
-    for (const timer of this._timers) clearInterval(timer.handle);
+    for (const timer of this._timers) {
+      clearTimeout(timer.handle);
+      clearInterval(timer.handle);
+    }
     this._timers = [];
   }
 
@@ -243,6 +282,36 @@ export abstract class LibrusBaseCard extends LitElement {
         }
         fn();
       }, ms),
+    };
+    this._timers.push(timer);
+  }
+
+  /**
+   * Runs `fn` on every full minute while the card is on the page - for
+   * texts and highlights that change by the minute ("in 12 min", "4 min
+   * ago", the current lesson). Waits for the next :00 first, so a
+   * countdown flips when the clock does, then ticks every 60 s; a 30 s
+   * timer rendered twice a minute for one visible change. Hidden-tab
+   * handling as in `_every()`.
+   */
+  protected _everyMinute(fn: () => void): void {
+    const tick = (): void => {
+      if (document.hidden) {
+        timer.missed = true;
+        return;
+      }
+      fn();
+    };
+    // A few ms past the minute, so a timer that fires a hair early still
+    // sees the new minute.
+    const wait = MINUTE_MS - (Date.now() % MINUTE_MS) + 50;
+    const timer: CardTimer = {
+      fn,
+      missed: false,
+      handle: setTimeout(() => {
+        tick();
+        timer.handle = setInterval(tick, MINUTE_MS);
+      }, wait),
     };
     this._timers.push(timer);
   }
@@ -381,8 +450,8 @@ export abstract class LibrusBaseCard extends LitElement {
    * `_fetch()` then runs again even though its cache key is unchanged. Not
    * sooner - render() calls `_fetch()` on every render, and an immediate
    * retry would hammer a Home Assistant that isn't answering. The retry
-   * comes with the next render after that (the heartbeat brings one at
-   * least once a minute) or the card's own timer.
+   * comes with the next render after that (while a fetch has failed, the
+   * heartbeat brings one at least once a minute) or the card's own timer.
    */
   protected _retryDue(): boolean {
     return this._fetchFailedAt !== undefined && Date.now() - this._fetchFailedAt >= FETCH_RETRY_MS;

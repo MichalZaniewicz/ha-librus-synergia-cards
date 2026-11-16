@@ -174,7 +174,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     // along as one lesson ends and the next begins, without waiting for
     // the next full calendar refresh. Nothing moves on a week without today,
     // unless the opening week itself has moved on.
-    this._every(30_000, () => {
+    this._everyMinute(() => {
       const today = isoDate(new Date());
       if (this._columnDates().includes(today) || isoDate(this._baseMonday()) !== this._renderedBase) {
         this.requestUpdate();
@@ -310,7 +310,7 @@ export class LibrusWeekTimetableCard extends LibrusBaseCard {
     // Lessons and activities outside the timetable (extra activities and
     // the like) per column: the grid keeps the activities in their own row,
     // the timeline puts them on the time axis with the lessons. Rebuilt only
-    // when the events or the week change (not on the 30 s tick).
+    // when the events or the week change (not on the minute tick).
     const { byDay, extraByDay } = this._memo("byDay", [events, dates[0], dayCount], () => {
       const lessons: LibrusCalendarEvent[][] = Array.from({ length: dayCount }, () => []);
       const extras: LibrusCalendarEvent[][] = Array.from({ length: dayCount }, () => []);
