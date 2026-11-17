@@ -14,7 +14,10 @@ export async function fetchStatisticMeans(
   hass: LibrusHass,
   statisticId: string,
   start: Date,
-  end: Date
+  end: Date,
+  /** Drop a day equal to the one before (only the changes). Off keeps one
+   * point a day, so a line drawn through them follows the real steps. */
+  dedupe = true
 ): Promise<HistoryPoint[]> {
   const result = await hass.callWS<Record<string, { start: number | string; mean?: number | null }[]>>({
     type: "recorder/statistics_during_period",
@@ -30,7 +33,7 @@ export async function fetchStatisticMeans(
     const timestamp = typeof row.start === "number" ? row.start : new Date(row.start).getTime();
     if (typeof value !== "number" || !Number.isFinite(value) || Number.isNaN(timestamp)) continue;
     const prev = points[points.length - 1];
-    if (prev && prev.value === value) continue;
+    if (dedupe && prev && prev.value === value) continue;
     points.push({ timestamp, value });
   }
   return points;

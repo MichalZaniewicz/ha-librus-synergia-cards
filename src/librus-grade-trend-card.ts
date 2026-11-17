@@ -70,10 +70,23 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
 
   /** A point-graded subject's daily percentage series (integration
    * 0.12.19+), when the chosen subject is one. */
-  private _statisticId(entityId: string): string | undefined {
+  private _pointsStatisticId(entityId: string): string | undefined {
     const state = this.hass?.states[entityId];
     const id = state?.attributes.points_statistic_id;
     return typeof id === "string" && pointsPercentage(state) !== undefined ? id : undefined;
+  }
+
+  /** The daily series to chart: the point percentage for a point-graded
+   * subject, else the integration's daily average (`statistic_id`, 0.12.53+)
+   * - kept since the first grade, while the sensor's own state history only
+   * goes back as far as the recorder keeps it (10 days by default), so "the
+   * last 60 days" used to show a day or two. None on an older integration:
+   * the state history, as before. */
+  private _statisticId(entityId: string): string | undefined {
+    const points = this._pointsStatisticId(entityId);
+    if (points) return points;
+    const id = this.hass?.states[entityId]?.attributes.statistic_id;
+    return typeof id === "string" && id ? id : undefined;
   }
 
   private async _fetch(force = false): Promise<void> {
@@ -88,14 +101,14 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
     // last_changed is the key - not every Librus refresh. A point series
     // grows with its percentage.
     const state = this.hass.states[entityId];
-    const cacheKey = `${range}:${statisticId ? String(state?.attributes.points_percentage) : (state?.last_changed ?? "")}`;
+    const cacheKey = `${range}:${statisticId ? `${state?.state}:${String(state?.attributes.points_percentage)}` : (state?.last_changed ?? "")}`;
     if (!force && this._fetchedFor === cacheKey && !this._retryDue()) return;
     this._fetchedFor = cacheKey;
 
     const generation = this._beginFetch();
     try {
       const points = statisticId
-        ? await fetchStatisticMeans(this.hass, statisticId, start, end)
+        ? await fetchStatisticMeans(this.hass, statisticId, start, end, false)
         : await fetchNumericHistory(this.hass, entityId, start, end);
       if (this._isCurrentFetch(generation)) {
         this._points = points;
@@ -121,7 +134,13 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
       const value = pointsPercentage(live) ?? Number(live?.state);
       if (!live || live.state === "" || !Number.isFinite(value)) return this._points;
       const last = this._points[this._points.length - 1];
-      if (last && last.value === value) return this._points;
+      // The same value: the line still runs on to today (a series that
+      // didn't change for a week used to stop a week ago).
+      if (last && last.value === value) {
+        return Date.now() - last.timestamp > 3_600_000
+          ? [...this._points, { timestamp: Date.now(), value }]
+          : this._points;
+      }
       const changed = new Date(live.last_changed).getTime();
       const timestamp = Number.isNaN(changed) ? Date.now() : Math.max(changed, last ? last.timestamp + 1 : changed);
       return [...this._points, { timestamp, value }];
@@ -154,7 +173,7 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
     const first = points[0];
     const last = points[points.length - 1];
     const subjectState = entityId ? hass.states[entityId] : undefined;
-    const isPoints = !!entityId && this._statisticId(entityId) !== undefined;
+    const isPoints = !!entityId && this._pointsStatisticId(entityId) !== undefined;
     const delta = Math.round((last.value - first.value) * (isPoints ? 10 : 100)) / (isPoints ? 10 : 100);
     const one = (v: number) => formatNumber(v, hass.language, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     // A point-graded subject: the next grade's threshold as a dashed line.

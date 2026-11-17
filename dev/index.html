@@ -259,6 +259,8 @@
       iso(new Date(today.getTime() - (all.length - 1 - i) * 7 * 86400000)), v,
     ]);
     addEntity("sensor.overall_average", "overall_average", {
+      // The daily average series (integration 0.12.53+) - Grade trend card.
+      statistic_id: "librus_synergia:dev_average",
       average_semester_1: 4.5,
       average_semester_2: 4.8,
       average_mode: "weighted",
@@ -1206,6 +1208,17 @@
         if (msg.type === "recorder/statistics_during_period") {
           const id = msg.statistic_ids[0];
           const rows = [];
+          if (!id.includes("_points_")) {
+            // The 1-6 average: steps up from 4.10 to today's 4.68, flat for
+            // the last week (the line must still reach today).
+            for (let i = 59; i >= 0; i--) {
+              const day = new Date(today.getTime() - i * 86400000);
+              const steps = [4.10, 4.25, 4.20, 4.38, 4.31, 4.44, 4.40, 4.52, 4.49, 4.58, 4.62];
+              const step = steps[Math.min(steps.length - 1, Math.floor((59 - i) / 5.5))];
+              rows.push({ start: day.getTime(), mean: i < 7 ? 4.68 : step });
+            }
+            return { [id]: rows };
+          }
           for (let i = 59; i >= 0; i--) {
             const day = new Date(today.getTime() - i * 86400000);
             const value = Math.round((72 + (59 - i) * 0.2 + (i % 9 === 0 ? -1.5 : 0)) * 10) / 10;
