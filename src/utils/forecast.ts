@@ -100,17 +100,19 @@ export function pointsPercentage(state: HassEntity | undefined): number | undefi
  * grade and its number of point grades (`points: true`).
  */
 export function heroSubjectStat(subject: string, state: HassEntity | undefined): SubjectStat {
+  const librus = state?.attributes.subject_librus;
+  const librusName = typeof librus === "string" && librus ? { librusName: librus } : {};
   const raw = state ? Number(state.state) : NaN;
   const gradeCount = ((state?.attributes.grades as unknown[] | undefined) ?? []).length;
   if (Number.isFinite(raw) || pointsPercentage(state) === undefined) {
-    return { subject, average: Number.isFinite(raw) ? raw : null, gradeCount };
+    return { subject, ...librusName, average: Number.isFinite(raw) ? raw : null, gradeCount };
   }
   const predicted = subjectForecast(state)?.predicted;
   const pointCount = ((state?.attributes.point_grades as { percentage?: number | null }[] | undefined) ?? []).filter(
     (g) => typeof g.percentage === "number"
   ).length;
-  if (predicted === undefined || pointCount === 0) return { subject, average: null, gradeCount };
-  return { subject, average: predicted, gradeCount: pointCount, points: true };
+  if (predicted === undefined || pointCount === 0) return { subject, ...librusName, average: null, gradeCount };
+  return { subject, ...librusName, average: predicted, gradeCount: pointCount, points: true };
 }
 
 export function predictedGrade(average: number, thresholds: number[]): number {

@@ -347,7 +347,7 @@ card's own config entry, so a multi-student household's cards don't mix achievem
 
 Thanks to everyone who sent code to this project:
 
-- <img src="https://github.com/keysim86.png?size=40" width="20" height="20" alt=""> [@keysim86](https://github.com/keysim86): point-graded subjects in the radar, spotlight, distribution, report card and hero cards
+- <img src="https://github.com/keysim86.png?size=40" width="20" height="20" alt=""> [@keysim86](https://github.com/keysim86): point-graded subjects in the radar, spotlight, distribution, report card and hero cards; hero cards that work with lower-case subject names, a fairer average and the Prymus / Collector order
 - <img src="https://github.com/emes30.png?size=40" width="20" height="20" alt=""> [@emes30](https://github.com/emes30): lesson hours in the week timetable
 - <img src="https://github.com/snooppoland-cpu.png?size=40" width="20" height="20" alt=""> [@snooppoland-cpu](https://github.com/snooppoland-cpu): Russian translation
 

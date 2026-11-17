@@ -4,6 +4,9 @@ export type HeroMode = "archetype" | "hero";
 
 export interface SubjectStat {
   subject: string;
+  /** The name from Librus (the sensor's `subject_librus`), when the
+   * integration's Subject names renamed it - what the clusters match on. */
+  librusName?: string;
   /** The sensor's own state (its weighted average) - `null` when the
    * subject has no counted grades yet (state is "unknown"). */
   average: number | null;
@@ -17,22 +20,24 @@ export interface SubjectStat {
 /**
  * The overall average with point-graded subjects folded in. The Overall
  * average sensor only covers 1-6 grades; each point-graded subject adds its
- * forecast grade as ONE grade - a subject has many tests but a single grade
- * on the report card, so weighting it by its number of point grades let a
- * few subjects outweigh every 1-6 grade. No point-graded subjects: the
- * sensor's value, unchanged. (The integration's Rank sensor uses the same
- * rule.)
+ * forecast grade, weighing as much as a typical 1-6 subject (the 1-6 grades
+ * divided by the subjects they're in). Weighted by its number of point
+ * grades, a few subjects with many tests outweighed every 1-6 grade; as a
+ * single grade it hardly counted. No point-graded subjects: the sensor's
+ * value, unchanged. (The integration's Rank sensor uses the same rule.)
  */
 export function overallWithPoints(overall: number | null, subjects: SubjectStat[]): number | null {
   const points = subjects.filter((s) => s.points && s.average !== null && s.gradeCount > 0);
   if (points.length === 0) return overall;
+  const gradedSubjects = subjects.filter((s) => !s.points && s.gradeCount > 0);
+  const graded = gradedSubjects.reduce((n, s) => n + s.gradeCount, 0);
+  const weight = gradedSubjects.length > 0 ? graded / gradedSubjects.length : 1;
   let sum = 0;
   let count = 0;
   for (const s of points) {
-    sum += s.average!;
-    count += 1;
+    sum += s.average! * weight;
+    count += weight;
   }
-  const graded = subjects.filter((s) => !s.points).reduce((n, s) => n + s.gradeCount, 0);
   if (overall !== null && graded > 0) {
     sum += overall * graded;
     count += graded;
@@ -182,7 +187,10 @@ export function weightedClusterAverage(
   let weighted = 0;
   let count = 0;
   for (const s of subjects) {
-    if (!wanted.has(s.subject.toLocaleLowerCase("pl")) || s.average === null || s.gradeCount <= 0) continue;
+    // The name from Librus first: a subject renamed under Subject names
+    // ("Maths") would match no cluster.
+    const name = s.librusName ?? s.subject;
+    if (!wanted.has(name.toLocaleLowerCase("pl")) || s.average === null || s.gradeCount <= 0) continue;
     weighted += s.average * s.gradeCount;
     count += s.gradeCount;
   }
