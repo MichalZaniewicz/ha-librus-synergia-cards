@@ -407,6 +407,7 @@ export const ru: Record<keyof typeof en, string> = {
   "card.changes.chip_room": "Кабинеты",
   "card.changes.chip_moved": "Перенесённые",
   "editor.hide_past": "Скрыть недавние изменения",
+  "editor.show_overdue": "Показывать задания с прошедшим сроком",
   "editor.keep_unread": "Не помечать прочитанным в Librus при открытии",
   "mailbox.inbox": "Входящие",
   "mailbox.notes": "Заметки",

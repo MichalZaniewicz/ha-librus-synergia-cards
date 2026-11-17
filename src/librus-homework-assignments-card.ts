@@ -6,6 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { formatShortDate } from "./utils/format";
+import { isoDate } from "./utils/calendar";
 import { t } from "./utils/localize";
 import { applyListOptions } from "./utils/list-options";
 import {
@@ -58,7 +59,14 @@ export class LibrusHomeworkAssignmentsCard extends LibrusBaseCard {
     const hass = this.hass;
 
     const entity = map.homework_assignments ? hass.states[map.homework_assignments] : undefined;
-    const recent = (entity?.attributes.recent as RecentAssignment[] | undefined) ?? [];
+    const all = (entity?.attributes.recent as RecentAssignment[] | undefined) ?? [];
+    // The sensor also lists homework due in the last month (the checklist
+    // card needs it); here it disappears the day after its due date unless
+    // `show_overdue` is on. No due date = always shown.
+    const today = isoDate(new Date());
+    const recent = this._config.show_overdue
+      ? all
+      : all.filter((a) => !a.due_date || a.due_date.slice(0, 10) >= today);
 
     if (!entity || recent.length === 0) {
       return this._message("mdi:notebook-edit-outline", t(hass, "card.homework_assignments.empty"));
@@ -70,7 +78,7 @@ export class LibrusHomeworkAssignmentsCard extends LibrusBaseCard {
           <div class="icon-badge"><ha-icon icon="mdi:notebook-edit-outline"></ha-icon></div>
           <div class="title-block">
             <div class="title">${this._config?.title ?? t(hass, "card.homework_assignments.title")}</div>
-            <div class="subtitle">${entity.state}</div>
+            <div class="subtitle">${recent.length}</div>
           </div>
         </div>
         <div class="scroll-list">

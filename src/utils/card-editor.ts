@@ -55,6 +55,7 @@ type EditorField =
       kind: "boolean";
       key:
         | "show_saturday"
+        | "show_overdue"
         | "show_hours"
         | "show_descriptive"
         | "hide_teacher"
@@ -462,6 +463,8 @@ addField(
   { kind: "boolean", key: "hide_subject_colors", label: "editor.hide_subject_colors" }
 );
 addField(["behaviour-grade"], { kind: "boolean", key: "hide_history", label: "editor.hide_history" });
+// Homework past its due date is hidden by default; this brings it back.
+addField(["homework-assignments"], { kind: "boolean", key: "show_overdue", label: "editor.show_overdue" });
 addField(
   ["attendance", "attendance-heatmap", "attendance-subject", "attendance-weekday", "grades-radar", "subject-attendance"],
   { kind: "boolean", key: "hide_legend", label: "editor.hide_legend" }

@@ -406,6 +406,7 @@ export const en = {
   "card.changes.chip_room": "Rooms",
   "card.changes.chip_moved": "Moved",
   "editor.hide_past": "Hide recent changes",
+  "editor.show_overdue": "Show homework past its due date",
   "editor.keep_unread": "Don't mark read in Librus when opened",
   "mailbox.inbox": "Inbox",
   "mailbox.notes": "Notes",

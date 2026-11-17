@@ -38,6 +38,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   mailbox?: string;
   /** Include Saturday in the week-timetable / lesson-time cards. */
   show_saturday?: boolean;
+  /** Homework assignments card: also list homework past its due date (hidden by default). */
+  show_overdue?: boolean;
   /** Week timetable: show bell schedule times beneath lesson numbers. */
   show_hours?: boolean;
   /** Week timetable: rows of lesson numbers (default) or lessons on a time axis. */
