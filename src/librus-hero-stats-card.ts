@@ -8,7 +8,7 @@ import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { computeHeroStats, type HeroStat } from "./utils/hero-stats";
 import type { SubjectStat } from "./utils/hero-archetypes";
 import { numOrNull as num } from "./utils/format";
-import { t } from "./utils/localize";
+import { t, type TranslationKey } from "./utils/localize";
 import { heroSubjectStat } from "./utils/forecast";
 
 const SCALE_MAX = 10;
@@ -54,6 +54,8 @@ const CHART_HEIGHT = 240;
 @customElement("librus-hero-stats-card")
 export class LibrusHeroStatsCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
+  /** The stat whose "where it comes from" is open (tap a row or its radar icon). */
+  @state() private _openStat?: HeroStat["id"];
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -120,7 +122,14 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
           return svg`
             <circle cx=${x} cy=${y} r="11" class="vertex-badge" style="stroke:${colorVar}"></circle>
             <foreignObject x=${x - 9} y=${y - 9} width="18" height="18">
-              ${html`<div class="vertex-icon" style="color:${colorVar}"><ha-icon icon=${stats[i].icon}></ha-icon></div>`}
+              ${html`<div
+                class="vertex-icon tap"
+                style="color:${colorVar}"
+                title=${t(hass, `hero_stat_how.${stats[i].id}` as TranslationKey)}
+                @click=${() => {
+                  this._openStat = this._openStat === stats[i].id ? undefined : stats[i].id;
+                }}
+              ><ha-icon icon=${stats[i].icon}></ha-icon></div>`}
             </foreignObject>
           `;
         })}
@@ -186,11 +195,28 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
           </div>
         </div>
         <div class="chart-wrap glow">${this._renderStatRadar(stats, hass)}</div>
+        ${this._openStat ? nothing : html`<div class="tap-hint">${t(hass, "card.hero_stats.tap_hint")}</div>`}
         <div class="stat-bars">
           ${stats.map((s, i) => {
             const colorVar = `var(--lc-chart-${PALETTE[i % PALETTE.length]})`;
+            const open = this._openStat === s.id;
+            const toggle = (): void => {
+              this._openStat = open ? undefined : s.id;
+            };
             return html`
-              <div class="stat-row">
+              <div
+                class="stat-row tap"
+                role="button"
+                tabindex="0"
+                aria-expanded=${open ? "true" : "false"}
+                title=${t(hass, `hero_stat_how.${s.id}` as TranslationKey)}
+                @click=${toggle}
+                @keydown=${(ev: KeyboardEvent) => {
+                  if (ev.key !== "Enter" && ev.key !== " ") return;
+                  ev.preventDefault();
+                  toggle();
+                }}
+              >
                 <div class="stat-icon" style="background:color-mix(in srgb, ${colorVar} 16%, transparent); color:${colorVar}">
                   <ha-icon icon=${s.icon}></ha-icon>
                 </div>
@@ -202,6 +228,9 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
                 </div>
                 <span class="stat-value" style="color:${colorVar}">${s.value.toFixed(1)}</span>
               </div>
+              ${open
+                ? html`<div class="explain stat-explain" role="note">${t(hass, `hero_stat_how.${s.id}` as TranslationKey)}</div>`
+                : nothing}
             `;
           })}
         </div>
@@ -319,6 +348,15 @@ export class LibrusHeroStatsCard extends LibrusBaseCard {
       .stat-fill {
         height: 100%;
         border-radius: 4px;
+      }
+      .stat-explain {
+        margin-top: -4px;
+      }
+      .tap-hint {
+        text-align: center;
+        font-size: 0.7rem;
+        color: var(--secondary-text-color);
+        margin: -2px 0 6px;
       }
       .stat-value {
         font-size: 0.78rem;

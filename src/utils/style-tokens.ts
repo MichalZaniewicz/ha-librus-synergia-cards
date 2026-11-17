@@ -690,9 +690,42 @@ export const librusSharedStyles = css`
     gap: 6px;
   }
   .chip[role="button"]:focus-visible,
-  .list-item[role="button"]:focus-visible {
+  .list-item[role="button"]:focus-visible,
+  .tap:focus-visible {
     outline: 2px solid var(--lc-brand);
     outline-offset: 2px;
+  }
+  /* Something you can tap for an explanation ("how do I get it"). */
+  .tap {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* The explanation a tap opens: a quiet box under the tapped section. */
+  .explain {
+    margin-top: 10px;
+    padding: 9px 11px;
+    border-radius: 10px;
+    background: var(--lc-chip-bg);
+    border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2));
+    font-size: 0.76rem;
+    line-height: 1.45;
+    color: var(--primary-text-color);
+  }
+  .explain-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .explain-title ha-icon {
+    --mdc-icon-size: 16px;
+    flex: none;
+  }
+  .explain-meta {
+    margin-top: 4px;
+    color: var(--secondary-text-color);
+    font-variant-numeric: tabular-nums;
   }
 
   .empty {

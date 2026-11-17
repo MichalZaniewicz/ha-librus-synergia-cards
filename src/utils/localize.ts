@@ -95,7 +95,15 @@ export function formatTimeAgo(hass: LibrusHass | undefined, iso: string | undefi
 }
 
 /** Text bases with `_one` / `_few` / `_many` / `_other` keys in every language. */
-export type CountedText = "label.lessons_before" | "label.lessons_before_short" | "card.exam_prep.lessons";
+export type CountedText =
+  | "label.lessons_before"
+  | "label.lessons_before_short"
+  | "card.exam_prep.lessons"
+  | "card.achievements.u_grades"
+  | "card.achievements.u_days"
+  | "card.achievements.u_notes"
+  | "card.achievements.u_tasks"
+  | "card.achievements.u_lessons";
 
 /**
  * "{count}" text in the right plural form for the card's language - Polish,

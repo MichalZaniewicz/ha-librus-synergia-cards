@@ -6,7 +6,7 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { UNAVAILABLE } from "./utils/entities";
-import { t, type TranslationKey } from "./utils/localize";
+import { t, tCount, type CountedText, type TranslationKey } from "./utils/localize";
 import { formatDate, formatNumber } from "./utils/format";
 
 const EVENT_TYPE = "librus_synergia_achievement_unlocked";
@@ -34,6 +34,17 @@ interface BadgeInfo {
   target: number | null;
   unit: string | null;
 }
+/** Where the tapped badge was, so its explanation opens under that section. */
+type BadgeSection = "strip" | "goals" | "recent";
+
+const UNIT_TEXT: Record<string, CountedText> = {
+  grades: "card.achievements.u_grades",
+  days: "card.achievements.u_days",
+  notes: "card.achievements.u_notes",
+  tasks: "card.achievements.u_tasks",
+  lessons: "card.achievements.u_lessons",
+};
+
 interface UnlockedAchievement {
   id: string;
   title: string;
@@ -90,6 +101,8 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
   private _torndown = false;
   // After a failed (not refused) subscription: no new attempt before this time.
   private _subscribeRetryAt = 0;
+  /** The badge whose "how to earn it" is open, and under which section. */
+  @state() private _open?: { key: string; section: BadgeSection };
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -324,6 +337,67 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
       : formatDate(day, hass.language, { day: "numeric", month: "short" });
   }
 
+  private _toggle(key: string, section: BadgeSection): void {
+    this._open = this._open?.key === key && this._open.section === section ? undefined : { key, section };
+  }
+
+  private _onKey(ev: KeyboardEvent, key: string, section: BadgeSection): void {
+    if (ev.key !== "Enter" && ev.key !== " ") return;
+    ev.preventDefault();
+    this._toggle(key, section);
+  }
+
+  /** The requirement sentence (also the hover title); empty for a badge this
+   * card version doesn't know yet. */
+  private _requirement(hass: LibrusHass, b: BadgeInfo): string {
+    return t(hass, `badge_req.${b.key}` as TranslationKey) ?? "";
+  }
+
+  /** A number with the badge's unit ("30 dni", "5,50"). */
+  private _amount(hass: LibrusHass, value: number, unit: string | null): string {
+    const text = unit ? UNIT_TEXT[unit] : undefined;
+    if (text) return tCount(hass, Math.round(value), text);
+    return this._number(hass, value, unit);
+  }
+
+  /** How a badge is earned: the requirement, its levels (or goal) with what
+   * is already earned and when, and where it stands now. */
+  private _renderExplain(hass: LibrusHass, badges: BadgeInfo[], section: BadgeSection): TemplateResult | typeof nothing {
+    if (this._open?.section !== section) return nothing;
+    const b = badges.find((x) => x.key === this._open?.key);
+    if (!b) return nothing;
+    const date = (day: string | null | undefined): string =>
+      day
+        ? t(hass, "card.achievements.earned_on", { date: this._dateLabel(hass, day) })
+        : t(hass, "card.achievements.earned");
+    const tiers = b.tiers ?? [];
+    let goalLine: string | undefined;
+    if (tiers.length) {
+      const parts = tiers.map((tier, i) => {
+        const label = i === tiers.length - 1 ? this._amount(hass, tier, b.unit) : String(tier);
+        if (i >= b.earned.length) return label;
+        const day = b.earned[i];
+        return day ? `${label} ✓ ${this._dateLabel(hass, day)}` : `${label} ✓`;
+      });
+      goalLine = t(hass, "card.achievements.levels", { list: parts.join(" · ") });
+    } else if (b.target !== null && b.target !== undefined) {
+      goalLine = t(hass, "card.achievements.goal", { value: this._amount(hass, b.target, b.unit) });
+    }
+    const complete = b.earned.length >= (tiers.length || 1);
+    const status = tiers.length ? undefined : complete ? date(b.earned[0]) : t(hass, "card.achievements.not_yet");
+    const now =
+      !complete && b.value !== null && b.value !== undefined
+        ? t(hass, "card.achievements.now", { value: this._amount(hass, b.value, b.unit) })
+        : undefined;
+    const meta = [status, now].filter(Boolean).join(" · ");
+    return html`<div class="explain" role="note">
+      <div class="explain-title"><ha-icon icon=${b.icon}></ha-icon>${this._badgeName(hass, b)}</div>
+      <div>${this._requirement(hass, b)}</div>
+      ${goalLine ? html`<div class="explain-meta">${goalLine}</div>` : nothing}
+      ${meta ? html`<div class="explain-meta">${meta}</div>` : nothing}
+    </div>`;
+  }
+
   /** Every earned badge, the three closest goals and the latest earned. */
   private _renderBadges(hass: LibrusHass, badges: BadgeInfo[]): TemplateResult {
     const total = badges.reduce((n, b) => n + (b.tiers?.length ?? 1), 0);
@@ -359,17 +433,36 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
               ${earned.map((b) => {
                 const tier = b.tiers ? b.earned.length - 1 : undefined;
                 const name = this._badgeName(hass, b, tier);
-                return html`<span class="strip-ic" role="img" title=${name} aria-label=${name}
+                const open = this._open?.key === b.key && this._open.section === "strip";
+                return html`<span
+                  class="strip-ic tap ${open ? "open" : ""}"
+                  role="button"
+                  tabindex="0"
+                  aria-pressed=${open ? "true" : "false"}
+                  title=${`${name}: ${this._requirement(hass, b)}`}
+                  aria-label=${name}
+                  @click=${() => this._toggle(b.key, "strip")}
+                  @keydown=${(ev: KeyboardEvent) => this._onKey(ev, b.key, "strip")}
                   ><ha-icon icon=${b.icon}></ha-icon
                 ></span>`;
               })}
-            </div>`
+            </div>
+            ${this._open ? nothing : html`<div class="tap-hint">${t(hass, "card.achievements.tap_hint")}</div>`}
+            ${this._renderExplain(hass, badges, "strip")}`
           : html`<div class="none">${t(hass, "card.achievements.none_yet")}</div>`}
         ${goals.length
           ? html`<div class="section-title">${t(hass, "card.achievements.goals")}</div>
               <div class="goals">
                 ${goals.map(
-                  ({ b, goal }) => html`<div class="goal">
+                  ({ b, goal }) => html`<div
+                    class="goal tap"
+                    role="button"
+                    tabindex="0"
+                    aria-pressed=${this._open?.key === b.key && this._open.section === "goals" ? "true" : "false"}
+                    title=${this._requirement(hass, b)}
+                    @click=${() => this._toggle(b.key, "goals")}
+                    @keydown=${(ev: KeyboardEvent) => this._onKey(ev, b.key, "goals")}
+                  >
                     <span class="goal-ic"><ha-icon icon=${b.icon}></ha-icon></span>
                     <div class="goal-body">
                       <div class="goal-name">${this._badgeName(hass, b)}</div>
@@ -381,18 +474,28 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
                     >
                   </div>`
                 )}
-              </div>`
+              </div>
+              ${this._renderExplain(hass, badges, "goals")}`
           : nothing}
         ${recent.length
           ? html`<div class="recent">
               <div class="section-title">${t(hass, "card.achievements.recent")}</div>
               ${recent.map(
-                ({ b, day, i }) => html`<div class="recent-row">
+                ({ b, day, i }) => html`<div
+                  class="recent-row tap"
+                  role="button"
+                  tabindex="0"
+                  aria-pressed=${this._open?.key === b.key && this._open.section === "recent" ? "true" : "false"}
+                  title=${this._requirement(hass, b)}
+                  @click=${() => this._toggle(b.key, "recent")}
+                  @keydown=${(ev: KeyboardEvent) => this._onKey(ev, b.key, "recent")}
+                >
                   <ha-icon icon=${b.icon}></ha-icon>
                   <span>${this._badgeName(hass, b, b.tiers ? i : undefined)}</span>
                   <time>${this._dateLabel(hass, day)}</time>
                 </div>`
               )}
+              ${this._renderExplain(hass, badges, "recent")}
             </div>`
           : nothing}
       </ha-card>
@@ -461,6 +564,15 @@ export class LibrusAchievementsCard extends LibrusBaseCard {
         background: var(--lc-amber-bg);
         color: var(--lc-amber);
         --mdc-icon-size: 19px;
+      }
+      .strip-ic.open {
+        outline: 2px solid var(--lc-amber);
+        outline-offset: 1px;
+      }
+      .tap-hint {
+        margin-top: 6px;
+        font-size: 0.7rem;
+        color: var(--secondary-text-color);
       }
       .none {
         margin-top: 12px;

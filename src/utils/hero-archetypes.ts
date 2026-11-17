@@ -167,6 +167,24 @@ function catalogEntry(id: string, icon: string): Pick<HeroResult, "icon" | "name
   };
 }
 
+/** Every result in the order `computeHeroResult` checks them (the first
+ * that fits wins) - the Hero card's "how it works" list. Keep in step with
+ * that function; each id has a `hero.rule.<id>` text. */
+export const HERO_ORDER = [
+  "prymus",
+  "feniks",
+  "wojownik",
+  "meteor",
+  "spolecznik",
+  "naukowiec",
+  "humanista",
+  "poliglota",
+  "artysta",
+  "sportowiec",
+  "kolekcjoner",
+  "wszechstronny",
+] as const;
+
 // Exported read-only for librus-hero-history-card, which only needs the
 // icon/name lookup by id (not the evidence-computing logic above).
 export const CATALOG: Record<string, Pick<HeroResult, "icon" | "nameKey" | "descKey">> = {};

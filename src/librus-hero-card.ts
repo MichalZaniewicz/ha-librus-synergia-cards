@@ -6,9 +6,11 @@ import { LibrusBaseCard } from "./utils/base-card";
 import { librusCardEditor } from "./utils/card-editor";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { numOrNull as num } from "./utils/format";
-import { t } from "./utils/localize";
+import { t, type TranslationKey } from "./utils/localize";
 import { heroSubjectStat } from "./utils/forecast";
 import {
+  CATALOG,
+  HERO_ORDER,
   computeHeroResult,
   overallWithPoints,
   readAchievementCount,
@@ -43,6 +45,8 @@ export class LibrusHeroCard extends LibrusBaseCard {
   // The `deviceId:resultId` last written - localStorage is only touched
   // when the result (or the student) actually changes.
   private _recorded?: string;
+  /** The "how results work" explanation, opened by tapping the result. */
+  @state() private _howOpen = false;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -120,6 +124,9 @@ export class LibrusHeroCard extends LibrusBaseCard {
       return this._message("mdi:creation-outline", t(hass, "card.hero.empty"));
     }
     this._pendingHistory = { deviceId, resultId: result.id };
+    const toggle = (): void => {
+      this._howOpen = !this._howOpen;
+    };
 
     return html`
       <ha-card>
@@ -132,7 +139,19 @@ export class LibrusHeroCard extends LibrusBaseCard {
             <div class="subtitle">${t(hass, "card.hero.subtitle")}</div>
           </div>
         </div>
-        <div class="result">
+        <div
+          class="result tap"
+          role="button"
+          tabindex="0"
+          aria-expanded=${this._howOpen ? "true" : "false"}
+          title=${t(hass, "card.hero.tap_hint")}
+          @click=${toggle}
+          @keydown=${(ev: KeyboardEvent) => {
+            if (ev.key !== "Enter" && ev.key !== " ") return;
+            ev.preventDefault();
+            toggle();
+          }}
+        >
           <div class="result-badge"><ha-icon icon=${result.icon}></ha-icon></div>
           <div class="result-name">${t(hass, result.nameKey[mode])}</div>
           <div class="result-desc">${t(hass, result.descKey[mode])}</div>
@@ -140,6 +159,30 @@ export class LibrusHeroCard extends LibrusBaseCard {
         <div class="evidence">
           ${result.evidence.map((chip) => html`<span class="evidence-chip">${t(hass, chip.key, chip.vars)}</span>`)}
         </div>
+        ${this._howOpen
+          ? html`<div class="explain" role="note">
+              <div class="explain-title">
+                <ha-icon icon=${result.icon}></ha-icon>${t(hass, result.nameKey[mode])}
+              </div>
+              <div>${t(hass, `hero.rule.${result.id}` as TranslationKey)}</div>
+              <div class="explain-meta">${t(hass, "card.hero.how_intro")}</div>
+              <ol class="how-list">
+                ${HERO_ORDER.map((id) => {
+                  const entry = CATALOG[id];
+                  const mine = id === result.id;
+                  return html`<li class=${mine ? "mine" : ""}>
+                    <ha-icon icon=${entry.icon}></ha-icon>
+                    <div>
+                      <b>${t(hass, entry.nameKey[mode])}</b>${mine
+                        ? html` <span class="you">${t(hass, "card.hero.yours")}</span>`
+                        : nothing}
+                      <div class="how-rule">${t(hass, `hero.rule.${id}` as TranslationKey)}</div>
+                    </div>
+                  </li>`;
+                })}
+              </ol>
+            </div>`
+          : nothing}
       </ha-card>
     `;
   }
@@ -206,6 +249,47 @@ export class LibrusHeroCard extends LibrusBaseCard {
         justify-content: center;
         overflow-x: auto;
         width: 100%;
+      }
+      .result.tap {
+        border-radius: 12px;
+      }
+      .how-list {
+        list-style: none;
+        margin: 8px 0 0;
+        padding: 0;
+        display: grid;
+        gap: 7px;
+      }
+      .how-list li {
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        gap: 8px;
+        align-items: start;
+        padding: 4px 6px;
+        border-radius: 8px;
+      }
+      .how-list li ha-icon {
+        --mdc-icon-size: 16px;
+        color: var(--secondary-text-color);
+        margin-top: 1px;
+      }
+      .how-list li.mine {
+        background: var(--lc-brand-bg);
+        outline: 1px solid var(--lc-brand);
+      }
+      .how-list li.mine ha-icon {
+        color: var(--lc-brand);
+      }
+      .how-rule {
+        color: var(--secondary-text-color);
+        font-size: 0.72rem;
+      }
+      .you {
+        font-size: 0.66rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--lc-brand-strong);
       }
       .evidence-chip {
         font-size: 0.68rem;
