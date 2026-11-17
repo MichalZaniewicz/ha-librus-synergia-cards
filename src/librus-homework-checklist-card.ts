@@ -193,7 +193,13 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
     // With the to-do list, show exactly its items: it drops homework that
     // was ticked off more than 14 days after its due date, and ticking one
     // of those here failed with "item not found" (found live).
-    const shown = todoId && this._todoUids ? items.filter((it) => this._todoUids!.has(it.key)) : items;
+    const listed = todoId && this._todoUids ? items.filter((it) => this._todoUids!.has(it.key)) : items;
+    // Homework past its due date drops off the next day unless `show_overdue`
+    // is on. No due date = always shown.
+    const today = isoDate(new Date());
+    const shown = this._config.show_overdue
+      ? listed
+      : listed.filter((it) => !it.due_date || it.due_date.slice(0, 10) >= today);
     if (shown.length === 0) {
       return this._message("mdi:notebook-edit-outline", t(hass, "card.homework_assignments.empty"));
     }
@@ -201,7 +207,6 @@ export class LibrusHomeworkChecklistCard extends LibrusBaseCard {
     // Not done and still due (soonest first), then not done and overdue
     // (most recent first), then done - in that same order. Sorted before
     // the cut, so `max_items` keeps the homework that matters most.
-    const today = isoDate(new Date());
     const rank = (it: (typeof shown)[number]): number =>
       (this._done.has(it.key) ? 2 : 0) + (it.due_date && it.due_date.slice(0, 10) < today ? 1 : 0);
     const sorted = [...shown].sort((a, b) => {

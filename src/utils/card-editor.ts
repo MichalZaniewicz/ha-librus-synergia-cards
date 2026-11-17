@@ -464,7 +464,11 @@ addField(
 );
 addField(["behaviour-grade"], { kind: "boolean", key: "hide_history", label: "editor.hide_history" });
 // Homework past its due date is hidden by default; this brings it back.
-addField(["homework-assignments"], { kind: "boolean", key: "show_overdue", label: "editor.show_overdue" });
+addField(["homework-assignments", "homework-checklist"], {
+  kind: "boolean",
+  key: "show_overdue",
+  label: "editor.show_overdue",
+});
 addField(
   ["attendance", "attendance-heatmap", "attendance-subject", "attendance-weekday", "grades-radar", "subject-attendance"],
   { kind: "boolean", key: "hide_legend", label: "editor.hide_legend" }
