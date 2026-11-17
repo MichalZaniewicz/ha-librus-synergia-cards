@@ -1004,7 +1004,7 @@ export const uk: Record<keyof typeof en, string> = {
   "hero.rule.artysta": "Нехай Plastyka і Muzyka випереджають кожну іншу групу щонайменше на 0,4 (мінімум 2 оцінки).",
   "hero.rule.sportowiec": "Нехай Wychowanie fizyczne випереджає кожну іншу групу щонайменше на 0,4 (мінімум 2 оцінки).",
   "hero.rule.kolekcjoner": "Збери щонайменше 5 різних значків (картка «Досягнення»).",
-  "hero.rule.wszechstronny": "Коли нічого з наведеного не підходить - твої оцінки рівні в усіх групах.",
+  "hero.rule.wszechstronny": "Коли нічого з наведеного не підходить - жодна група предметів помітно не випереджає інші.",
   "hero_stat_how.sila": "Середній бал з Wychowanie fizyczne (з 6), переведений у 0‑10. Кращі оцінки з фізкультури його підвищують.",
   "hero_stat_how.intelekt": "Середній бал з точних наук (Matematyka, Fizyka, Chemia, Informatyka, Biologia, Geografia), переведений у 0‑10. Кращі оцінки з них його підвищують.",
   "hero_stat_how.wiedza": "Середній бал з гуманітарних предметів (Język polski, Historia, Wiedza o społeczeństwie, Filozofia), переведений у 0‑10. Кращі оцінки з них його підвищують.",

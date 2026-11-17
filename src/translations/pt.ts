@@ -1004,7 +1004,7 @@ export const pt: Record<keyof typeof en, string> = {
   "hero.rule.artysta": "Faz Plastyka e Muzyka passarem qualquer outro grupo por 0,4 ou mais (pelo menos 2 notas).",
   "hero.rule.sportowiec": "Faz Wychowanie fizyczne passar qualquer outro grupo por 0,4 ou mais (pelo menos 2 notas).",
   "hero.rule.kolekcjoner": "Ganha 5 ou mais distintivos diferentes (cartão Conquistas).",
-  "hero.rule.wszechstronny": "Quando nada acima encaixa - as tuas notas estão equilibradas entre grupos.",
+  "hero.rule.wszechstronny": "Quando nada acima encaixa - nenhum grupo de disciplinas se destaca claramente dos outros.",
   "hero_stat_how.sila": "A tua média de Wychowanie fizyczne (em 6), passada para 0‑10. Melhores notas a Educação Física sobem-na.",
   "hero_stat_how.intelekt": "A tua média de ciências (Matematyka, Fizyka, Chemia, Informatyka, Biologia, Geografia), passada para 0‑10. Melhores notas aí sobem-na.",
   "hero_stat_how.wiedza": "A tua média de humanidades (Język polski, Historia, Wiedza o społeczeństwie, Filozofia), passada para 0‑10. Melhores notas aí sobem-na.",

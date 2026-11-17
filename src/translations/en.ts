@@ -1003,7 +1003,7 @@ export const en = {
   "hero.rule.artysta": "Let the arts (Plastyka, Muzyka) beat every other group by 0.4 or more (at least 2 grades).",
   "hero.rule.sportowiec": "Let Wychowanie fizyczne beat every other group by 0.4 or more (at least 2 grades).",
   "hero.rule.kolekcjoner": "Earn 5 or more different badges (see the Achievements card).",
-  "hero.rule.wszechstronny": "When nothing above fits - your grades are level across the groups.",
+  "hero.rule.wszechstronny": "When nothing above fits - no group of subjects is clearly ahead of the others.",
   "hero_stat_how.sila": "Your Wychowanie fizyczne average (out of 6), turned into 0‑10. Better PE grades raise it.",
   "hero_stat_how.intelekt": "Your science average (Matematyka, Fizyka, Chemia, Informatyka, Biologia, Geografia), turned into 0‑10. Better grades there raise it.",
   "hero_stat_how.wiedza": "Your humanities average (Język polski, Historia, Wiedza o społeczeństwie, Filozofia), turned into 0‑10. Better grades there raise it.",

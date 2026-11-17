@@ -1004,7 +1004,7 @@ export const pl: Record<keyof typeof en, string> = {
   "hero.rule.artysta": "Niech Plastyka i Muzyka wyprzedzą każdą inną grupę o co najmniej 0,4 (minimum 2 oceny).",
   "hero.rule.sportowiec": "Niech Wychowanie fizyczne wyprzedzi każdą inną grupę o co najmniej 0,4 (minimum 2 oceny).",
   "hero.rule.kolekcjoner": "Zdobądź co najmniej 5 różnych odznak (karta Osiągnięcia).",
-  "hero.rule.wszechstronny": "Gdy nic z powyższych nie pasuje - masz równe oceny we wszystkich grupach.",
+  "hero.rule.wszechstronny": "Gdy nic z powyższych nie pasuje - żadna grupa przedmiotów nie wyprzedza wyraźnie pozostałych.",
   "hero_stat_how.sila": "Średnia z Wychowania fizycznego (na 6) przeliczona na 0‑10. Lepsze oceny z WF ją podnoszą.",
   "hero_stat_how.intelekt": "Średnia z przedmiotów ścisłych (Matematyka, Fizyka, Chemia, Informatyka, Biologia, Geografia) przeliczona na 0‑10. Lepsze oceny z nich ją podnoszą.",
   "hero_stat_how.wiedza": "Średnia z przedmiotów humanistycznych (Język polski, Historia, Wiedza o społeczeństwie, Filozofia) przeliczona na 0‑10. Lepsze oceny z nich ją podnoszą.",

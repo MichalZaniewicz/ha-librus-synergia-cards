@@ -1004,7 +1004,7 @@ export const de: Record<keyof typeof en, string> = {
   "hero.rule.artysta": "Lass Plastyka und Muzyka jede andere Gruppe um mindestens 0,4 übertreffen (mindestens 2 Noten).",
   "hero.rule.sportowiec": "Lass Wychowanie fizyczne jede andere Gruppe um mindestens 0,4 übertreffen (mindestens 2 Noten).",
   "hero.rule.kolekcjoner": "Sammle 5 oder mehr verschiedene Abzeichen (Karte Erfolge).",
-  "hero.rule.wszechstronny": "Wenn nichts davon passt - deine Noten sind in allen Gruppen ausgeglichen.",
+  "hero.rule.wszechstronny": "Wenn nichts davon passt - keine Fächergruppe liegt deutlich vor den anderen.",
   "hero_stat_how.sila": "Dein Durchschnitt in Wychowanie fizyczne (von 6), umgerechnet auf 0‑10. Bessere Sportnoten erhöhen ihn.",
   "hero_stat_how.intelekt": "Dein Durchschnitt in den Naturwissenschaften (Matematyka, Fizyka, Chemia, Informatyka, Biologia, Geografia), umgerechnet auf 0‑10. Bessere Noten dort erhöhen ihn.",
   "hero_stat_how.wiedza": "Dein Durchschnitt in den Geisteswissenschaften (Język polski, Historia, Wiedza o społeczeństwie, Filozofia), umgerechnet auf 0‑10. Bessere Noten dort erhöhen ihn.",

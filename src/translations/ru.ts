@@ -1004,7 +1004,7 @@ export const ru: Record<keyof typeof en, string> = {
   "hero.rule.artysta": "Пусть Plastyka и Muzyka опережают любую другую группу минимум на 0,4 (минимум 2 оценки).",
   "hero.rule.sportowiec": "Пусть Wychowanie fizyczne опережает любую другую группу минимум на 0,4 (минимум 2 оценки).",
   "hero.rule.kolekcjoner": "Собери минимум 5 разных значков (карточка «Достижения»).",
-  "hero.rule.wszechstronny": "Когда ничего из перечисленного не подходит - твои оценки ровные во всех группах.",
+  "hero.rule.wszechstronny": "Когда ничего из перечисленного не подходит - ни одна группа предметов заметно не опережает другие.",
   "hero_stat_how.sila": "Средний балл по Wychowanie fizyczne (из 6), переведённый в 0‑10. Лучшие оценки по физкультуре его повышают.",
   "hero_stat_how.intelekt": "Средний балл по точным наукам (Matematyka, Fizyka, Chemia, Informatyka, Biologia, Geografia), переведённый в 0‑10. Лучшие оценки по ним его повышают.",
   "hero_stat_how.wiedza": "Средний балл по гуманитарным предметам (Język polski, Historia, Wiedza o społeczeństwie, Filozofia), переведённый в 0‑10. Лучшие оценки по ним его повышают.",

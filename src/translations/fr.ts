@@ -1004,7 +1004,7 @@ export const fr: Record<keyof typeof en, string> = {
   "hero.rule.artysta": "Que Plastyka et Muzyka dépassent tous les autres groupes d'au moins 0,4 (au moins 2 notes).",
   "hero.rule.sportowiec": "Que Wychowanie fizyczne dépasse tous les autres groupes d'au moins 0,4 (au moins 2 notes).",
   "hero.rule.kolekcjoner": "Obtiens au moins 5 badges différents (carte Succès).",
-  "hero.rule.wszechstronny": "Quand rien de tout cela ne correspond - tes notes sont équilibrées entre les groupes.",
+  "hero.rule.wszechstronny": "Quand rien de tout cela ne correspond - aucun groupe de matières n'est nettement devant les autres.",
   "hero_stat_how.sila": "Ta moyenne en Wychowanie fizyczne (sur 6), ramenée sur 0‑10. De meilleures notes en sport l'augmentent.",
   "hero_stat_how.intelekt": "Ta moyenne en sciences (Matematyka, Fizyka, Chemia, Informatyka, Biologia, Geografia), ramenée sur 0‑10. De meilleures notes là l'augmentent.",
   "hero_stat_how.wiedza": "Ta moyenne en humanités (Język polski, Historia, Wiedza o społeczeństwie, Filozofia), ramenée sur 0‑10. De meilleures notes là l'augmentent.",
