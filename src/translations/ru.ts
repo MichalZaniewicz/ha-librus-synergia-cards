@@ -427,7 +427,7 @@ export const ru: Record<keyof typeof en, string> = {
   "card.announcements.mark_failed": "Не удалось пометить как прочитанное: {error}",
 
   "card.homework_assignments.title": "Домашние задания",
-  "card.homework_assignments.empty": "Домашних заданий нет",
+  "card.homework_assignments.empty": "Делать нечего",
   "label.due": "Срок",
 
   "card.today_lessons.title": "Сегодняшние уроки",

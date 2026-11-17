@@ -426,7 +426,7 @@ export const en = {
   "card.announcements.mark_failed": "Couldn't mark it read: {error}",
 
   "card.homework_assignments.title": "Homework assignments",
-  "card.homework_assignments.empty": "No homework assignments",
+  "card.homework_assignments.empty": "Nothing to do",
   "label.due": "Due",
 
   "card.today_lessons.title": "Today's lessons",

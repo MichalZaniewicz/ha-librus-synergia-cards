@@ -427,7 +427,7 @@ export const pl: Record<keyof typeof en, string> = {
   "card.announcements.mark_failed": "Nie udało się oznaczyć: {error}",
 
   "card.homework_assignments.title": "Zadania domowe",
-  "card.homework_assignments.empty": "Brak zadań domowych",
+  "card.homework_assignments.empty": "Nic do zrobienia",
   "label.due": "Termin",
 
   "card.today_lessons.title": "Dzisiejszy plan lekcji",

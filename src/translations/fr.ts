@@ -427,7 +427,7 @@ export const fr: Record<keyof typeof en, string> = {
   "card.announcements.mark_failed": "Impossible de marquer comme lue : {error}",
 
   "card.homework_assignments.title": "Devoirs",
-  "card.homework_assignments.empty": "Aucun devoir",
+  "card.homework_assignments.empty": "Rien à faire",
   "label.due": "À rendre",
 
   "card.today_lessons.title": "Cours du jour",
