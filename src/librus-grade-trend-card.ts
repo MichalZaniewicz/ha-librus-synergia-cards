@@ -1,4 +1,4 @@
-import { html, css, nothing, type TemplateResult } from "lit";
+import { html, css, nothing, type PropertyValues, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import type { LovelaceCardEditor } from "custom-card-helpers";
 import { LibrusBaseCard } from "./utils/base-card";
@@ -26,7 +26,12 @@ const DEFAULT_HISTORY_DAYS = 60;
 export class LibrusGradeTrendCard extends LibrusBaseCard {
   @state() private _config?: LibrusCardConfig;
   @state() private _points: HistoryPoint[] = [];
+  /** The chart's width: the room left next to the current value, measured
+   * (a fixed 280 px left a wide card half empty). */
+  @state() private _chartWidth = 280;
   private _fetchedFor?: string;
+  private _resize?: ResizeObserver;
+  private _observed?: HTMLElement;
 
   public static getConfigElement(): LovelaceCardEditor {
     return librusCardEditor();
@@ -53,6 +58,31 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
     super.connectedCallback();
     // Only notices a new day - a changed average changes the cache key itself.
     this._every(30 * 60_000, () => void this._fetch());
+  }
+
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._resize?.disconnect();
+    this._resize = undefined;
+    this._observed = undefined;
+  }
+
+  protected updated(changed: PropertyValues): void {
+    super.updated(changed);
+    // The row is re-created after an empty or error state: watch the new one.
+    const row = this.renderRoot.querySelector<HTMLElement>(".chart-row");
+    if (!row || row === this._observed) return;
+    this._resize?.disconnect();
+    this._observed = row;
+    this._resize = new ResizeObserver(() => this._measureChart(row));
+    this._resize.observe(row);
+    this._measureChart(row);
+  }
+
+  private _measureChart(row: HTMLElement): void {
+    const value = row.querySelector<HTMLElement>(".current-value");
+    const width = Math.floor(row.clientWidth - (value?.offsetWidth ?? 0) - 12);
+    if (width > 80 && Math.abs(width - this._chartWidth) > 2) this._chartWidth = width;
   }
 
 
@@ -198,7 +228,7 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
         </div>
         <div class="chart-row">
           <div class="current-value">${isPoints ? `${one(last.value)}%` : last.value.toFixed(2)}</div>
-          ${lineChart(points, { colorVar: "var(--lc-brand)", guide })}
+          ${lineChart(points, { colorVar: "var(--lc-brand)", guide, width: this._chartWidth })}
         </div>
       </ha-card>
     `;
