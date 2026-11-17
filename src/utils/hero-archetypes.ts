@@ -17,9 +17,11 @@ export interface SubjectStat {
 /**
  * The overall average with point-graded subjects folded in. The Overall
  * average sensor only covers 1-6 grades; each point-graded subject adds its
- * forecast grade, weighted by how many point grades it has - the same
- * weighting `weightedClusterAverage` uses. No point-graded subjects: the
- * sensor's value, unchanged.
+ * forecast grade as ONE grade - a subject has many tests but a single grade
+ * on the report card, so weighting it by its number of point grades let a
+ * few subjects outweigh every 1-6 grade. No point-graded subjects: the
+ * sensor's value, unchanged. (The integration's Rank sensor uses the same
+ * rule.)
  */
 export function overallWithPoints(overall: number | null, subjects: SubjectStat[]): number | null {
   const points = subjects.filter((s) => s.points && s.average !== null && s.gradeCount > 0);
@@ -27,8 +29,8 @@ export function overallWithPoints(overall: number | null, subjects: SubjectStat[
   let sum = 0;
   let count = 0;
   for (const s of points) {
-    sum += s.average! * s.gradeCount;
-    count += s.gradeCount;
+    sum += s.average!;
+    count += 1;
   }
   const graded = subjects.filter((s) => !s.points).reduce((n, s) => n + s.gradeCount, 0);
   if (overall !== null && graded > 0) {
@@ -131,6 +133,9 @@ export const CLUSTERS: ClusterDef[] = [
   },
 ];
 
+/** Overall average (point subjects included) from which the result is Prymus - the Rank sensor's Diamond tier. */
+const PRYMUS_MIN_AVERAGE = 5.0;
+
 const OTHER_ICONS: Record<string, string> = {
   wojownik: "mdi:shield-check-outline",
   meteor: "mdi:meteor",
@@ -206,8 +211,8 @@ export function computeHeroResult(inputs: HeroInputs): HeroResult | null {
     gradedSubjects.length > 0 || inputs.attendanceStreak !== null || inputs.behaviourShortName !== null;
   if (!hasAnyData) return null;
 
-  // 1. Prymus/Legenda - high average held broadly, not just in one subject.
-  if (inputs.overallAverage !== null && inputs.overallAverage >= 5.3 && gradedSubjects.length >= 4) {
+  // 1. Prymus/Legenda - a Diamond-rank average (5.0, the Rank sensor's top tier) held broadly, not just in one subject.
+  if (inputs.overallAverage !== null && inputs.overallAverage >= PRYMUS_MIN_AVERAGE && gradedSubjects.length >= 4) {
     return {
       ...CATALOG.prymus,
       id: "prymus",
@@ -218,19 +223,7 @@ export function computeHeroResult(inputs: HeroInputs): HeroResult | null {
     };
   }
 
-  // 2. Kolekcjoner - a real trophy case (read-only, see readAchievementCount).
-  if (inputs.achievementCount >= 5) {
-    return {
-      ...CATALOG.kolekcjoner,
-      id: "kolekcjoner",
-      evidence: [
-        { key: "hero.chip.badges", vars: { n: inputs.achievementCount } },
-        { key: "hero.chip.various_categories" },
-      ],
-    };
-  }
-
-  // 3. Feniks - this semester's average clearly up from the last one.
+  // 2. Feniks - this semester's average clearly up from the last one.
   if (
     inputs.overallSemester1 !== null &&
     inputs.overallSemester2 !== null &&
@@ -246,7 +239,7 @@ export function computeHeroResult(inputs: HeroInputs): HeroResult | null {
     };
   }
 
-  // 4. Wojownik Frekwencji - a long, clean attendance streak.
+  // 3. Wojownik Frekwencji - a long, clean attendance streak.
   if (inputs.attendanceStreak !== null && inputs.attendanceStreak >= 30 && inputs.unexcusedCount === 0) {
     return {
       ...CATALOG.wojownik,
@@ -258,7 +251,7 @@ export function computeHeroResult(inputs: HeroInputs): HeroResult | null {
     };
   }
 
-  // 5. Meteor - a real hot streak of good grades.
+  // 4. Meteor - a real hot streak of good grades.
   if (inputs.goodGradeStreak !== null && inputs.goodGradeStreak >= 10) {
     return {
       ...CATALOG.meteor,
@@ -272,7 +265,7 @@ export function computeHeroResult(inputs: HeroInputs): HeroResult | null {
     };
   }
 
-  // 6. Społecznik - model conduct AND a genuinely positive recent record
+  // 5. Społecznik - model conduct AND a genuinely positive recent record
   //    (only the sensor's last few notes ever carry sentiment - this is
   //    best-effort over that small window, not the full note history).
   const positiveNotes = inputs.recentNoteSentiments.filter((s) => s === "positive").length;
@@ -288,7 +281,7 @@ export function computeHeroResult(inputs: HeroInputs): HeroResult | null {
     };
   }
 
-  // 7. Subject-cluster dominance - one cluster clearly ahead of the rest.
+  // 6. Subject-cluster dominance - one cluster clearly ahead of the rest.
   const clusterAverages = CLUSTERS.map((c) => ({
     cluster: c,
     result: weightedClusterAverage(inputs.subjects, c.subjects),
@@ -309,6 +302,20 @@ export function computeHeroResult(inputs: HeroInputs): HeroResult | null {
         ],
       };
     }
+  }
+
+  // 7. Kolekcjoner - a real trophy case (read-only, see readAchievementCount). Only
+  //    when nothing more specific stood out: 5 badges come quickly, and ranked
+  //    near the top this one hid every other result for good.
+  if (inputs.achievementCount >= 5) {
+    return {
+      ...CATALOG.kolekcjoner,
+      id: "kolekcjoner",
+      evidence: [
+        { key: "hero.chip.badges", vars: { n: inputs.achievementCount } },
+        { key: "hero.chip.various_categories" },
+      ],
+    };
   }
 
   // 8. Wszechstronny Talent - the fallback: nothing else stood out.
