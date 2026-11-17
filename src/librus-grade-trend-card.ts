@@ -77,7 +77,7 @@ export class LibrusGradeTrendCard extends LibrusBaseCard {
   }
 
   /** The daily series to chart: the point percentage for a point-graded
-   * subject, else the integration's daily average (`statistic_id`, 0.12.53+)
+   * subject, else the integration's daily average (`statistic_id`, 0.12.52+)
    * - kept since the first grade, while the sensor's own state history only
    * goes back as far as the recorder keeps it (10 days by default), so "the
    * last 60 days" used to show a day or two. None on an older integration:
