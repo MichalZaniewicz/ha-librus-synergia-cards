@@ -137,6 +137,8 @@ interface PointGradeAttr {
   category: string | null;
   date: string | null;
   counts_to_average?: boolean | null;
+  /** The teacher's comments (integration with point grade comments; absent before). */
+  comments?: string[] | null;
   changed_at?: string | null;
   previous?: Record<string, unknown> | null;
 }
@@ -153,7 +155,7 @@ export function pointGradeEntries(attributes: Record<string, unknown> | undefine
     value: p.points !== null && p.max_points ? `${formatPoints(p.points)}/${formatPoints(p.max_points)}` : p.value,
     category: p.category,
     date: p.date,
-    comments: [],
+    comments: p.comments ?? [],
     percentage: p.percentage,
     points: true,
     counts_to_average: p.counts_to_average,
