@@ -137,6 +137,8 @@ interface PointGradeAttr {
   category: string | null;
   date: string | null;
   counts_to_average?: boolean | null;
+  /** Who gave the grade (the integration sends it like a 1-6 grade's). */
+  teacher?: string | null;
   /** The teacher's comments (integration with point grade comments; absent before). */
   comments?: string[] | null;
   changed_at?: string | null;
@@ -156,6 +158,7 @@ export function pointGradeEntries(attributes: Record<string, unknown> | undefine
     category: p.category,
     date: p.date,
     comments: p.comments ?? [],
+    teacher: p.teacher ?? null,
     percentage: p.percentage,
     points: true,
     counts_to_average: p.counts_to_average,
