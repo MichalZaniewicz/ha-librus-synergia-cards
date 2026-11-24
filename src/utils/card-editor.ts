@@ -89,7 +89,7 @@ type EditorField =
     }
   | {
       kind: "number";
-      key: "max_items" | "days_ahead" | "days" | "target" | "list_height" | "max_lines" | "good_above" | "bad_below" | "honours" | "weeks";
+      key: "max_items" | "days_ahead" | "days" | "target" | "list_height" | "max_lines" | "title_max_lines" | "good_above" | "bad_below" | "honours" | "weeks";
       label: TranslationKey;
       min: number;
       max: number;
@@ -488,6 +488,13 @@ addField(
     "homework-checklist", "justifications", "messages", "recent-activity", "substitutions",
   ],
   { kind: "number", key: "max_lines", label: "editor.max_lines", min: 1, max: 20 }
+);
+addField(
+  [
+    "agenda", "announcements", "behaviour-notices", "descriptive-grades", "grade-log", "homework-assignments",
+    "homework-checklist", "justifications", "messages", "recent-activity", "substitutions",
+  ],
+  { kind: "number", key: "title_max_lines", label: "editor.title_max_lines", min: 1, max: 20 }
 );
 
 export function librusCardEditor(): LovelaceCardEditor {

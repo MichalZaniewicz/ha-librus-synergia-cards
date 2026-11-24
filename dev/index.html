@@ -1074,13 +1074,15 @@
           }),
       ],
       "calendar.agenda": [
-        { start: iso(agendaStart), end: iso(new Date(agendaStart.getTime() + 86400000)), allDay: true, summary: "[Zebranie z Rodzicami] Zebranie z rodzicami. Organizacja roku szkolnego 2026/2027.", description: null },
-        { start: iso(new Date(today.getTime() + 9 * 86400000)), end: iso(new Date(today.getTime() + 10 * 86400000)), allDay: true, summary: "[Sprawdzian] Matematyka: Ułamki dziesiętne, dział 2.", description: null },
-        { start: iso(new Date(today.getTime() + 3 * 86400000)), end: iso(new Date(today.getTime() + 4 * 86400000)), allDay: true, summary: "[Kartkówka] Biologia: Mięśnie", description: null },
-        { start: iso(new Date(today.getTime() + 6 * 86400000)), end: iso(new Date(today.getTime() + 7 * 86400000)), allDay: true, summary: "[Wycieczka] Centrum Nauki, 8:00-15:00", description: null },
-        { start: iso(new Date(today.getTime() - 2 * 86400000)), end: iso(new Date(today.getTime() - 1 * 86400000)), allDay: true, summary: "[Sprawdzian] Historia: Powstanie listopadowe", description: null },
-        { start: iso(new Date(today.getTime() + 9 * 86400000)), end: iso(new Date(today.getTime() + 10 * 86400000)), allDay: true, summary: "[Inne] Konkurs matematyczny - zgłoszenia", description: null },
-        { start: iso(new Date(today.getTime() + 1 * 86400000)), end: iso(new Date(today.getTime() + 2 * 86400000)), allDay: true, summary: "[Test] Język angielski: Unit 2", description: null },
+        { start: iso(agendaStart), end: iso(new Date(agendaStart.getTime() + 86400000)), allDay: true, summary: "[Zebranie z Rodzicami] Zebranie z rodzicami. Organizacja roku szkolnego 2026/2027.", description: "17:30 · Zebranie z rodzicami. Organizacja roku szkolnego 2026/2027." },
+        { start: iso(new Date(today.getTime() + 9 * 86400000)), end: iso(new Date(today.getTime() + 10 * 86400000)), allDay: true, summary: "[Sprawdzian] Matematyka: Ułamki dziesiętne, dział 2.", description: "Ułamki dziesiętne, dział 2." },
+        { start: iso(new Date(today.getTime() + 3 * 86400000)), end: iso(new Date(today.getTime() + 4 * 86400000)), allDay: true, summary: "[Kartkówka] Biologia: Mięśnie", description: "Mięśnie" },
+        { start: iso(new Date(today.getTime() + 6 * 86400000)), end: iso(new Date(today.getTime() + 7 * 86400000)), allDay: true, summary: "[Wycieczka] Centrum Nauki, 8:00-15:00", description: "Centrum Nauki, 8:00-15:00" },
+        { start: iso(new Date(today.getTime() - 2 * 86400000)), end: iso(new Date(today.getTime() - 1 * 86400000)), allDay: true, summary: "[Sprawdzian] Historia: Powstanie listopadowe", description: "Powstanie listopadowe" },
+        { start: iso(new Date(today.getTime() + 9 * 86400000)), end: iso(new Date(today.getTime() + 10 * 86400000)), allDay: true, summary: "[Inne] Konkurs matematyczny - zgłoszenia", description: "Konkurs matematyczny - zgłoszenia" },
+        // A long entry: the summary holds only the first 80 characters (issue #20).
+        { start: iso(new Date(today.getTime() + 4 * 86400000)), end: iso(new Date(today.getTime() + 5 * 86400000)), allDay: true, summary: "[Inne] Zdjęcia klasowe. Fotograf będzie w szkole od rana, prosimy o strój galowy i odda", description: "13:45 · Zdjęcia klasowe. Fotograf będzie w szkole od rana, prosimy o strój galowy i oddanie zgód na zdjęcia grupowe do piątku." },
+        { start: iso(new Date(today.getTime() + 1 * 86400000)), end: iso(new Date(today.getTime() + 2 * 86400000)), allDay: true, summary: "[Test] Język angielski: Unit 2", description: "Unit 2" },
         // Tests and quizzes across the semester (the Tests this semester card).
         ...[
           [-52, "Sprawdzian", "Fizyka: Ruch"], [-45, "Kartkówka", "Chemia: Wzory"], [-44, "Kartkówka", "Geografia: Mapa"],
@@ -1094,7 +1096,7 @@
         ].map(([days, category, text]) => ({
           start: iso(new Date(today.getTime() + days * 86400000)),
           end: iso(new Date(today.getTime() + (days + 1) * 86400000)),
-          allDay: true, summary: `[${category}] ${text}`, description: null,
+          allDay: true, summary: `[${category}] ${text}`, description: text.split(": ").slice(1).join(": ") || text,
         })),
       ],
       // Made-up absences, a few school days back (the month card's bars).

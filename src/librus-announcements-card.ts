@@ -169,7 +169,7 @@ export class LibrusAnnouncementsCard extends LibrusBaseCard {
               >
                 <span class="dot ${isRead(a) ? "neutral" : "good"}"></span>
                 <div class="body">
-                  <div class="row1">${a.subject}</div>
+                  <div class="row1"><span>${a.subject}</span></div>
                   ${a.start_date && a.end_date
                     ? html`<div class="item-text">
                         ${formatShortDate(a.start_date, hass.language)} –

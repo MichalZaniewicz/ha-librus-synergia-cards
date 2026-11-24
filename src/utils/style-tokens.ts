@@ -649,6 +649,15 @@ export const librusSharedStyles = css`
     -webkit-line-clamp: var(--lc-max-lines);
     overflow: hidden;
   }
+  /* title_max_lines: the first part of an entry's bold line (the title; a
+     date or pill next to it stays whole). */
+  :host(.clamp-title) .row1 > :first-child {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--lc-title-lines);
+    overflow: hidden;
+    min-width: 0;
+  }
   .quote {
     font-size: 0.72rem;
     color: var(--secondary-text-color);

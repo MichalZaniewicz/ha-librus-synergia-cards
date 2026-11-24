@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { allDayDates, fetchCalendarEvents, isoDate, type LibrusCalendarEvent } from "./utils/calendar";
-import { parseCategory, formatDate } from "./utils/format";
+import { agendaParts, parseCategory, formatDate } from "./utils/format";
 import { t, type TranslationKey } from "./utils/localize";
 import { librusCardEditor } from "./utils/card-editor";
 
@@ -216,10 +216,12 @@ export class LibrusMonthCalendarCard extends LibrusBaseCard {
     const add = (day: string, entry: DayEntry) => entries.set(day, [...(entries.get(day) ?? []), entry]);
     for (const ev of this._agenda) {
       const { category, text } = parseCategory(ev.summary);
+      // Without the start of the text shown twice (issue #20).
+      const parts = agendaParts(ev.summary, ev.description);
       const entry: DayEntry = {
         kind: kindOf(category, text),
-        title: text,
-        detail: [category, ev.description].filter(Boolean).join(" · ") || undefined,
+        title: parts.title || parts.text,
+        detail: [category, parts.title ? parts.text : ""].filter(Boolean).join(" · ") || undefined,
       };
       // A multi-day all-day entry (e.g. a trip) gets a dot on every day it covers.
       for (const day of ev.allDay ? allDayDates(ev) : [ev.start.slice(0, 10)]) add(day, entry);

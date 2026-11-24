@@ -113,6 +113,7 @@ export const en = {
   "editor.hide_comments": "Hide comments",
   "editor.list_height": "List height (px)",
   "editor.max_lines": "Lines of text per entry",
+  "editor.title_max_lines": "Lines of title per entry",
   "editor.more_items": "How many more to list",
   "editor.tap_action": "Tap action",
   "editor.exam_keywords": "Exam category keywords (comma-separated)",

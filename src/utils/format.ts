@@ -107,3 +107,37 @@ export function parseCategory(summary: string): { category: string | null; text:
   const match = CATEGORY_RE.exec(summary);
   return match ? { category: match[1], text: summary.slice(match[0].length) } : { category: null, text: summary };
 }
+
+// "13:45 · whole text" - the integration leads an Agenda description with
+// the entry's time when Librus has one.
+const TIME_LEAD_RE = /^(\d{1,2}:\d{2})(?: · ([\s\S]*))?$/;
+
+const stem = (value: string): string => value.replace(/[\s…]+$/, "");
+
+/**
+ * An Agenda entry split for display, without the text shown twice. The
+ * integration's summary is "[Category] Subject: first 80 characters" (or
+ * just the first 80 characters) and the description "time · whole text",
+ * so the start of the text came twice (issue #20). When the summary only
+ * repeats the start of the text, `title` is the subject alone, or empty
+ * when there's no subject - the whole text is in `text` either way.
+ */
+export function agendaParts(
+  summary: string,
+  description?: string | null
+): { category: string | null; title: string; text: string } {
+  const { category, text: rawTitle } = parseCategory(summary);
+  const title = rawTitle.trim();
+  const text = (description ?? "").trim();
+  const match = TIME_LEAD_RE.exec(text);
+  const content = (match ? match[2] ?? "" : text).trim();
+  if (!content) return { category, title, text };
+  const whole = stem(title);
+  if (whole && content.startsWith(whole)) return { category, title: "", text };
+  const colon = title.indexOf(": ");
+  if (colon > 0) {
+    const rest = stem(title.slice(colon + 2));
+    if (rest && content.startsWith(rest)) return { category, title: title.slice(0, colon), text };
+  }
+  return { category, title, text };
+}

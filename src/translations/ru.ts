@@ -114,6 +114,7 @@ export const ru: Record<keyof typeof en, string> = {
   "editor.hide_comments": "Скрыть комментарии",
   "editor.list_height": "Высота списка (px)",
   "editor.max_lines": "Строк текста в записи",
+  "editor.title_max_lines": "Строк заголовка в записи",
   "editor.more_items": "Сколько ещё показать в списке",
   "editor.tap_action": "Действие при нажатии",
   "editor.exam_keywords": "Ключевые слова категорий контрольных (через запятую)",

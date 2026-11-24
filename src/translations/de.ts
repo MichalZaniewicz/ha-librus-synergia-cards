@@ -114,6 +114,7 @@ export const de: Record<keyof typeof en, string> = {
   "editor.hide_comments": "Kommentare ausblenden",
   "editor.list_height": "Listenhöhe (px)",
   "editor.max_lines": "Textzeilen pro Eintrag",
+  "editor.title_max_lines": "Titelzeilen pro Eintrag",
   "editor.more_items": "Wie viele weitere anzeigen",
   "editor.tap_action": "Aktion beim Tippen",
   "editor.exam_keywords": "Stichwörter für Klassenarbeiten (kommagetrennt)",

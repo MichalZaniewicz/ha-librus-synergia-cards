@@ -93,6 +93,8 @@ export interface LibrusCardConfig extends LovelaceCardConfig {
   list_height?: number;
   /** Shortens an entry's text to this many lines, with an ellipsis. Universal. */
   max_lines?: number;
+  /** Shortens an entry's title (its bold first line) the same way. Universal. */
+  title_max_lines?: number;
   /** Hides the colour legend under the attendance charts and the grade radar. */
   hide_legend?: boolean;
   /** Hides teachers' comments under grades and notes. */

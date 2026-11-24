@@ -536,6 +536,10 @@ export abstract class LibrusBaseCard extends LitElement {
     this.classList.toggle("clamp-text", lines > 0);
     if (lines > 0) this.style.setProperty("--lc-max-lines", String(lines));
     else this.style.removeProperty("--lc-max-lines");
+    const titleLines = Math.floor(Number(config?.title_max_lines));
+    this.classList.toggle("clamp-title", titleLines > 0);
+    if (titleLines > 0) this.style.setProperty("--lc-title-lines", String(titleLines));
+    else this.style.removeProperty("--lc-title-lines");
     const height = config?.list_height;
     if (height && height > 0) this.style.setProperty("--lc-list-height", `${height}px`);
     else this.style.removeProperty("--lc-list-height");

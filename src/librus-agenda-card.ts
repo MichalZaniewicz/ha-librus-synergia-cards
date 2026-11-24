@@ -5,7 +5,7 @@ import type { LibrusCardConfig } from "./utils/types";
 import { LibrusBaseCard } from "./utils/base-card";
 import { librusTokens, librusSharedStyles } from "./utils/style-tokens";
 import { fetchCalendarEvents, type LibrusCalendarEvent } from "./utils/calendar";
-import { formatShortDate, parseCategory } from "./utils/format";
+import { agendaParts, formatShortDate } from "./utils/format";
 import { t } from "./utils/localize";
 import { applyListOptions } from "./utils/list-options";
 import { librusCardEditor } from "./utils/card-editor";
@@ -108,14 +108,14 @@ export class LibrusAgendaCard extends LibrusBaseCard {
               <div class="day-group">
                 <div class="day-label">${formatShortDate(day, hass.language)}</div>
                 ${events.map((ev) => {
-                  const { category, text } = parseCategory(ev.summary);
+                  const { category, title, text } = agendaParts(ev.summary, ev.description);
                   return html`
                     <div class="list-item">
                       <span class="dot neutral"></span>
                       <div class="body">
                         ${category ? html`<div class="cat-label-row"><span class="cat-label">${category}</span></div>` : nothing}
-                        <div class="row1">${text}</div>
-                        ${ev.description ? html`<div class="item-text">${ev.description}</div>` : nothing}
+                        ${title ? html`<div class="row1"><span>${title}</span></div>` : nothing}
+                        ${text ? html`<div class="item-text">${text}</div>` : nothing}
                       </div>
                     </div>
                   `;

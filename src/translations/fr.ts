@@ -114,6 +114,7 @@ export const fr: Record<keyof typeof en, string> = {
   "editor.hide_comments": "Masquer les commentaires",
   "editor.list_height": "Hauteur de liste (px)",
   "editor.max_lines": "Lignes de texte par entrée",
+  "editor.title_max_lines": "Lignes de titre par entrée",
   "editor.more_items": "Combien d'autres afficher",
   "editor.tap_action": "Action au toucher",
   "editor.exam_keywords": "Mots-clés des catégories de contrôles (séparés par des virgules)",
